@@ -1,6 +1,7 @@
 import pygame
 import cv2 as cv
 import numpy
+from typing import Union
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -69,14 +70,18 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, cam, x, y, w=0, h=0):
+    def __init__(self, cam: Union[cv.VideoCapture, None], x, y, w=0, h=0):
         super().__init__(x, y, w, h)
         self.cam = cam  # this can be any buffer with read() returning opencv frames, can be used in both client and server
         self.surf = pygame.Surface((self.w, self.h))
 
-    def draw(self, screen, *modifiers):
+    def draw(self, screen, *modifiers, frame=None):
+        if self.cam is not None:
+            frame = self.cam.read()
+        elif frame is None:
+            return
+
         self.surf.fill(BLACK)
-        frame = self.cam.read()
 
         # MODIFIERS SHOULD BE FUNCTIONS THAT CAN ACT ON THE FRAME ALONE
         # CAN BE USED FOR EASY CROP AND SCALE

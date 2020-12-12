@@ -2,11 +2,14 @@ import pyaudio
 import wave
 import threading
 from time import sleep
+from queue import Queue
+
+# SERVER NEEDS MANY AUDIO STREAMS, CONSIDER CHANNELLER
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 44100//1
-CHUNK = 1024
+RATE = 44100//2
+CHUNK = 512
 AUDIO = pyaudio.PyAudio()
 
 
@@ -15,6 +18,7 @@ class Throughput:
         self.buffer = []
         self.open = False
         self.stream = None
+        self.running = False
 
     def pause(self):
         self.open = False
@@ -25,9 +29,10 @@ class Throughput:
         self.stream.start_stream()
 
     def close(self):
+        self.running = False
+        self.open = False
         self.stream.stop_stream()
         self.stream.close()
-
 
 class AudioInput(Throughput):
     def __init__(self):
@@ -35,20 +40,22 @@ class AudioInput(Throughput):
         self.stream = AUDIO.open(format=FORMAT, channels=CHANNELS,
                     rate=RATE, input=True,
                     frames_per_buffer=CHUNK)
-        self.buffer = []
+        self.buffer = Queue(100)
+        self.running = True
 
     def activate(self):
-        self.open = True
-        while True:
-            sleep(0.0005)
+        self.open = True  # this is for pause/unpause, it's not a mistake
+        while self.running:  # running is for dead/alive
             if self.open:
-                self.buffer.append(self.stream.read(CHUNK))
-                if len(self.buffer) > 100:
-                    self.buffer.pop(0)
+                if self.buffer.full():
+                    continue
+                self.buffer.put(self.stream.read(CHUNK))
+                continue
+            sleep(0.01)
 
     def read(self):
-        while not self.buffer: sleep(0.00002)
-        return self.buffer.pop(0)
+        return self.buffer.get()
+
 
 
 class AudioOutput(Throughput):
@@ -57,17 +64,20 @@ class AudioOutput(Throughput):
         self.stream = AUDIO.open(format=FORMAT, channels=CHANNELS,
                     rate=RATE, output=True,
                     frames_per_buffer=CHUNK)
-        self.buffer = []
+        self.buffer = Queue(100)
+        self.running = True
 
     def activate(self):
-        self.open = True
-        while True:
-            sleep(0.0005)
-            if self.open and self.buffer:
-                self.stream.write(self.buffer.pop(0))
+        self.open = True  # this is for pause/unpause, it's not a mistake
+        while self.running:  # running is for dead/alive
+            if self.open:
+                self.stream.write(self.buffer.get())
+                continue
+            sleep(0.01)
 
     def write(self, data):
-        self.buffer.append(data)
+        self.buffer.put(data)
+
 
 
 class AudioInterface:
@@ -79,6 +89,9 @@ class AudioInterface:
 
     def read(self):
         return self.inp.read()
+    def pending(self):
+        while not self.inp.buffer.empty():
+            yield self.inp.read()
 
     def write(self, data):
         self.out.write(data)
