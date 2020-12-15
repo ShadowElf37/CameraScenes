@@ -70,15 +70,22 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, cam: Union[cv.VideoCapture, None], x, y, w=0, h=0):
+    def __init__(self, x, y, w=0, h=0):
+        # NOTE: used to contain a cam/buffer input, this is now handled in mainloop for direct control of webcam data
         super().__init__(x, y, w, h)
-        self.cam = cam  # this can be any buffer with read() returning opencv frames, can be used in both client and server
         self.surf = pygame.Surface((self.w, self.h))
+        self.old_frame: numpy.ndarray = None
+        self.new_frame: numpy.ndarray = None
 
-    def draw(self, screen, *modifiers, frame=None):
-        if self.cam is not None:
-            frame = self.cam.read()
-        elif frame is None:
+
+    # this is necessary so that if we draw without a new frame (because of lag or something) the viewer won't be drawn as a black square
+    def take_frame(self, frame):
+        self.new_frame = frame
+
+    def draw(self, screen, *modifiers):
+        # see take_frame - otherwise it would flicker abhorrently
+        if numpy.array_equal(self.old_frame, self.new_frame):
+            self.selective_blit(screen, self.surf)
             return
 
         self.surf.fill(BLACK)
@@ -86,15 +93,17 @@ class WebcamViewer(Object):
         # MODIFIERS SHOULD BE FUNCTIONS THAT CAN ACT ON THE FRAME ALONE
         # CAN BE USED FOR EASY CROP AND SCALE
         for func in modifiers:
-            frame: numpy.ndarray = func(frame)
+            self.new_frame: numpy.ndarray = func(self.new_frame)
 
         # we will be compatible with all possible frame sizes
         # no clue what we're receiving sadly
         # if we want specific dimensions, use modifiers to crop or scale on client or server side
-        w, h, *_ = frame.shape
-        if self.w != w or self.h != h and frame:
+        w, h, *_ = self.new_frame.shape
+        if self.w != w or self.h != h and self.new_frame:
             self.w, self.h = w, h
             self.surf = pygame.Surface((w, h))
-        pygame.surfarray.blit_array(self.surf, frame)
 
+        pygame.surfarray.blit_array(self.surf, self.new_frame)
+
+        self.old_frame = self.new_frame
         self.selective_blit(screen, self.surf)

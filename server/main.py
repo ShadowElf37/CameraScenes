@@ -7,6 +7,9 @@ import graphics
 import webcam
 import network
 import audio
+import layout
+import numpy
+import pickle
 from cv2 import COLOR_BGR2RGB
 
 clock = pygame.time.Clock()
@@ -18,12 +21,15 @@ WIDTH = 1000
 HEIGHT = 700
 FPS = 30
 
+CAM_WIDTH = 400
+CAM_HEIGHT = 300
+
 pygame.init()
-pygame.display.set_caption("WEBCAM WOOOOOOOOOOO")
+pygame.display.set_caption("Scene Manager - Server")
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
-cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
-text = graphics.Text('SERVER', WIDTH/2, 600)
+#cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
+text = graphics.Text('PogU', WIDTH/2, 600)
 
 aud = audio.AudioInterface()
 aud.activate()
@@ -31,24 +37,33 @@ aud.activate()
 server = network.UDPManager(37001)
 server.init()
 
-cam_viewer = graphics.WebcamViewer(None, WIDTH/2, HEIGHT/2, 400, 200)
-
-cameras: [graphics.WebcamViewer] = [cam_viewer]
+cameras: {str: graphics.WebcamViewer} = {}
 objects: [graphics.Object] = [text]
 
-while True:
-    for chunk in aud.pending():
-        for client in server.sessions.values():
-            client.send('AUDIO', chunk)
-            client.send('VIDEO', cam.read())
+preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 
-    screen.fill(BLACK)
+print('Application started!')
+while True:
+    #for chunk in aud.pending():
+    #    for client in server.sessions.values():
+    #        pass
+            #client.send('AUDIO', chunk)
+            #client.send('VIDEO', cam.read())
+
+    #screen.fill(BLACK)
 
     while not server.VIDEO_QUEUE.empty():
-        # TODO: match viewers to camera streams in the video queue, loop through cameras[]
-        cam_viewer.draw(screen, webcam.jpeg_decode, frame=server.VIDEO_QUEUE.get())
-    for object in objects:
-        object.draw(screen)
+        uuid, frame = server.VIDEO_QUEUE.get()
+        cam = cameras.get(uuid)
+        if cam is None: # make new viewer
+            cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)
+
+        cam.take_frame(pickle.loads(frame))
+
+    for cam in cameras.values():
+        cam.draw(screen, webcam.jpeg_decode)
+
+    text.draw(screen)
 
     pygame.display.update()
 

@@ -1,0 +1,8 @@
+ALPHA v0.0.1
+- First working tech demo
+- Mature webcam class
+- Basic 2-way UDP controls in network.py files
+- De facto audio library in audio.py
+- Good prototype layout/scene manager in layout.py
+- Rough and simple graphics objects in graphics.py
+- Working file structure

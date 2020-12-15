@@ -3,37 +3,7 @@ from socket import *
 from queue import Queue
 import threading
 from time import sleep
-
-class UDPSession:
-    def __init__(self, sock, ip, port):
-        self.socket: socket = sock
-        self.ip = ip
-        self.port = port
-        self.uuid = str(uuid4())
-        self.packet_id = 0
-
-    @property
-    def addr(self):
-        return self.ip, self.port
-
-    @classmethod
-    def decompile(self, data: bytes):
-        return data.decode().split('\n')
-    def compile(self, datatype, data):
-        # datatype should be INFO, AUDIO, VIDEO, other
-        # META is for manager to handle
-        return '\n'.join((self.uuid, self.packet_id, datatype, data)).encode()
-
-    def verify_decompiled(self, decomp_tuple):
-        return decomp_tuple[0] == self.uuid and decomp_tuple[1] > self.packet_id
-
-    def send(self, datatype, data):
-        self.socket.sendto(self.compile(datatype, data), self.addr)
-        self.packet_id += 1
-
-    def keepalive(self):
-        self.send('KEEPALIVE', '')
-
+from network_common import *
 
 class UDPManager:
     def __init__(self, port=37001):
@@ -60,23 +30,29 @@ class UDPManager:
 
     def _handle_data(self):
         while self.running:
-            data, addr = self.socket.recvfrom(1024)
-            if self.sessions.get(addr) is None:
-                self.sessions[addr] = UDPSession(self, *addr)
-            session = self.sessions[addr]
-
+            data, addr = self.socket.recvfrom(100000)
             data = UDPSession.decompile(data)
-            if not session.verify_decompiled(data):
-                continue
+
+            if self.sessions.get(addr) is None:
+                self.sessions[addr] = session = UDPSession(self, *addr)
+                session.uuid = data[0]
+            else:
+                session: UDPSession = self.sessions[addr]
+                # print('SESSION:', session.uuid, session.packet_id)
+                if not session.verify_decompiled(data):
+                    print('PACKET REJECTED')
+                    continue
+
             session.packet_id = data[1]
 
             # DATATYPE
+            #print(data)
             if data[2] == 'INFO':
-                self.INFO_QUEUE.put((session.uuid, data))
+                self.INFO_QUEUE.put((session.uuid, data[3]))
             elif data[2] == 'AUDIO':
-                self.AUDIO_QUEUE.put((session.uuid, data))
+                self.AUDIO_QUEUE.put((session.uuid, data[3]))
             elif data[2] == 'VIDEO':
-                self.VIDEO_QUEUE.put((session.uuid, data))
+                self.VIDEO_QUEUE.put((session.uuid, data[3]))
             elif data[2] == 'KEEPALIVE':
                 pass
             elif data[2] == 'PRINT':

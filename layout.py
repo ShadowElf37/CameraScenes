@@ -1,42 +1,50 @@
-from typing import Union
-
-class Screen:
-    def __init__(self, w, h):
-        self.real_w = w
-        self.real_h = h
-
-    @property
-    def center(self):
-        return self.real_w // 2, self.real_h // 2
-
-class Grid:
-    def __init__(self, parent: Union[Screen, __class__], w=1, h=1, padr=0, padl=0, padt=0, padb=0):
-        self.parent = parent
+class BasicTiler:
+    def __init__(self, w, h, tilew, tileh, pad_edges=False):
+        self.count = -1
         self.w = w
         self.h = h
-        self.real_w = parent.real_w
-        self.real_h = parent.real_h
-        self.pad_right = padr
-        self.pad_left = padl
-        self.pad_top = padt
-        self.pad_bottom = padb
+        self.tw = tilew
+        self.th = tileh
+        self.x = 0
+        self.y = 0
 
-        self.tiles = [[Tile(self, 1/self.w, 1/self.h, x*self.real_w/self.w-, y) for x in range(self.w)] for y in range(self.h)]
+        self.pad_edges = pad_edges
 
-    @property
-    def center(self):
-        return (self.real_w - self.pad_left - self.pad_right)//2, self.real_h//2
+        self.countx = self.w // self.tw
+        self.county = self.h // self.th
+        self.maximum = self.countx * self.county
+        #      (fraction that can fit - actual that can fit) * size / (number +- 1 for padding)
+        # i cant explain exactly why padding is count+1 instead of +2, but it is the case
+        if pad_edges:
+            self.padx = ((self.w / self.tw - self.countx) * self.tw / (self.countx + 1)) if self.countx > 1 else 0
+            self.pady = ((self.h / self.th - self.county) * self.th / (self.county + 1)) if self.county > 1 else 0
+        else:
+            self.padx = ((self.w / self.tw - self.countx) * self.tw / (self.countx - 1)) if self.countx > 1 else 0
+            self.pady = ((self.h / self.th - self.county) * self.th / (self.county - 1)) if self.county > 1 else 0
 
-class Tile:
-    def __init__(self, parent: Grid, wfrac, hfrac, realx, realy):
-        self.parent = parent
-        self.wfrac = wfrac
-        self.hfrac = hfrac
-        self.x = realx
-        self.y = realy
-        self.w = parent.real_w * wfrac - parent.pad_left - parent.pad_right
-        self.h = parent.real_h * hfrac - parent.pad_top - parent.pad_bottom
+    def new(self):
+        if self.count == self.maximum-1:
+            raise ValueError('Layout can\'t handle any more tiles!')
 
-    @property
-    def center(self):
-        return self.w // 2, self.h // 2
+        self.count += 1
+        x = y = 0
+
+        # preliminary check so we can center a single input cam
+        if self.countx < 2:
+            x = self.w / 2
+        if self.county < 2:
+            y = self.h / 2
+
+        #        (proper place on axis + centering) * wh + padding * (number on axis because it accumulates + 1 if the 0th place wants more than 0 padding)
+        if not x:
+            x = (self.count % self.countx + 0.5) * self.tw + self.padx * (self.count % self.countx + (1 if self.pad_edges else 0))
+        if not y:
+            y = (self.count // self.countx + 0.5) * self.th + self.pady * (self.count // self.countx + (1 if self.pad_edges else 0))
+
+        return x, y
+
+
+if __name__ == "__main__":
+    tiler = BasicTiler(550, 550, 100, 100, False)
+    while True:
+        print(tiler.new())

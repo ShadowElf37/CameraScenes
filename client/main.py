@@ -4,6 +4,7 @@ from sys import exit
 import graphics
 import network
 import audio
+import pickle
 from cv2 import COLOR_BGR2RGB
 
 BLACK = (0,0,0)
@@ -15,7 +16,7 @@ FPS = 30
 
 
 pygame.init()
-pygame.display.set_caption("Scene Manager")
+pygame.display.set_caption("Scene Manager - Client")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
@@ -25,20 +26,22 @@ text = graphics.Text('POGGERS', WIDTH/2, 600)
 aud = audio.AudioInterface()
 aud.activate()
 
-client = network.UDPClient('localhost', 37001)
+client = network.UDPClient('73.166.38.74', 37001)
 client.init()
 
-cam_viewer = graphics.WebcamViewer(None, WIDTH/2, HEIGHT/2, 400, 200)
+cam_viewer = graphics.WebcamViewer(WIDTH/2, HEIGHT/2, 400, 200)
 
 print(cam_viewer.w, cam_viewer.h)
 while True:
-    for chunk in aud.pending():
-        client.session.send('AUDIO', chunk)
-    client.session.send('VIDEO', cam.read())
+    #for chunk in aud.pending():
+    #    client.session.send('AUDIO', chunk)
+    frame = cam.read()
+    client.session.send('VIDEO', pickle.dumps(frame))
 
     screen.fill(BLACK)
 
-    cam_viewer.draw(screen, webcam.jpeg_decode, frame=(client.VIDEO_QUEUE.empty() or client.VIDEO_QUEUE.get()))
+    cam_viewer.take_frame(frame)
+    cam_viewer.draw(screen, webcam.jpeg_decode)
     text.draw(screen)
 
     pygame.display.update()
