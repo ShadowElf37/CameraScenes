@@ -6,7 +6,7 @@ import pygame.locals
 import graphics
 import webcam
 import network
-import audio
+#import audio
 import layout
 import numpy
 import pickle
@@ -31,8 +31,8 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 #cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
 text = graphics.Text('PogU', WIDTH/2, 600)
 
-aud = audio.AudioInterface()
-aud.activate()
+#aud = audio.AudioInterface()
+#aud.activate()
 
 server = network.UDPManager(37001)
 server.init()

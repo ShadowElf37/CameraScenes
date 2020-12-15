@@ -3,7 +3,7 @@ import webcam
 from sys import exit
 import graphics
 import network
-import audio
+#import audio
 import pickle
 from cv2 import COLOR_BGR2RGB
 
@@ -23,8 +23,8 @@ clock = pygame.time.Clock()
 cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
 text = graphics.Text('POGGERS', WIDTH/2, 600)
 
-aud = audio.AudioInterface()
-aud.activate()
+#aud = audio.AudioInterface()
+#aud.activate()
 
 client = network.UDPClient('73.166.38.74', 37001)
 client.init()
