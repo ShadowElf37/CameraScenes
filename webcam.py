@@ -22,7 +22,9 @@ class Webcam:
     def __init__(self, *cv_conversion_flags, mirror=False, swap_axes=False, compress_quality=100, resolution=()):
         # open webcam
         self.cap = cv.VideoCapture(0, cv.CAP_DSHOW)
-        if not self.cap.isOpened() or self.cap.read()[0] is False:
+        if not self.cap.isOpened():
+            raise IOError('Failed to open webcam.')
+        if self.cap.read()[0] is False:
             raise IOError('Failed to open webcam. Maybe it\'s already in use?')
         print('Webcam initialized.')
         # DONE INIT WOO
