@@ -29,7 +29,7 @@ pygame.display.set_caption("Scene Manager - Server")
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
 #cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
-text = graphics.Text('PogU', WIDTH/2, 600)
+text = graphics.Text('Server POGGERS', WIDTH/2, 600)
 
 #aud = audio.AudioInterface()
 #aud.activate()
@@ -39,7 +39,7 @@ server.init()
 
 preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 
-cameras: {str: graphics.WebcamViewer} = {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
+cameras: {str: graphics.WebcamViewer} = {}  # BLANK {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
 objects: [graphics.Object] = [text]
 
 print('Application started!')
@@ -59,7 +59,7 @@ while True:
             cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT, enforce_dim=True)
 
         cam.take_frame(pickle.loads(frame))
-        server.session_by_uuid(uuid).send('PRINT', b'hello fren', affect_pid=False)
+        server.sessions[uuid].send('PRINT', b'hello fren')
 
     for cam in cameras.values():
         cam.draw(screen, webcam.jpeg_decode)
@@ -71,6 +71,7 @@ while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             print('User quit.')
+            pygame.display.quit()
             exit()
 
     clock.tick(FPS)

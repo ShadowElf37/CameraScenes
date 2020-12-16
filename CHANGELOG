@@ -1,3 +1,8 @@
+ALPHA v0.0.3
+- MAC address used for uuid, allowing devices to connect and disconnect without breaking the server's session with it
+- Sessions are now stored by uuid - pid is the only thing verified
+- Bug fixes
+
 ALPHA v0.0.2
 - Buffered send()
 - Added scale_to() in webcam.py

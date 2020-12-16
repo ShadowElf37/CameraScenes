@@ -28,9 +28,9 @@ class UDPManager:
         self.running = False
         self.socket.close()
 
-    def session_by_uuid(self, uuid) -> UDPSession:
+    def session_by_addr(self, addr) -> UDPSession:
         for s in self.sessions.values():
-            if s.uuid == uuid:
+            if s.ip == addr[0] and s.port == addr[1]:
                 return s
         return None
 
@@ -38,19 +38,21 @@ class UDPManager:
         while self.running:
             data, addr = self.socket.recvfrom(100000)
             data = UDPSession.decompile(data)
+            uuid = data[0]
 
-            if self.sessions.get(addr) is None:
-                self.sessions[addr] = session = UDPSession(self, *addr)
-                session.uuid = data[0]
+            if self.sessions.get(uuid) is None:
+                self.sessions[uuid] = session = UDPSession(self, *addr)
+                session.uuid = uuid
                 session.start_send_thread()
             else:
-                session: UDPSession = self.sessions[addr]
-                # print('SESSION:', session.uuid, session.packet_id)
-                if not session.verify_decompiled(data):
+                session: UDPSession = self.sessions[uuid]
+                # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
+                # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
+                if not session.verify_pid(data[1]):
                     print('PACKET REJECTED')
                     continue
 
-            session.packet_id = data[1]
+            session.packet_id_recv = data[1]
 
             # DATATYPE
             #print(data)

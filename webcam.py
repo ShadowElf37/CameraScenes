@@ -42,12 +42,12 @@ def jpeg_decode(frame):
     return cv.imdecode(frame, 1)
 
 class Webcam:
-    def __init__(self, *cv_conversion_flags, mirror=False, swap_axes=False, compress_quality=100, resolution=()):
+    def __init__(self, *cv_conversion_flags, mirror=False, swap_axes=False, compress_quality=100, resolution=(), device=0):
         # open webcam
-        if PLATFORM == 'Windows':
-            self.cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+        if PLATFORM == 'Windows' and type(device) is int:
+            self.cap = cv.VideoCapture(device, cv.CAP_DSHOW)
         else:
-            self.cap = cv.VideoCapture(0)
+            self.cap = cv.VideoCapture(device)
         if not self.cap.isOpened():
             raise IOError('Failed to open webcam. Is it connected?')
         if self.cap.read()[0] is False:

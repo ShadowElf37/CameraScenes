@@ -1,17 +1,9 @@
-from uuid import uuid4
 from socket import *
-from queue import Queue
 import threading
-import numpy
-from numpy import dtype
-from time import sleep
 from network_common import *
 
-
-# TODO add send buffers to client and server so we're not wasting resources in main
-
 class UDPClient:
-    def __init__(self, host, port=37001):
+    def __init__(self, host, port=37001, override_uuid=None):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
@@ -20,6 +12,7 @@ class UDPClient:
         self.port = port
 
         self.socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+        self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         # I NEED A REALLY RANDOM PORT SO I CAN RECEIVE - ROUTER HAS NAT, WE'RE RECEIVING FROM WAN, NUM DOESNT MATTER
         p = 38000
         while True:
@@ -29,7 +22,10 @@ class UDPClient:
                 continue
             else:
                 break
+
         self.session = UDPSession(self, self.host, self.port)
+        if override_uuid:
+            self.session.uuid = override_uuid
         self.session.start_send_thread()
 
         self.running = False
@@ -45,9 +41,10 @@ class UDPClient:
     def _handle_data(self):
         while self.running:
             data = UDPSession.decompile(self.socket.recvfrom(50000)[0])
-            if not self.session.verify_decompiled(data):
+
+            if not self.session.verify_pid(data[1]):
                 continue
-            self.session.packet_id = data[1]
+            self.session.packet_id_recv = data[1]
 
             if data[2] == 'INFO': # DATATYPE
                 self.INFO_QUEUE.put((data[0], data[3]))

@@ -20,16 +20,16 @@ pygame.display.set_caption("Scene Manager - Client")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
-cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
-text = graphics.Text('POGGERS', WIDTH/2, 600)
+cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
+text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 
 #aud = audio.AudioInterface()
 #aud.activate()
 
-client = network.UDPClient('73.166.38.74', 37001)
+client = network.UDPClient('73.166.38.74', 37001, override_uuid='tester77')
 client.init()
 
-cam_viewer = graphics.WebcamViewer(WIDTH/2, HEIGHT/2, 400, 200)
+cam_viewer = graphics.WebcamViewer(WIDTH/2, HEIGHT/2, 640, 480, enforce_dim=True)
 
 print(cam_viewer.w, cam_viewer.h)
 while True:
