@@ -1,7 +1,22 @@
 import cv2 as cv
 import numpy
 from sys import getsizeof
-array_type = type(numpy.array([]))
+import platform
+
+def is_admin():
+    import ctypes, os
+    try:
+        return os.getuid() == 0
+    except AttributeError:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+PLATFORM = platform.system()
+
+if PLATFORM == 'Darwin':
+    if not is_admin():
+        raise PermissionError('Please start the program with sudo.')
+    import os
+    os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
 
 
 def crop(frame, x1, y1, x2, y2):
@@ -21,9 +36,12 @@ def jpeg_decode(frame):
 class Webcam:
     def __init__(self, *cv_conversion_flags, mirror=False, swap_axes=False, compress_quality=100, resolution=()):
         # open webcam
-        self.cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+        if PLATFORM == 'Windows':
+            self.cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+        else:
+            self.cap = cv.VideoCapture(0)
         if not self.cap.isOpened():
-            raise IOError('Failed to open webcam.')
+            raise IOError('Failed to open webcam. Is it connected?')
         if self.cap.read()[0] is False:
             raise IOError('Failed to open webcam. Maybe it\'s already in use?')
         print('Webcam initialized.')
@@ -43,7 +61,7 @@ class Webcam:
         self.swap_axes = swap_axes # switches x and y axes, necessary for pygame for unknown reasons
 
     def read(self):
-        frame: array_type = self.cap.read()[1]
+        frame: numpy.ndarray = self.cap.read()[1]
         if self.swap_axes:
             frame = frame.swapaxes(0, 1)
         for flag in self.conversion_flags:
@@ -60,7 +78,11 @@ class Webcam:
 
     def preview(self, w_name='Webcam Preview'):
         while True:
-            cv.imshow(w_name, self.read())
+            print(2)
+            frame = self.read()
+            print(3)
+            cv.imshow(w_name, frame)
+            print(4)
 
             c = cv.waitKey(1)
             if c == ord('q'):
@@ -72,5 +94,4 @@ class Webcam:
 
 if __name__ == '__main__':
     webcam = Webcam(mirror=False, swap_axes=False, resolution=(640, 480))
-    webcam.fix_crop_dim(0, 0, 640, 480)
     webcam.preview()
