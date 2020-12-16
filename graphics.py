@@ -1,4 +1,5 @@
 import pygame
+import pygame.freetype
 from webcam import scale_to
 import numpy
 from typing import Union

@@ -1,6 +1,6 @@
 import pygame.freetype
-import webcam
 from sys import exit
+import webcam
 import graphics
 import network
 #import audio
@@ -20,8 +20,9 @@ pygame.display.set_caption("Scene Manager - Client")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
+print('Opening webcam...')
 cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
-text = graphics.Text('Client POGGERS', WIDTH/2, 600)
+text = graphics.Text('Client POGGERS', WIDTH / 2, 600)
 
 #aud = audio.AudioInterface()
 #aud.activate()
@@ -29,9 +30,9 @@ text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 client = network.UDPClient('73.166.38.74', 37001)
 client.init()
 
-cam_viewer = graphics.WebcamViewer(WIDTH/2, HEIGHT/2, 640, 480, enforce_dim=True)
+cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=True)
 
-print(cam_viewer.w, cam_viewer.h)
+print('Client started', cam_viewer.w, cam_viewer.h)
 while True:
     #for chunk in aud.pending():
     #    client.session.send('AUDIO', chunk)

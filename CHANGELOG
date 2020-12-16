@@ -1,3 +1,9 @@
+ALPHA v0.0.4
+-
+TODO no bueno, uuids are shared between foreign clients despite being on different systems
+TODO very inconsistent experience on first launch ?
+TODO meta packet to close a session
+
 ALPHA v0.0.3
 - MAC address used for uuid, allowing devices to connect and disconnect without breaking the server's session with it
 - Sessions are now stored by uuid - pid is the only thing verified

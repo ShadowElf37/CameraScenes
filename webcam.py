@@ -50,7 +50,7 @@ class Webcam:
             self.cap = cv.VideoCapture(device)
         if not self.cap.isOpened():
             raise IOError('Failed to open webcam. Is it connected?')
-        if self.cap.read()[0] is False:
+        elif self.cap.read()[0] is False:
             raise IOError('Failed to open webcam. Maybe it\'s already in use?')
         print('Webcam initialized.')
         # DONE INIT WOO

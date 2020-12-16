@@ -1,16 +1,13 @@
 # GUI NEEDS CUSTOM BACKGROUND
 # SPRITE ANIMATIONS
 # USEABLE GRAPHICS LIBRARY
-import pygame.freetype
 import pygame.locals
-import graphics
-import webcam
 import network
 #import audio
+import webcam
+import graphics
 import layout
-import numpy
 import pickle
-from cv2 import COLOR_BGR2RGB
 
 clock = pygame.time.Clock()
 
@@ -29,7 +26,7 @@ pygame.display.set_caption("Scene Manager - Server")
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
 #cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
-text = graphics.Text('Server POGGERS', WIDTH/2, 600)
+text = graphics.Text('Server POGGERS', WIDTH / 2, 600)
 
 #aud = audio.AudioInterface()
 #aud.activate()
@@ -42,7 +39,7 @@ preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 cameras: {str: graphics.WebcamViewer} = {}  # BLANK {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
 objects: [graphics.Object] = [text]
 
-print('Application started!')
+print('Server started.')
 while True:
     #for chunk in aud.pending():
     #    for client in server.sessions.values():
