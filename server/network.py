@@ -49,7 +49,7 @@ class UDPManager:
                 # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
                 # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
                 if not session.verify_pid(data[1]):
-                    print('PACKET REJECTED')
+                    print('Out of order packet rejected')
                     continue
 
             session.packet_id_recv = data[1]

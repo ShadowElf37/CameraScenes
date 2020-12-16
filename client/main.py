@@ -26,7 +26,7 @@ text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 #aud = audio.AudioInterface()
 #aud.activate()
 
-client = network.UDPClient('73.166.38.74', 37001, override_uuid='tester77')
+client = network.UDPClient('73.166.38.74', 37001)
 client.init()
 
 cam_viewer = graphics.WebcamViewer(WIDTH/2, HEIGHT/2, 640, 480, enforce_dim=True)

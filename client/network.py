@@ -43,6 +43,7 @@ class UDPClient:
             data = UDPSession.decompile(self.socket.recvfrom(50000)[0])
 
             if not self.session.verify_pid(data[1]):
+                print('Out of order packet rejected')
                 continue
             self.session.packet_id_recv = data[1]
 
