@@ -1,5 +1,6 @@
-from socket import *
 from uuid import uuid4
+from queue import Queue
+from threading import Thread
 
 class UDPSession:
     def __init__(self, manager, ip, port):
@@ -8,6 +9,10 @@ class UDPSession:
         self.port = port
         self.uuid = str(uuid4())
         self.packet_id = 0
+
+        self.send_buffer = Queue()
+        self.sending = False
+        self.send_thread = Thread(target=self._sendloop, daemon=True)
 
     @property
     def addr(self):
@@ -33,6 +38,7 @@ class UDPSession:
         type_ = data[indices[1]+1:indices[2]].decode()
         data = data[indices[2]+1:]
 
+        # PRINTING FROM HERE
         print(uuid, pid, type_)
         return uuid, int(pid), type_, data
 
@@ -44,6 +50,22 @@ class UDPSession:
     def verify_decompiled(self, decomp_tuple):
         return decomp_tuple[0] == self.uuid and decomp_tuple[1] > self.packet_id
 
-    def send(self, datatype, data):
+    def _send(self, datatype: str, data: bytes, affect_pid=True):
         self.manager.socket.sendto(self.compile(datatype, data), self.addr)
-        self.packet_id += 1
+        if affect_pid:
+            self.packet_id += 1
+
+
+    # BUFFERED STUFF
+    def send(self, datatype: str, data: bytes, affect_pid=True):
+        self.send_buffer.put((datatype, data, affect_pid))
+
+    def start_send_thread(self):
+        self.sending = True
+        self.send_thread.start()
+    def close_send_thread(self):
+        self.sending = False
+
+    def _sendloop(self):
+        while self.sending:
+            self._send(*self.send_buffer.get())

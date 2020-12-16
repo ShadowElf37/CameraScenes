@@ -22,8 +22,16 @@ if PLATFORM == 'Darwin':
 def crop(frame, x1, y1, x2, y2):
     return frame[x1:x2, y1:y2]
 
-def scale(frame, factor):
-    return cv.resize(frame, factor)
+def scale_by(frame, factor):
+    if factor < 1:
+        return cv.resize(frame, factor, interpolation=cv.INTER_AREA)
+    elif factor > 1:
+        return cv.resize(frame, factor, interpolation=cv.INTER_LINEAR)
+    return frame
+
+def scale_to(frame: numpy.ndarray, x, y):
+    ox, oy, _ = frame.shape  # third is color depth (3)
+    return cv.resize(frame, None, fx=x/ox, fy=y/oy)
 
 def jpeg_encode(frame, quality):
     _, frame = cv.imencode('.jpg', frame, (int(cv.IMWRITE_JPEG_QUALITY), quality))

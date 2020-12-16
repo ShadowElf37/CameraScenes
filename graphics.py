@@ -1,5 +1,5 @@
 import pygame
-import cv2 as cv
+from webcam import scale_to
 import numpy
 from typing import Union
 
@@ -70,12 +70,14 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, x, y, w=0, h=0):
+    def __init__(self, x, y, w=0, h=0, enforce_dim=False):
         # NOTE: used to contain a cam/buffer input, this is now handled in mainloop for direct control of webcam data
         super().__init__(x, y, w, h)
         self.surf = pygame.Surface((self.w, self.h))
         self.old_frame: numpy.ndarray = None
         self.new_frame: numpy.ndarray = None
+
+        self.enforce_dim = enforce_dim
 
 
     # this is necessary so that if we draw without a new frame (because of lag or something) the viewer won't be drawn as a black square
@@ -83,12 +85,16 @@ class WebcamViewer(Object):
         self.new_frame = frame
 
     def draw(self, screen, *modifiers):
+        # debug
+        if self.new_frame is None:
+            self.surf.fill(WHITE)
+
         # see take_frame - otherwise it would flicker abhorrently
         if numpy.array_equal(self.old_frame, self.new_frame):
             self.selective_blit(screen, self.surf)
             return
 
-        self.surf.fill(BLACK)
+        self.surf.fill(WHITE)
 
         # MODIFIERS SHOULD BE FUNCTIONS THAT CAN ACT ON THE FRAME ALONE
         # CAN BE USED FOR EASY CROP AND SCALE
@@ -97,11 +103,14 @@ class WebcamViewer(Object):
 
         # we will be compatible with all possible frame sizes
         # no clue what we're receiving sadly
-        # if we want specific dimensions, use modifiers to crop or scale on client or server side
-        w, h, *_ = self.new_frame.shape
-        if self.w != w or self.h != h and self.new_frame:
-            self.w, self.h = w, h
-            self.surf = pygame.Surface((w, h))
+        # if we want specific dimensions, use modifiers to crop or scale on client or server side, or use enforce_dim, which will scale automatically to ow/oh
+        if self.enforce_dim:
+            self.new_frame = scale_to(self.new_frame, self.w, self.h)
+        else:
+            w, h, *_ = self.new_frame.shape
+            if self.w != w or self.h != h and self.new_frame:
+                self.w, self.h = w, h
+                self.surf = pygame.Surface((w, h))
 
         pygame.surfarray.blit_array(self.surf, self.new_frame)
 

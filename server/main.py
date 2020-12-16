@@ -37,10 +37,10 @@ text = graphics.Text('PogU', WIDTH/2, 600)
 server = network.UDPManager(37001)
 server.init()
 
-cameras: {str: graphics.WebcamViewer} = {}
-objects: [graphics.Object] = [text]
-
 preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
+
+cameras: {str: graphics.WebcamViewer} = {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
+objects: [graphics.Object] = [text]
 
 print('Application started!')
 while True:
@@ -50,15 +50,16 @@ while True:
             #client.send('AUDIO', chunk)
             #client.send('VIDEO', cam.read())
 
-    #screen.fill(BLACK)
+    screen.fill(BLACK)
 
     while not server.VIDEO_QUEUE.empty():
         uuid, frame = server.VIDEO_QUEUE.get()
         cam = cameras.get(uuid)
         if cam is None: # make new viewer
-            cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)
+            cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT, enforce_dim=True)
 
         cam.take_frame(pickle.loads(frame))
+        server.session_by_uuid(uuid).send('PRINT', b'hello fren', affect_pid=False)
 
     for cam in cameras.values():
         cam.draw(screen, webcam.jpeg_decode)

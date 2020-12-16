@@ -20,7 +20,7 @@ class UDPClient:
         self.port = port
 
         self.socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
-        # I NEED A REALLY RANDOM PORT SO I CAN RECEIVE - ROUTER HAS NAT, WE'RE RECEIVING FROM WAN, # DOESNT MATTER
+        # I NEED A REALLY RANDOM PORT SO I CAN RECEIVE - ROUTER HAS NAT, WE'RE RECEIVING FROM WAN, NUM DOESNT MATTER
         p = 38000
         while True:
             try:
@@ -30,6 +30,7 @@ class UDPClient:
             else:
                 break
         self.session = UDPSession(self, self.host, self.port)
+        self.session.start_send_thread()
 
         self.running = False
         self.thread = threading.Thread(target=self._handle_data, daemon=True)

@@ -28,6 +28,12 @@ class UDPManager:
         self.running = False
         self.socket.close()
 
+    def session_by_uuid(self, uuid) -> UDPSession:
+        for s in self.sessions.values():
+            if s.uuid == uuid:
+                return s
+        return None
+
     def _handle_data(self):
         while self.running:
             data, addr = self.socket.recvfrom(100000)
@@ -36,6 +42,7 @@ class UDPManager:
             if self.sessions.get(addr) is None:
                 self.sessions[addr] = session = UDPSession(self, *addr)
                 session.uuid = data[0]
+                session.start_send_thread()
             else:
                 session: UDPSession = self.sessions[addr]
                 # print('SESSION:', session.uuid, session.packet_id)
