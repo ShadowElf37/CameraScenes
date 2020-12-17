@@ -8,8 +8,11 @@ class UDPSession:
         self.ip = ip
         self.port = port
         self.uuid = str(getnode())
-        self.packet_id_recv = -1
-        self.packet_id_send = -1
+
+        # these are different because we don't care about client and server syncing perfectly when it's just streaming data
+        # all we want to ensure is that we and they are not *receiving* packets out of order, and are discarding such packets
+        self.packet_id_recv = -1  # packet id of packets we receive - other end's send id
+        self.packet_id_send = -1  # packet id of packets we send - other end's receive id
 
         self.send_buffer = Queue()
         self.sending = False

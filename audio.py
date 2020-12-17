@@ -1,5 +1,4 @@
 import pyaudio
-import wave
 import threading
 from time import sleep
 from queue import Queue
@@ -8,10 +7,9 @@ from queue import Queue
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 44100//2
-CHUNK = 512
+RATE = 16000
+CHUNK = 80  # actually doubled because 16 bit samples - needs to be small for encoding
 AUDIO = pyaudio.PyAudio()
-
 
 class Throughput:
     def __init__(self):
@@ -79,13 +77,12 @@ class AudioOutput(Throughput):
         self.buffer.put(data)
 
 
-
 class AudioInterface:
     def __init__(self):
         self.inp = AudioInput()
         self.out = AudioOutput()
-        self.ithread = None
-        self.othread = None
+        self.ithread = threading.Thread(target=self.inp.activate, daemon=True)
+        self.othread = threading.Thread(target=self.out.activate, daemon=True)
 
     def read(self):
         return self.inp.read()
@@ -97,8 +94,6 @@ class AudioInterface:
         self.out.write(data)
 
     def activate(self):
-        self.ithread = threading.Thread(target=self.inp.activate, daemon=True)
-        self.othread = threading.Thread(target=self.out.activate, daemon=True)
         self.ithread.start()
         self.othread.start()
 
@@ -118,8 +113,20 @@ class AudioInterface:
         self.ithread = None
         self.othread = None
 
+
+
+import g729a
+encoder = g729a.G729Aencoder()
+decoder = g729a.G729Adecoder()
+
 if __name__ == '__main__':
     aud = AudioInterface()
     aud.activate()
+
     while True:
-        aud.write(aud.read())
+        frame = aud.read()
+        encode = encoder.process(frame)
+        print(len(encode), encode)
+        decode = bytes(decoder.process(encode))
+        #print(decode)
+        aud.write(decode)
