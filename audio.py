@@ -49,7 +49,7 @@ class AudioInput(Throughput):
                 if self.buffer.full():
                     continue
                 try:
-                    self.buffer.put(self.stream.read(CHUNK))
+                    self.buffer.put(self.stream.read(CHUNK, exception_on_overflow=False))
                 except OSError as e:
                     print('MIC IMPLODED LUL', e)
                     pass
