@@ -1,7 +1,8 @@
 import pyaudio
-import threading
+from threading import Thread
 from time import sleep
 from queue import Queue
+import g729a
 
 # SERVER NEEDS MANY AUDIO STREAMS, CONSIDER CHANNELLER
 
@@ -76,13 +77,30 @@ class AudioOutput(Throughput):
     def write(self, data):
         self.buffer.put(data)
 
+class MultipleAudioOutput:
+    def __init__(self):
+        self.outputs: {str: AudioOutput} = {}  # USE UUIDS
+        self.threads = {}
+
+    def new_output(self, uuid):
+        self.outputs[uuid] = out = AudioOutput()
+        self.threads[uuid] = thread = Thread(target=out.activate, daemon=True)
+        thread.start()
+
+    def close_output(self, uuid):
+        self.outputs[uuid].close()
+        del self.outputs[uuid]
+
+    def process(self, uuid, chunk):
+        self.outputs[uuid].write(chunk)
+
 
 class AudioInterface:
     def __init__(self):
         self.inp = AudioInput()
         self.out = AudioOutput()
-        self.ithread = threading.Thread(target=self.inp.activate, daemon=True)
-        self.othread = threading.Thread(target=self.out.activate, daemon=True)
+        self.ithread = Thread(target=self.inp.activate, daemon=True)
+        self.othread = Thread(target=self.out.activate, daemon=True)
 
     def read(self):
         return self.inp.read()
@@ -115,18 +133,79 @@ class AudioInterface:
 
 
 
-import g729a
-encoder = g729a.G729Aencoder()
-decoder = g729a.G729Adecoder()
+class G729ABufferedAudioInterface(AudioInterface):
+    ENCODED_FRAME_SIZE = 640  # size of encoded frame to send (should be multiple of 10)
+    RAW_FRAME_SIZE = 1200  # size of raw frame to send (send to server only)
+
+    def __init__(self, use_raw=True):
+        self.out = MultipleAudioOutput()
+        self.inp = AudioInput()
+        self.ithread = Thread(target=self.inp.activate, daemon=True)
+        self.encoder = g729a.G729Aencoder()
+        self.decoder = g729a.G729Adecoder()
+
+        self.temp_encoding_buffer = []  # this will take 50 160-bit frames before returning a bigger one - we have no need to be sending 10-byte udp packets, that's probably a bottleneck
+        self.encoded = Queue(100)
+        self.to_decode = Queue(100)
+
+        self.use_raw = use_raw
+        self.temp_raw_buffer = []
+        self.raw_stream = Queue(100)
+
+        self.encoder_thread = Thread(target=self._encode_all, daemon=True)
+        self.decoder_thread = Thread(target=self._decode_all, daemon=True)
+
+    def activate(self):
+        self.ithread.start()
+        self.encoder_thread.start()
+        self.decoder_thread.start()
+
+    def write_raw(self, uuid, data):
+        self.out.process(uuid, data)
+    def read_raw(self):
+        return self.raw_stream.get()
+    def pending_raw(self):
+        while not self.raw_stream.empty():
+            yield self.read_raw()
+
+    def write(self, uuid, data):
+        self.to_decode.put((uuid, data))
+    def read(self):
+        return self.encoded.get()
+    def pending(self):
+        while not self.encoded.empty():
+            yield self.read()
+
+    def _encode_all(self):  # encode everything from mic and put it in input buffer
+        while self.inp.running:
+            raw = self.inp.read()
+
+            self.temp_encoding_buffer.append(self.encoder.process(raw))
+
+            if self.use_raw:
+                self.temp_raw_buffer.append(raw)
+                if len(self.temp_raw_buffer) == self.RAW_FRAME_SIZE//160:
+                    self.raw_stream.put(b''.join(self.temp_raw_buffer))
+                    self.temp_raw_buffer = []
+
+            if len(self.temp_encoding_buffer) == self.ENCODED_FRAME_SIZE//10:
+                self.encoded.put(b''.join(self.temp_encoding_buffer))
+                self.temp_encoding_buffer = []
+
+    def _decode_all(self):  # decode everything we received and put it in the output
+        while self.inp.running:
+            uuid, encoded = self.to_decode.get()
+            frames = [encoded[i:i+10] for i in range(0, len(encoded), 10)]
+            for frame in frames:
+                #print(frame)
+                self.out.process(uuid, bytes(self.decoder.process(frame)))
+
 
 if __name__ == '__main__':
-    aud = AudioInterface()
+    aud = G729ABufferedAudioInterface()
     aud.activate()
 
     while True:
         frame = aud.read()
-        encode = encoder.process(frame)
-        print(len(encode), encode)
-        decode = bytes(decoder.process(encode))
-        #print(decode)
-        aud.write(decode)
+        print(len(frame), frame)
+        aud.write(frame)

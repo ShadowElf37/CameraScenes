@@ -46,28 +46,26 @@ class UDPSession:
         print(uuid, pid, type_)
         return uuid, int(pid), type_, data
 
-    def compile(self, datatype: str, data: bytes):
+    def compile(self, datatype: str, data: bytes, override_uuid=None):
         # datatype should be INFO, AUDIO, VIDEO, other
         # META is for manager to handle
-        return '\n'.join((self.uuid, str(self.packet_id_send), datatype)).encode() + b'\n' + data
+        return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send), datatype)).encode() + b'\n' + data
 
     def verify_pid(self, pid, accept_reset_connection=True):
         return pid > self.packet_id_recv or (pid == -1 and accept_reset_connection)
 
-    def _send(self, datatype: str, data: bytes, affect_pid=True):
-        self.manager.socket.sendto(self.compile(datatype, data), self.addr)
-        if affect_pid:
-            self.packet_id_send += 1
-
+    def _send(self, datatype: str, data: bytes, send_as=None):
+        self.manager.socket.sendto(self.compile(datatype, data, override_uuid=send_as), self.addr)
+        self.packet_id_send += 1
 
     # BUFFERED STUFF
-    def send(self, datatype: str, data: bytes):
-        self.send_buffer.put((datatype, data))
+    def send(self, datatype: str, data: bytes, send_as=None):
+        self.send_buffer.put((datatype, data, send_as))
 
     def start_send_thread(self):
         self.sending = True
         self.send_thread.start()
-    def close_send_thread(self):
+    def close(self):
         self.sending = False
 
     def _sendloop(self):

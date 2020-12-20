@@ -35,7 +35,7 @@ def scale_to(frame: numpy.ndarray, x, y):
 
 def jpeg_encode(frame, quality):
     _, frame = cv.imencode('.jpg', frame, (int(cv.IMWRITE_JPEG_QUALITY), quality))
-    print(getsizeof(frame))
+    #print(getsizeof(frame))
     return frame
 
 def jpeg_decode(frame):
@@ -86,11 +86,11 @@ class Webcam:
 
     def preview(self, w_name='Webcam Preview'):
         while True:
-            print(2)
+            print(1)
             frame = self.read()
-            print(3)
+            print(2)
             cv.imshow(w_name, frame)
-            print(4)
+            print(3)
 
             c = cv.waitKey(1)
             if c == ord('q'):

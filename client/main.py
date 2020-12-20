@@ -1,11 +1,16 @@
+from sys import path
+path.append('..')
+
 import pygame.freetype
 from sys import exit
 import webcam
 import graphics
 import network
-#import audio
+import audio
 import pickle
 from cv2 import COLOR_BGR2RGB
+
+
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -21,11 +26,11 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
 print('Opening webcam...')
-cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
+cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=70) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
 text = graphics.Text('Client POGGERS', WIDTH / 2, 600)
 
-#aud = audio.AudioInterface()
-#aud.activate()
+aud = audio.G729ABufferedAudioInterface()
+aud.activate()
 
 client = network.UDPClient('73.166.38.74', 37001)
 client.init()
@@ -34,8 +39,14 @@ cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=
 
 print('Client started', cam_viewer.w, cam_viewer.h)
 while True:
-    #for chunk in aud.pending():
-    #    client.session.send('AUDIO', chunk)
+    for chunk in aud.pending():
+        client.audio_broadcast_buffer.put(chunk)
+    for chunk in aud.pending_raw():
+        client.session.send('AUDIO', chunk)  # RAW
+
+    while not client.AUDIO_QUEUE.empty():
+        aud.write(*client.AUDIO_QUEUE.get())
+
     frame = cam.read()
     client.session.send('VIDEO', pickle.dumps(frame))
 

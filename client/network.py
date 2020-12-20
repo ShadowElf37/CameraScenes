@@ -1,12 +1,17 @@
 from socket import *
 import threading
 from network_common import *
+import json
 
 class UDPClient:
     def __init__(self, host, port=37001, override_uuid=None):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
+
+        self.audio_client_table: {tuple: UDPSession} = {}  # addr: UDPSession
+        self.audio_broadcast_buffer = Queue()
+        self.audio_client_thread = Thread(target=self._broadcast_audio, daemon=True)
 
         self.host = host
         self.port = port
@@ -34,18 +39,27 @@ class UDPClient:
     def init(self):
         self.running = True
         self.thread.start()
+        self.audio_client_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
 
+    def _broadcast_audio(self):
+        while self.running:
+            audio = self.audio_broadcast_buffer.get()
+            for client in self.audio_client_table.values():
+                client.send('AUDIO', audio, self.session.uuid)
+
+
     def _handle_data(self):
         while self.running:
-            data = UDPSession.decompile(self.socket.recvfrom(50000)[0])
+            data = UDPSession.decompile(self.socket.recvfrom(56000)[0])
 
-            if not self.session.verify_pid(data[1]):
+            session = self.audio_client_table.get(data[0], self.session)
+            if not session.verify_pid(data[1]):
                 print('Out of order packet rejected')
                 continue
-            self.session.packet_id_recv = data[1]
+            session.packet_id_recv = data[1]
 
             if data[2] == 'INFO': # DATATYPE
                 self.INFO_QUEUE.put((data[0], data[3]))
@@ -57,5 +71,13 @@ class UDPClient:
                 pass
             elif data[2] == 'PRINT':
                 print('PRINT REQUEST:', data[3])
+            elif data[2] == 'ADD_CLIENT_TABLE':  # HOST PORT UUID
+                for host, port, uuid in json.loads(data[3].decode()):
+                    self.audio_client_table[uuid] = session = UDPSession(self, host, port)
+                    session.start_send_thread()
+            elif data[2] == 'REMOVE_CLIENT_TABLE': # [UUID]
+                for uuid in json.loads(data[3].decode()):
+                    self.audio_client_table[uuid].close()
+                    del self.audio_client_table[uuid]
             else:
                 ...  # can do stuff if necessary

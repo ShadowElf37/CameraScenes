@@ -9,7 +9,7 @@ class UDPManager:
         self.INFO_QUEUE = Queue()
 
         self.port = port
-        self.sessions = {}
+        self.sessions: {str: UDPSession} = {}
 
         self.socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
         self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -52,7 +52,7 @@ class UDPManager:
             session.packet_id_recv = data[1]
 
             # DATATYPE
-            #print(data)
+            #print(data[:3])
             if data[2] == 'INFO':
                 self.INFO_QUEUE.put((session.uuid, data[3]))
             elif data[2] == 'AUDIO':
