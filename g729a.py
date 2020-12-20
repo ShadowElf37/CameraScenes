@@ -7,9 +7,9 @@ p = platform.system()
 
 if p == 'Windows':
     g729a_lib_path = 'libg729a.dll'
-elif os.name == 'Darwin':
+elif p == 'Darwin':
     g729a_lib_path = 'macos_libg729a.so'
-elif os.name == 'Linux':
+elif p == 'Linux':
     g729a_lib_path = 'libg729a.so'
 else:
     raise RuntimeError("Unknown OS")
