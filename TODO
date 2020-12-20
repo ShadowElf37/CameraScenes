@@ -2,14 +2,10 @@ High Priority Features
 - TODO user set uuid sent via meta on launch, need to be able to select for it (i.e. a table between USER and SYS uuids at least)
 - TODO Scene class, controls camera size, location, on/off - based on USER uuid - should have access to session objects for emergencies
 - TODO SceneManager class, controls scenes and cues
-- TODO audio recv - server has audio process, one thread + PA.stream() per client
-- TODO audio send - tricky to avoid sending clients their own audio, but working solution may be this --> https://stackoverflow.com/questions/26573556/record-speakers-output-with-pyaudio
-    - note that pydub has pyaudioop.add() and AudioSegment.overlay(), may be worth investigating - we could also just have everyone multicast their audio? seems rough though, depends on frame size, maybe compression?
-    - we should only be broadcasting audio of people who are unmuted, which should be like 3 people on average - client-side muting
-    - bad for server bandwidth but simplest is to receive all and rebroadcast all, as necessary - compression may be vital
 
 High Priority Bugs
 - TODO no bueno, uuids are shared between foreign clients despite being on different systems
+- TODO need g729 dll for macOS
 - TODO very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
 
 Low Priority Features
@@ -20,8 +16,10 @@ Low Priority Features
 - client-side video scaling (server is transforming fine but we can avoid it at least a bit), maybe client-side mutes too
 - client-side cue indicators, like "you're coming up", notified via meta
 - keep-alive and/or timed ping pong metas in the event we can silence clients
-- listener pipe/socket for cues, simple protocol that can be worked into Channeller - SceneManager processes cues and switches scenes, clients, etc.
+- listener pipe/socket for cues, simple device that can be worked into Channeller - SceneManager processes cues and switches scenes, clients, etc.
 - in channeller we could have keybound functions in config, easy HALT
+- UI scaling
+- pleasant UI
 
 Low Priority Bugs
 - client doesn't exit when the connection to server dies (i.e. server quits), is there a reliable way to determine this? (thread throws brokenpipe but doesnt exit)

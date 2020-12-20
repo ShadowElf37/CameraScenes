@@ -1,5 +1,8 @@
 ALPHA v0.0.4
 - G729A audio encoding support
+- Audio is now broadcast by all clients
+- Clients now have session objects with other clients
+- Server gets raw audio and plays it
 
 
 ALPHA v0.0.3

@@ -48,7 +48,8 @@ class UDPClient:
         while self.running:
             audio = self.audio_broadcast_buffer.get()
             for client in self.audio_client_table.values():
-                client.send('AUDIO', audio, self.session.uuid)
+                print('SENDING TO CLIENT', client.ip, client.port)
+                client.send('AUDIO', audio, send_as=self.session.uuid)
 
 
     def _handle_data(self):
@@ -72,8 +73,9 @@ class UDPClient:
             elif data[2] == 'PRINT':
                 print('PRINT REQUEST:', data[3])
             elif data[2] == 'ADD_CLIENT_TABLE':  # HOST PORT UUID
+                print(data[3], json.loads(data[3].decode()))
                 for host, port, uuid in json.loads(data[3].decode()):
-                    self.audio_client_table[uuid] = session = UDPSession(self, host, port)
+                    self.audio_client_table[uuid] = session = UDPSession(self, host, port, uuid=uuid)
                     session.start_send_thread()
             elif data[2] == 'REMOVE_CLIENT_TABLE': # [UUID]
                 for uuid in json.loads(data[3].decode()):

@@ -3,11 +3,11 @@ from queue import Queue
 from threading import Thread
 
 class UDPSession:
-    def __init__(self, manager, ip, port):
+    def __init__(self, manager, ip, port, uuid=None):
         self.manager = manager  # UDPClient or UDPManager will both work
         self.ip = ip
         self.port = port
-        self.uuid = str(getnode())
+        self.uuid = uuid or str(getnode())
 
         # these are different because we don't care about client and server syncing perfectly when it's just streaming data
         # all we want to ensure is that we and they are not *receiving* packets out of order, and are discarding such packets

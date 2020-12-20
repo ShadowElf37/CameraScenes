@@ -70,6 +70,9 @@ class Webcam:
 
     def read(self):
         frame: numpy.ndarray = self.cap.read()[1]
+        if frame is None:
+            return
+
         if self.swap_axes:
             frame = frame.swapaxes(0, 1)
         for flag in self.conversion_flags:

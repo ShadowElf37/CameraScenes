@@ -65,7 +65,9 @@ while True:
             new_session: UDPSession = server.sessions[uuid]
             for client in server.sessions.values():
                 if client != new_session:
-                    client.send('ADD_CLIENT_TABLE', json.dumps((new_session.ip, new_session.port, uuid)).encode())
+                    client.send('ADD_CLIENT_TABLE', json.dumps(((new_session.ip, new_session.port, uuid),)).encode())
+                else:
+                    client.send('ADD_CLIENT_TABLE', json.dumps([(s.ip, s.port, s.uuid) for s in server.sessions.values() if s is not client]).encode())
 
             # add an audio processor for them
             aud.new_output(uuid)

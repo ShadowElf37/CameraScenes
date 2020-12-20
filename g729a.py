@@ -1,15 +1,20 @@
 from typing import *
 import ctypes
 import os
+import platform
 
-if os.name == 'nt':
+p = platform.system()
+
+if p == 'Windows':
     g729a_lib_path = 'libg729a.dll'
-elif os.name == 'posix':
+elif os.name == 'Darwin':
+    g729a_lib_path = 'macos_libg729a.so'
+elif os.name == 'Linux':
     g729a_lib_path = 'libg729a.so'
 else:
     raise RuntimeError("Unknown OS")
 
-g729a_lib_path = os.path.join(os.getcwd(), g729a_lib_path)
+g729a_lib_path = os.path.join('..', g729a_lib_path)
 
 class G729Acoder:
     SAMPLES_IN_FRAME = 80
@@ -60,6 +65,8 @@ class G729Adecoder(G729Acoder):
             self.SAMPLES_IN_FRAME*2
         )
 
+if __name__ == "__main__":
+    G729Aencoder()
 
 """
 NOTE: THIS CODE HAS BEEN MODIFIED FROM SOURCE

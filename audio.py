@@ -48,9 +48,14 @@ class AudioInput(Throughput):
             if self.open:
                 if self.buffer.full():
                     continue
-                self.buffer.put(self.stream.read(CHUNK))
+                try:
+                    self.buffer.put(self.stream.read(CHUNK))
+                except OSError as e:
+                    print('MIC IMPLODED LUL', e)
+                    pass
                 continue
-            sleep(0.01)
+            else:
+                sleep(0.01)
 
     def read(self):
         return self.buffer.get()
@@ -72,7 +77,8 @@ class AudioOutput(Throughput):
             if self.open:
                 self.stream.write(self.buffer.get())
                 continue
-            sleep(0.01)
+            else:
+                sleep(0.01)
 
     def write(self, data):
         self.buffer.put(data)
@@ -134,8 +140,8 @@ class AudioInterface:
 
 
 class G729ABufferedAudioInterface(AudioInterface):
-    ENCODED_FRAME_SIZE = 640  # size of encoded frame to send (should be multiple of 10)
-    RAW_FRAME_SIZE = 1200  # size of raw frame to send (send to server only)
+    ENCODED_FRAME_SIZE = 640  # size of encoded frame to send (should be multiple of 10) (>150)
+    RAW_FRAME_SIZE = 500  # size of raw frame to send (send to server only) (>160)
 
     def __init__(self, use_raw=True):
         self.out = MultipleAudioOutput()
