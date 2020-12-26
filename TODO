@@ -1,21 +1,18 @@
 High Priority Features
-- TODO user set uuid sent via meta on launch, need to be able to select for it (i.e. a table between USER and SYS uuids at least)
 - TODO Scene class, controls camera size, location, on/off - based on USER uuid - should have access to session objects for emergencies
 - TODO SceneManager class, controls scenes and cues
 
 High Priority Bugs
 - TODO no bueno, uuids are shared between foreign clients despite being on different systems
-- TODO need g729 dll for macOS
 - TODO very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
 
 Low Priority Features
 - debug labels on camera viewers - user uuid
 - scenes can set background
 - scenes can create sprites; Sprite should be animated, as in looping frames on draw(); need objects list that mainloop can draw, or maybe the scene gets a draw call
-- meta packet to close a session
 - client-side video scaling (server is transforming fine but we can avoid it at least a bit), maybe client-side mutes too
 - client-side cue indicators, like "you're coming up", notified via meta
-- keep-alive and/or timed ping pong metas in the event we can silence clients
+- keep-alive and/or timed ping pong metas in the event we can silence clients; client/session dies after some time of no signal
 - listener pipe/socket for cues, simple device that can be worked into Channeller - SceneManager processes cues and switches scenes, clients, etc.
 - in channeller we could have keybound functions in config, easy HALT
 - UI scaling

@@ -22,6 +22,9 @@ class BasicTiler:
             self.padx = ((self.w / self.tw - self.countx) * self.tw / (self.countx - 1)) if self.countx > 1 else 0
             self.pady = ((self.h / self.th - self.county) * self.th / (self.county - 1)) if self.county > 1 else 0
 
+    def go_back_one(self):
+        self.count -= 1
+
     def new(self):
         if self.count == self.maximum-1:
             raise ValueError('Layout can\'t handle any more tiles!')

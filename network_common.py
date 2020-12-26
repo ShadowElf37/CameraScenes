@@ -42,8 +42,6 @@ class UDPSession:
         type_ = data[indices[1]+1:indices[2]].decode()
         data = data[indices[2]+1:]
 
-        # PRINTING FROM HERE
-        print(uuid, pid, type_)
         return uuid, int(pid), type_, data
 
     def compile(self, datatype: str, data: bytes, override_uuid=None):
@@ -51,15 +49,15 @@ class UDPSession:
         # META is for manager to handle
         return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send), datatype)).encode() + b'\n' + data
 
-    def verify_pid(self, pid, accept_reset_connection=True):
-        return pid > self.packet_id_recv or (pid == -1 and accept_reset_connection)
+    def verify_pid(self, pid):
+        return pid > self.packet_id_recv
 
-    def _send(self, datatype: str, data: bytes, send_as=None):
-        self.manager.socket.sendto(self.compile(datatype, data, override_uuid=send_as), self.addr)
+    def _send(self, datatype: str, data: bytes=b'', send_as=None):
         self.packet_id_send += 1
+        self.manager.socket.sendto(self.compile(datatype, data, override_uuid=send_as), self.addr)
 
     # BUFFERED STUFF
-    def send(self, datatype: str, data: bytes, send_as=None):
+    def send(self, datatype: str, data: bytes=b'', send_as=None):
         self.send_buffer.put((datatype, data, send_as))
 
     def start_send_thread(self):
@@ -71,3 +69,9 @@ class UDPSession:
     def _sendloop(self):
         while self.sending:
             self._send(*self.send_buffer.get())
+
+
+def iterq(queue: Queue):
+    """Creates an iterator over a Queue object"""
+    while not queue.empty():
+        yield queue.get()

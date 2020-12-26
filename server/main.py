@@ -1,6 +1,9 @@
 from sys import path
 path.append('..')
 
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 # GUI NEEDS CUSTOM BACKGROUND
 # SPRITE ANIMATIONS
 # USEABLE GRAPHICS LIBRARY
@@ -13,7 +16,7 @@ import layout
 import pickle
 import json
 from sys import exit
-from network_common import UDPSession
+from network_common import UDPSession, iterq
 
 path.append('..')
 
@@ -50,31 +53,27 @@ import g729a
 audio_decoder = g729a.G729Adecoder()
 
 print('Server started.')
-while True:
+while server.running:
     screen.fill(BLACK)
 
-    while not server.VIDEO_QUEUE.empty():
-        uuid, frame = server.VIDEO_QUEUE.get()
-        cam = cameras.get(uuid)
-
-        # NEW GUY SPOTTED
-        if cam is None: # ALL CLIENT INITIALIZATION GOES HERE
+    for data in iterq(server.META_QUEUE):
+        uuid = data[0]
+        if data[2] == 'OPEN':
             print('NEW CLIENT', uuid)
-            # tell everyone to give them audio
-            client: UDPSession
-            new_session: UDPSession = server.sessions[uuid]
-            for client in server.sessions.values():
-                if client != new_session:
-                    client.send('ADD_CLIENT_TABLE', json.dumps(((new_session.ip, new_session.port, uuid),)).encode())
-                else:
-                    client.send('ADD_CLIENT_TABLE', json.dumps([(s.ip, s.port, s.uuid) for s in server.sessions.values() if s is not client]).encode())
-
+            server.sessions[uuid].send('CONTINUE')
             # add an audio processor for them
             aud.new_output(uuid)
-
             # make a cam viewer
             cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT, enforce_dim=True)
+        elif data[2] == 'CLOSE':
+            del cameras[uuid]
+            aud.close_output(uuid)
+            preview_tiler.go_back_one()
 
+    for uuid, frame in iterq(server.VIDEO_QUEUE):
+        cam = cameras.get(uuid)
+        if cam is None:
+            continue
         cam.take_frame(pickle.loads(frame))
         #server.sessions[uuid].send('PRINT', b'hello fren')
 
@@ -84,15 +83,21 @@ while True:
     text.draw(screen)
 
     # PLAY AUDIO FROM CLIENTS
-    while not server.AUDIO_QUEUE.empty():
-        aud.process(*server.AUDIO_QUEUE.get())
+    for chunk in iterq(server.AUDIO_QUEUE):
+        aud.process(*chunk)
 
     pygame.display.update()
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             print('User quit.')
-            pygame.display.quit()
-            exit()
+            break
 
     clock.tick(FPS)
+
+for session in server.sessions.values():
+    session._send('DIE')
+server.close()
+pygame.display.quit()
+print('Died safely.')
+exit(0)

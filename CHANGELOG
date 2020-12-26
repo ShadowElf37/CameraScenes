@@ -1,8 +1,12 @@
 ALPHA v0.0.4
-- G729A audio encoding support
-- Audio is now broadcast by all clients
-- Clients now have session objects with other clients
-- Server gets raw audio and plays it
+- UNIMPLEMENTED: G729A audio encoding support for all OS, G729ABufferedAudioInterface in audio.py; this may not get used now that audio broadcasting is undoable
+- Server gets raw audio from clients and plays it
+- Client now formally tells the server when it opens and closes, and the server manages video + audio outputs accordingly
+- Client can now set a custom uuid at launch
+- Client now dies when server dies
+- Client is told to die if it's communicating with the server and the server has no record of it
+- Added loading message to client
+- Lots of bug fixes
 
 
 ALPHA v0.0.3

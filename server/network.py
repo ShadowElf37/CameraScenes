@@ -7,6 +7,7 @@ class UDPManager:
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
+        self.META_QUEUE = Queue()
 
         self.port = port
         self.sessions: {str: UDPSession} = {}
@@ -36,23 +37,31 @@ class UDPManager:
             data, addr = self.socket.recvfrom(100000)
             data = UDPSession.decompile(data)
             uuid = data[0]
+            reason = data[2]
+
+            print(*data[:3], addr[0]+':'+str(addr[1]))
 
             if self.sessions.get(uuid) is None:
-                self.sessions[uuid] = session = UDPSession(self, *addr)
-                session.uuid = uuid
+                self.sessions[uuid] = session = UDPSession(self, *addr, uuid=uuid)
+
+                # If they're sending us something but we have no records, i.e. zombie that we have to get rid of
+                if reason != 'OPEN':
+                    session._send('DIE')  # can't send() because no send thread, must _send
+                    del self.sessions[uuid]
+                    continue
+
                 session.start_send_thread()
             else:
                 session: UDPSession = self.sessions[uuid]
                 # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
                 # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
-                if not session.verify_pid(data[1]):
+                if not session.verify_pid(data[1]) and data[2] != 'OPEN':
                     print('Out of order packet rejected')
                     continue
 
             session.packet_id_recv = data[1]
 
             # DATATYPE
-            #print(data[:3])
             if data[2] == 'INFO':
                 self.INFO_QUEUE.put((session.uuid, data[3]))
             elif data[2] == 'AUDIO':
@@ -63,6 +72,8 @@ class UDPManager:
                 pass
             elif data[2] == 'PRINT':
                 print('PRINT REQUEST:', data[3])
+            elif data[2] == 'OPEN' or data[2] == 'CLOSE':
+                self.META_QUEUE.put(data)
             else:
                 ... # can do stuff if necessary
                 # possible keep-alive, auth, etc.

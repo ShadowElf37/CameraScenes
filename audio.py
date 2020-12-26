@@ -4,12 +4,17 @@ from time import sleep
 from queue import Queue
 import g729a
 
+def iterq(queue: Queue):
+    """Creates an iterator over a Queue object"""
+    while not queue.empty():
+        yield queue.get()
+
 # SERVER NEEDS MANY AUDIO STREAMS, CONSIDER CHANNELLER
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 16000
-CHUNK = 80  # actually doubled because 16 bit samples - needs to be small for encoding
+RATE = 20000
+CHUNK = 1000  # actually doubled because 16 bit samples - needs to be small for encoding, doesn't matter too much for raw
 AUDIO = pyaudio.PyAudio()
 
 class Throughput:
@@ -51,9 +56,8 @@ class AudioInput(Throughput):
                 try:
                     self.buffer.put(self.stream.read(CHUNK, exception_on_overflow=False))
                 except OSError as e:
-                    print('MIC IMPLODED LUL', e)
+                    print('MIC IMPLODED LUL')
                     pass
-                continue
             else:
                 sleep(0.01)
 
@@ -76,7 +80,6 @@ class AudioOutput(Throughput):
         while self.running:  # running is for dead/alive
             if self.open:
                 self.stream.write(self.buffer.get())
-                continue
             else:
                 sleep(0.01)
 
@@ -141,7 +144,7 @@ class AudioInterface:
 
 class G729ABufferedAudioInterface(AudioInterface):
     ENCODED_FRAME_SIZE = 640  # size of encoded frame to send (should be multiple of 10) (>150)
-    RAW_FRAME_SIZE = 500  # size of raw frame to send (send to server only) (>160)
+    RAW_FRAME_SIZE = 800  # size of raw frame to send (send to server only) (>160)
 
     def __init__(self, use_raw=True):
         self.out = MultipleAudioOutput()
@@ -171,8 +174,7 @@ class G729ABufferedAudioInterface(AudioInterface):
     def read_raw(self):
         return self.raw_stream.get()
     def pending_raw(self):
-        while not self.raw_stream.empty():
-            yield self.read_raw()
+        return iterq(self.raw_stream)
 
     def write(self, uuid, data):
         self.to_decode.put((uuid, data))

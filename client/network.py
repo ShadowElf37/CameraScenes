@@ -8,10 +8,7 @@ class UDPClient:
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
-
-        self.audio_client_table: {tuple: UDPSession} = {}  # addr: UDPSession
-        self.audio_broadcast_buffer = Queue()
-        self.audio_client_thread = Thread(target=self._broadcast_audio, daemon=True)
+        self.META_QUEUE = Queue()
 
         self.host = host
         self.port = port
@@ -39,47 +36,41 @@ class UDPClient:
     def init(self):
         self.running = True
         self.thread.start()
-        self.audio_client_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
 
-    def _broadcast_audio(self):
-        while self.running:
-            audio = self.audio_broadcast_buffer.get()
-            for client in self.audio_client_table.values():
-                print('SENDING TO CLIENT', client.ip, client.port)
-                client.send('AUDIO', audio, send_as=self.session.uuid)
-
 
     def _handle_data(self):
-        while self.running:
-            data = UDPSession.decompile(self.socket.recvfrom(56000)[0])
+        try:
+            while self.running:
+                data = UDPSession.decompile(self.socket.recvfrom(56000)[0])
 
-            session = self.audio_client_table.get(data[0], self.session)
-            if not session.verify_pid(data[1]):
-                print('Out of order packet rejected')
-                continue
-            session.packet_id_recv = data[1]
+                if not self.session.verify_pid(data[1]) and data[2] not in ('DIE', 'RESET'):
+                    print('Out of order packet rejected', data[:3])
+                    continue
+                self.session.packet_id_recv = data[1]
 
-            if data[2] == 'INFO': # DATATYPE
-                self.INFO_QUEUE.put((data[0], data[3]))
-            elif data[2] == 'AUDIO':
-                self.AUDIO_QUEUE.put((data[0], data[3]))
-            elif data[2] == 'VIDEO':
-                self.VIDEO_QUEUE.put((data[0], data[3]))
-            elif data[2] == 'KEEPALIVE':
-                pass
-            elif data[2] == 'PRINT':
-                print('PRINT REQUEST:', data[3])
-            elif data[2] == 'ADD_CLIENT_TABLE':  # HOST PORT UUID
-                print(data[3], json.loads(data[3].decode()))
-                for host, port, uuid in json.loads(data[3].decode()):
-                    self.audio_client_table[uuid] = session = UDPSession(self, host, port, uuid=uuid)
-                    session.start_send_thread()
-            elif data[2] == 'REMOVE_CLIENT_TABLE': # [UUID]
-                for uuid in json.loads(data[3].decode()):
-                    self.audio_client_table[uuid].close()
-                    del self.audio_client_table[uuid]
-            else:
-                ...  # can do stuff if necessary
+                print(*data[:3])
+
+                if data[2] == 'INFO': # DATATYPE
+                    self.INFO_QUEUE.put((data[0], data[3]))
+                elif data[2] == 'AUDIO':
+                    self.AUDIO_QUEUE.put((data[0], data[3]))
+                elif data[2] == 'VIDEO':
+                    self.VIDEO_QUEUE.put((data[0], data[3]))
+                elif data[2] == 'KEEPALIVE':
+                    pass
+                elif data[2] == 'PRINT':
+                    print('PRINT REQUEST:', data[3])
+                elif data[2] == 'CONTINUE':
+                    self.META_QUEUE.put('CONTINUE')
+                elif data[2] == 'DIE':
+                    self.META_QUEUE.put('DIE')
+                else:
+                    ...  # can do stuff if necessary
+
+        except (ConnectionAbortedError, ConnectionError, OSError):
+            self.close()
+        finally:
+            print('FATAL CONNECTION ERROR')
