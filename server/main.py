@@ -59,7 +59,6 @@ while server.running and RUNNING:
         uuid = data[0]
         session = server.sessions[uuid]
         if data[2] == 'OPEN':
-            print('NEW CLIENT', uuid)
             if not session.is_open:
                 session.is_open = True
                 session.send('CONTINUE')

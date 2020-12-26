@@ -69,8 +69,9 @@ def change_loading_text(text, color=WHITE):
     loading_text.draw(screen)
     pygame.display.flip()
 def throw_error_to_user(text):
-    global clock
+    global clock, client
     change_loading_text(text+'\nYou may exit the application.', color=RED)
+    client.session._send('CLOSE')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
