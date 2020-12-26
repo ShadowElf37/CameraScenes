@@ -102,6 +102,11 @@ class WebcamViewer(Object):
     def take_frame(self, frame):
         self.new_frame = frame
 
+    def set_pos(self, x, y):
+        self.x, self.y = x, y
+    def set_dim(self, w, h):
+        self.w, self.h = w, h
+
     def draw(self, screen, *modifiers):
         # debug
         if self.new_frame is None:

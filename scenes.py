@@ -1,3 +1,76 @@
+import pygame
+from typing import Optional
+import graphics
+
+class SceneManager:
+    def __init__(self, server):
+        self.server = server
+        self.cameras: {str: graphics.WebcamViewer} = {}
+        self.persistent_objects: [graphics.Object] = []
+        self.scenes: [Scene] = []
+        self.current_i = -1
+        self.current_scene: Optional[Scene] = None
+
+    def register_camera(self, uuid, viewer):
+        self.cameras[uuid] = viewer
+
+    def add_scene(self, scene):
+        self.scenes.append(scene)
+
+    def set_scene(self, i):
+        self.current_i = i
+        self.current_scene = self.scenes[i]
+        self.current_scene.activate()
+
+    def next_scene(self):
+        self.set_scene(self.current_i + 1)
+
+    def draw(self, screen):
+        self.current_scene.draw(screen)
+        for obj in self.persistent_objects:
+            obj.draw(screen)
+
+class Scene:
+    def __init__(self, manager, layout=None):
+        self.manager: SceneManager = manager
+        self.layout: Layout = layout or Layout()
+        self.cameras: [graphics.WebcamViewer] = []
+        self.background: Optional[pygame.Surface] = None
+
+    def activate(self):
+        for uuid in self.cameras:
+            cam = self.manager.cameras[uuid]
+            cam.set_pos(*self.layout.get_pos(uuid))
+            cam.set_dim(*self.layout.get_dim(uuid))
+
+    def use_camera(self, uuid, *frame_modifying_funcs):
+        self.cameras.append((uuid, frame_modifying_funcs))
+
+    def draw(self, screen):
+        screen.blit(self.background)
+        for uuid, funcs in self.cameras:
+            self.manager.cameras[uuid].draw(screen, *funcs)
+
+
+class Layout:
+    def __init__(self):
+        self.positions = {}
+        self.dims = {}
+
+    def register(self, uuid, x, y, w, h):
+        self.positions[uuid] = x,y
+        self.dims[uuid] = w,h
+
+    def get_pos(self, uuid):
+        return self.positions[uuid]
+
+    def get_dim(self, uuid):
+        return self.dims[uuid]
+
+
+
+
+
 class BasicTiler:
     def __init__(self, w, h, tilew, tileh, pad_edges=False):
         self.count = -1

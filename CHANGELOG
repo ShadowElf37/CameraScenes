@@ -1,4 +1,6 @@
 ALPHA v0.0.6
+- Added SceneManager and Scene
+- Fixed some bugs
 
 ALPHA v0.0.5
 - Client has user-friendly error messages for many situations during startup
@@ -16,7 +18,6 @@ ALPHA v0.0.4
 - Client is told to die if it's communicating with the server and the server has no record of it
 - Added loading message to client
 - Lots of bug fixes
-
 
 ALPHA v0.0.3
 - MAC address used for uuid, allowing devices to connect and disconnect without breaking the server's session with it

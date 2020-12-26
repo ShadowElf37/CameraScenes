@@ -12,7 +12,7 @@ import network
 import audio
 import webcam
 import graphics
-import layout
+import scenes
 import pickle
 import json
 from sys import exit
@@ -46,7 +46,7 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001)
 server.init()
 
-preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
+preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 
 cameras: {str: graphics.WebcamViewer} = {}  # BLANK {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
 objects: [graphics.Object] = [text]
