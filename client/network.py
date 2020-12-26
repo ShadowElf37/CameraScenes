@@ -63,14 +63,13 @@ class UDPClient:
                     pass
                 elif data[2] == 'PRINT':
                     print('PRINT REQUEST:', data[3])
-                elif data[2] == 'CONTINUE':
-                    self.META_QUEUE.put('CONTINUE')
-                elif data[2] == 'DIE':
-                    self.META_QUEUE.put('DIE')
+                elif data[2] in ('CONTINUE', 'DIE', 'DUPLICATE'):
+                    self.META_QUEUE.put(data[2])
                 else:
                     ...  # can do stuff if necessary
 
         except (ConnectionAbortedError, ConnectionError, OSError):
+            print('Connection imploded!')
             self.close()
         finally:
-            print('FATAL CONNECTION ERROR')
+            print('FATAL ERROR')

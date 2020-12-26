@@ -28,6 +28,7 @@ WHITE = (255, 255, 255)
 WIDTH = 1000
 HEIGHT = 700
 FPS = 30
+RUNNING = True
 
 CAM_WIDTH = 400
 CAM_HEIGHT = 300
@@ -41,6 +42,7 @@ text = graphics.Text('Server POGGERS', WIDTH / 2, 600)
 
 aud = audio.MultipleAudioOutput()
 
+print('Audio ready. Initializing server...')
 server = network.UDPManager(37001)
 server.init()
 
@@ -49,23 +51,27 @@ preview_tiler = layout.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 cameras: {str: graphics.WebcamViewer} = {}  # BLANK {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
 objects: [graphics.Object] = [text]
 
-import g729a
-audio_decoder = g729a.G729Adecoder()
-
-print('Server started.')
-while server.running:
+print('Server started!')
+while server.running and RUNNING:
     screen.fill(BLACK)
 
     for data in iterq(server.META_QUEUE):
         uuid = data[0]
+        session = server.sessions[uuid]
         if data[2] == 'OPEN':
             print('NEW CLIENT', uuid)
-            server.sessions[uuid].send('CONTINUE')
+            if not session.is_open:
+                session.is_open = True
+                session.send('CONTINUE')
+            else:  # the session is already open!
+                session.send('DUPLICATE')
+                continue
             # add an audio processor for them
             aud.new_output(uuid)
             # make a cam viewer
             cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT, enforce_dim=True)
         elif data[2] == 'CLOSE':
+            session.is_open = False
             del cameras[uuid]
             aud.close_output(uuid)
             preview_tiler.go_back_one()
@@ -91,6 +97,7 @@ while server.running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             print('User quit.')
+            RUNNING = False
             break
 
     clock.tick(FPS)

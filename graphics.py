@@ -9,12 +9,12 @@ WHITE = (255, 255, 255)
 
 class Object:
     def __init__(self, x, y, w, h, corner=0):
-        self.x = x
-        self.y = y
+        self.x = self.ox = self.cx = x
+        self.y = self.oy = self.cy = y
         self.w = self.ow = self.cw = w
         self.h = self.oh = self.ch = h
-        # ow/oh don't need to be used but are nice for original w/h
-        # cw/ch should be used for caching positions so rescaling doesn't need to be done every frame
+        # ox and cx are provided for whatever you might need them for
+        # generally ox should be kept the same, and cx can be used for caching a second temporary position if x is already changed
         self.corner = corner  # positioning - 0 1 2 3 4 by property order below; 0 is center
 
     @property
@@ -37,37 +37,54 @@ class Object:
         pass
         #screen.blit()
 
-    def selective_blit(self, screen, py_object):
+    def selective_blit(self, screen, py_object, xoffset=0, yoffset=0):
         if self.corner == 0:
-            screen.blit(py_object, self.center)
+            screen.blit(py_object, (self.center[0] + xoffset, self.center[1] + yoffset))
         elif self.corner == 1:
-            screen.blit(py_object, self.top_left)
+            screen.blit(py_object, (self.top_left[0] + xoffset, self.top_left[1] + yoffset))
         elif self.corner == 2:
-            screen.blit(py_object, self.top_right)
+            screen.blit(py_object, (self.top_right[0] + xoffset, self.top_right[1] + yoffset))
         elif self.corner == 3:
-            screen.blit(py_object, self.bottom_left)
+            screen.blit(py_object, (self.bottom_left[0] + xoffset, self.bottom_left[1] + yoffset))
         elif self.corner == 4:
-            screen.blit(py_object, self.bottom_right)
+            screen.blit(py_object, (self.bottom_right[0] + xoffset, self.bottom_right[1] + yoffset))
         else:
             raise ValueError('Invalid draw corner %s' % self.corner)
 
 
 class Text(Object):
     def __init__(self, text, x, y, font='Calibri', fontsize=24, color=WHITE):
-        self.text = text
-        self.font = font
-        self.fontsize = fontsize
-        self.color = color
-        self.py_font = pygame.freetype.SysFont(self.font, self.fontsize)
-        self.py_text, self.py_textbox = self.py_font.render(self.text, self.color)
-        super().__init__(x, y, self.py_textbox.width, self.py_textbox.height)
+        self.reload(text, font, fontsize, color)
+        super().__init__(x, y, self.w, self.h)
 
-    def reload(self):
+    def reload(self, text=None, font=None, fontsize=None, color=None,):
+        if text is not None: self.text = text.split('\n')
+        if font is not None: self.font = font
+        if color is not None: self.color = color
+        if fontsize is not None: self.fontsize = fontsize
+
         self.py_font = pygame.freetype.SysFont(self.font, self.fontsize)
-        self.py_text, self.py_textbox = self.py_font.render(self.text, self.color)
+        if len(self.text) == 1:
+            self.py_text, self.py_textbox = self.py_font.render(self.text[0], self.color)
+            self.w, self.h = self.py_textbox.width, self.py_textbox.height
+        else:
+            self.w = None
+            self.h = None
 
     def draw(self, screen):
-        self.selective_blit(screen, self.py_text)
+        # SINGLE LINE - PRERENDERED
+        if len(self.text) == 1:
+            self.selective_blit(screen, self.py_text)
+        # MULTILINE
+        else:
+            self.y = self.oy - len(self.text) * self.fontsize / 2
+            for i, line in enumerate(self.text):
+                py_text, py_textbox = self.py_font.render(line, self.color)
+                self.w = py_textbox.width
+                self.h = py_textbox.height
+                self.selective_blit(screen, py_text, yoffset=self.fontsize * i)
+
+            self.x, self.y = self.ox, self.oy
 
 
 class WebcamViewer(Object):

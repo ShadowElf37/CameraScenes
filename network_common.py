@@ -18,6 +18,8 @@ class UDPSession:
         self.sending = False
         self.send_thread = Thread(target=self._sendloop, daemon=True)
 
+        self.is_open = False
+
     @property
     def addr(self):
         return self.ip, self.port

@@ -1,3 +1,10 @@
+ALPHA v0.0.5
+- Client has user-friendly error messages for many situations during startup
+- Client loading screen now mirrors log output
+- Clearer startup logging
+- graphics.Text has rudimentary support for multiple lines; please don't use this seriously
+- Cleaned up redundant code
+
 ALPHA v0.0.4
 - UNIMPLEMENTED: G729A audio encoding support for all OS, G729ABufferedAudioInterface in audio.py; this may not get used now that audio broadcasting is undoable
 - Server gets raw audio from clients and plays it
