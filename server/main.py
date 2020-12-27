@@ -46,15 +46,23 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001)
 server.init()
 
-preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
+scene_manager = scenes.SceneManager(server)
 
-cameras: {str: graphics.WebcamViewer} = {}  # BLANK {'1': graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT)}
-objects: [graphics.Object] = [text]
+preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
+scene1 = scenes.Scene(scene_manager, layout=preview_tiler, background=BLACK)
+
+scene2 = scenes.Scene(scene_manager)
+
+scene2.add(7, WIDTH/4, HEIGHT/2, CAM_WIDTH, CAM_HEIGHT)
+scene2.add(1, WIDTH*3/4, HEIGHT/2, CAM_WIDTH, CAM_HEIGHT)
+
+scene_manager.add_scenes(scene1, scene2)
+scene_manager.first()
+
+scene_manager.persistent_objects.append(text)
 
 print('Server started!')
 while server.running and RUNNING:
-    screen.fill(BLACK)
-
     for data in iterq(server.META_QUEUE):
         uuid = data[0]
         session = server.sessions[uuid]
@@ -68,24 +76,20 @@ while server.running and RUNNING:
             # add an audio processor for them
             aud.new_output(uuid)
             # make a cam viewer
-            cameras[uuid] = cam = graphics.WebcamViewer(*preview_tiler.new(), CAM_WIDTH, CAM_HEIGHT, enforce_dim=True)
+            scene_manager.register_camera(uuid, graphics.WebcamViewer(w=CAM_WIDTH, h=CAM_HEIGHT, enforce_dim=True))
+            scene1.add(uuid, *[None]*4)
         elif data[2] == 'CLOSE':
             session.is_open = False
-            del cameras[uuid]
+            scene_manager.unregister_camera(uuid)
             aud.close_output(uuid)
-            preview_tiler.go_back_one()
 
     for uuid, frame in iterq(server.VIDEO_QUEUE):
-        cam = cameras.get(uuid)
-        if cam is None:
+        if (cam := scene_manager.cameras.get(uuid)) is None:
             continue
         cam.take_frame(pickle.loads(frame))
         #server.sessions[uuid].send('PRINT', b'hello fren')
 
-    for cam in cameras.values():
-        cam.draw(screen, webcam.jpeg_decode)
-
-    text.draw(screen)
+    scene_manager.draw(screen)
 
     # PLAY AUDIO FROM CLIENTS
     for chunk in iterq(server.AUDIO_QUEUE):

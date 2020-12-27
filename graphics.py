@@ -2,13 +2,12 @@ import pygame
 import pygame.freetype
 from webcam import scale_to
 import numpy
-from typing import Union
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
 
 class Object:
-    def __init__(self, x, y, w, h, corner=0):
+    def __init__(self, x=0, y=0, w=0, h=0, corner=0):
         self.x = self.ox = self.cx = x
         self.y = self.oy = self.cy = y
         self.w = self.ow = self.cw = w
@@ -36,6 +35,9 @@ class Object:
     def draw(self, screen: pygame.Surface):
         pass
         #screen.blit()
+    def reset(self):
+        pass
+        # if animated, revert to first frame etc.
 
     def selective_blit(self, screen, py_object, xoffset=0, yoffset=0):
         if self.corner == 0:
@@ -88,7 +90,7 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, x, y, w=0, h=0, enforce_dim=False):
+    def __init__(self, x=0, y=0, w=0, h=0, enforce_dim=False):
         # NOTE: used to contain a cam/buffer input, this is now handled in mainloop for direct control of webcam data
         super().__init__(x, y, w, h)
         self.surf = pygame.Surface((self.w, self.h))

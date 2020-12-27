@@ -1,5 +1,6 @@
 ALPHA v0.0.6
-- Added SceneManager and Scene
+- Added SceneManager, Scene, Layout
+- Integrated the server mainloop and BasicTiler with the new Scene structure
 - Fixed some bugs
 
 ALPHA v0.0.5

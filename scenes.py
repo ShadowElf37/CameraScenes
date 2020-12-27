@@ -1,6 +1,7 @@
 import pygame
-from typing import Optional
+from typing import Optional, Callable, Tuple, Set
 import graphics
+import webcam
 
 class SceneManager:
     def __init__(self, server):
@@ -12,18 +13,32 @@ class SceneManager:
         self.current_scene: Optional[Scene] = None
 
     def register_camera(self, uuid, viewer):
+        uuid = str(uuid)
         self.cameras[uuid] = viewer
+    def unregister_camera(self, uuid):
+        uuid = str(uuid)
+        self.cameras[uuid] = None
+        for scene in self.scenes:
+            scene.notify_death(uuid)
 
-    def add_scene(self, scene):
-        self.scenes.append(scene)
+    def add_scenes(self, *scenes):
+        for scene in scenes:
+            self.scenes.append(scene)
 
     def set_scene(self, i):
+        if i > len(self.scenes) or i < 0: return
         self.current_i = i
         self.current_scene = self.scenes[i]
         self.current_scene.activate()
 
-    def next_scene(self):
+    def next(self):
         self.set_scene(self.current_i + 1)
+    def back(self):
+        self.set_scene(self.current_i - 1)
+    def last(self):
+        self.set_scene(len(self.scenes))
+    def first(self):
+        self.set_scene(0)
 
     def draw(self, screen):
         self.current_scene.draw(screen)
@@ -31,25 +46,53 @@ class SceneManager:
             obj.draw(screen)
 
 class Scene:
-    def __init__(self, manager, layout=None):
+    def __init__(self, manager, layout=None, background=None):
         self.manager: SceneManager = manager
         self.layout: Layout = layout or Layout()
-        self.cameras: [graphics.WebcamViewer] = []
-        self.background: Optional[pygame.Surface] = None
+        self.cameras: [Tuple[str, Set[Callable]]] = []
+        self.objects: [graphics.Object] = []
+        self.background: Optional[pygame.Surface, tuple] = background
+        self.manager.add_scenes(self)
 
     def activate(self):
-        for uuid in self.cameras:
-            cam = self.manager.cameras[uuid]
-            cam.set_pos(*self.layout.get_pos(uuid))
-            cam.set_dim(*self.layout.get_dim(uuid))
+        for uuid, _ in self.cameras:
+            if cam := self.manager.cameras.get(uuid):
+                cam.set_pos(*self.layout.get_pos(uuid))
+                cam.set_dim(*self.layout.get_dim(uuid))
 
-    def use_camera(self, uuid, *frame_modifying_funcs):
-        self.cameras.append((uuid, frame_modifying_funcs))
+        for obj in self.objects:
+            obj.reset()
 
-    def draw(self, screen):
-        screen.blit(self.background)
+    def add(self, uuid, x, y, w, h, *frame_modifying_funcs):
+        for cam in self.cameras:
+            # ALREADY REGISTERED
+            if cam[0] == uuid:
+                return
+
+        uuid = str(uuid)
+        self.cameras.append((uuid, set(frame_modifying_funcs+(webcam.jpeg_decode,))))
+        self.layout.register(uuid, x, y, w, h)
+
+    def add_object(self, obj):
+        self.objects.append(obj)
+
+    def notify_death(self, uuid):
+        self.layout.notify_death(uuid)
+
+    def draw(self, screen: pygame.Surface):
+        if type(self.background) is tuple:
+            screen.fill(self.background)
+        elif self.background:
+            screen.blit(self.background, (0,0))
+        else:
+            screen.fill((0,0,0))
+
         for uuid, funcs in self.cameras:
-            self.manager.cameras[uuid].draw(screen, *funcs)
+            if cam := self.manager.cameras.get(uuid):
+                cam.draw(screen, *funcs)
+
+        for obj in self.objects:
+            obj.draw(screen)
 
 
 class Layout:
@@ -58,21 +101,28 @@ class Layout:
         self.dims = {}
 
     def register(self, uuid, x, y, w, h):
+        uuid = str(uuid)
         self.positions[uuid] = x,y
         self.dims[uuid] = w,h
 
-    def get_pos(self, uuid):
-        return self.positions[uuid]
+    def unregister(self, uuid):
+        uuid = str(uuid)
+        del self.positions[uuid], self.dims[uuid]
 
+    def notify_death(self, uuid):
+        return
+
+    def get_pos(self, uuid):
+        uuid = str(uuid)
+        return self.positions[uuid]
     def get_dim(self, uuid):
+        uuid = str(uuid)
         return self.dims[uuid]
 
 
-
-
-
-class BasicTiler:
+class BasicTiler(Layout):
     def __init__(self, w, h, tilew, tileh, pad_edges=False):
+        super().__init__()
         self.count = -1
         self.w = w
         self.h = h
@@ -95,8 +145,16 @@ class BasicTiler:
             self.padx = ((self.w / self.tw - self.countx) * self.tw / (self.countx - 1)) if self.countx > 1 else 0
             self.pady = ((self.h / self.th - self.county) * self.th / (self.county - 1)) if self.county > 1 else 0
 
-    def go_back_one(self):
-        self.count -= 1
+    def register(self, uuid, *_):
+        print('NEW REGISTER')
+        super().register(uuid, *self.new(), self.tw, self.th)
+
+    def notify_death(self, dead_uuid):
+        self.count = -1
+        for uuid in self.positions.keys():
+            if uuid != dead_uuid:
+                print('NEW DEATH')
+                self.positions[uuid] = self.new()
 
     def new(self):
         if self.count == self.maximum-1:
@@ -117,6 +175,7 @@ class BasicTiler:
         if not y:
             y = (self.count // self.countx + 0.5) * self.th + self.pady * (self.count // self.countx + (1 if self.pad_edges else 0))
 
+        print('NEW', x, y)
         return x, y
 
 
