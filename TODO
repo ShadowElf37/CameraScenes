@@ -17,6 +17,7 @@ Low Priority Features
 - UI scaling
 - pleasant UI
 - wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
+- fragmented video frames so we can respect macs' low udp size limits; otherwise we need sudo, and that can be problematic
 
 Low Priority Bugs
 -

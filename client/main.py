@@ -71,7 +71,10 @@ def change_loading_text(text, color=WHITE):
 def throw_error_to_user(text):
     global clock, client
     change_loading_text(text+'\nYou may exit the application.', color=RED)
-    client.session._send('CLOSE')
+    try:
+        client.session._send('CLOSE')
+    except OSError:
+        pass
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -79,6 +82,23 @@ def throw_error_to_user(text):
                 exit()
         pygame.display.update()
         clock.tick(FPS)
+
+
+# SUDO CHECK
+import platform
+def is_admin():
+    import ctypes, os
+    try:
+        return os.getuid() == 0
+    except AttributeError:
+        return ctypes.windll.shell32.IsUserAnAdmin() != 0
+
+PLATFORM = platform.system()
+if PLATFORM == 'Darwin':
+    if not is_admin():
+        throw_error_to_user('Please start this program with sudo.')
+    import os
+    os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
 
 
 change_loading_text('Starting client...')

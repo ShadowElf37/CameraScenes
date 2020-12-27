@@ -1,22 +1,6 @@
 import cv2 as cv
 import numpy
 from sys import getsizeof
-import platform
-
-def is_admin():
-    import ctypes, os
-    try:
-        return os.getuid() == 0
-    except AttributeError:
-        return ctypes.windll.shell32.IsUserAnAdmin() != 0
-
-PLATFORM = platform.system()
-
-if PLATFORM == 'Darwin':
-    if not is_admin():
-        raise PermissionError('Please start the program with sudo.')
-    import os
-    os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
 
 
 def crop(frame, x1, y1, x2, y2):
