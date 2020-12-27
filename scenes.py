@@ -21,6 +21,8 @@ class SceneManager:
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
         self.cameras[uuid] = viewer
+        for scene in self.scenes:
+            scene.notify_new(uuid)
     def unregister_camera(self, uuid):
         uuid = str(uuid)
         self.cameras[uuid] = None
@@ -63,12 +65,14 @@ class Scene:
         self.background: Optional[pygame.Surface, tuple] = background
         self.manager.add_scenes(self)
 
-    def activate(self):
+    def update_cameras(self):
         for uuid, _ in self.cameras:
             if cam := self.manager.cameras.get(uuid):
                 cam.set_pos(*self.layout.get_pos(uuid))
                 cam.set_dim(*self.layout.get_dim(uuid))
 
+    def activate(self):
+        self.update_cameras()
         for obj in self.objects:
             obj.reset()
 
@@ -81,12 +85,20 @@ class Scene:
         uuid = str(uuid)
         self.cameras.append((uuid, set(frame_modifying_funcs+(webcam.jpeg_decode,))))
         self.layout.register(uuid, x, y, w, h)
+        if cam := self.manager.cameras.get(uuid):
+            cam.set_pos(*self.layout.get_pos(uuid))
+            cam.set_dim(*self.layout.get_dim(uuid))
 
     def add_object(self, obj):
         self.objects.append(obj)
 
+    def notify_new(self, uuid):
+        self.layout.notify_new(uuid)
+        self.update_cameras()
+
     def notify_death(self, uuid):
         self.layout.notify_death(uuid)
+        self.update_cameras()
 
     def draw(self, screen: pygame.Surface):
         if type(self.background) is tuple:
@@ -118,6 +130,8 @@ class Layout:
         uuid = str(uuid)
         del self.positions[uuid], self.dims[uuid]
 
+    def notify_new(self, uuid):
+        return
     def notify_death(self, uuid):
         return
 
@@ -158,6 +172,8 @@ class BasicTiler(Layout):
         print('NEW REGISTER')
         super().register(uuid, *self.new(), self.tw, self.th)
 
+    def notify_new(self, new_uuid):
+        return
     def notify_death(self, dead_uuid):
         self.count = -1
         for uuid in self.positions.keys():

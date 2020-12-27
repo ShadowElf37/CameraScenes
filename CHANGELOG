@@ -1,6 +1,6 @@
 ALPHA v0.0.7
 - Added pipe.py
-- Fixed some bugs
+- Fixed many bugs, especially with the layouts
 
 ALPHA v0.0.6
 - Added SceneManager, Scene, Layout
