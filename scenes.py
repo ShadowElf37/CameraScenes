@@ -2,15 +2,21 @@ import pygame
 from typing import Optional, Callable, Tuple, Set
 import graphics
 import webcam
+from pipe import Pipe
 
 class SceneManager:
-    def __init__(self, server):
+    def __init__(self, server, use_pipe=True):
         self.server = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
         self.scenes: [Scene] = []
         self.current_i = -1
         self.current_scene: Optional[Scene] = None
+
+        self.cues = Pipe()
+
+        if use_pipe:
+            self.cues.open()
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
@@ -41,6 +47,9 @@ class SceneManager:
         self.set_scene(0)
 
     def draw(self, screen):
+        for command in iter(self.cues):
+            exec(command, __globals=globals(), __locals=locals())
+
         self.current_scene.draw(screen)
         for obj in self.persistent_objects:
             obj.draw(screen)

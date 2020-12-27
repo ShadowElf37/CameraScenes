@@ -114,7 +114,7 @@ client.session.send('OPEN')
 
 try:
     sleep(0.2)
-    if not client.running:
+    if not client.running:  # it crashed when it tried to send OPEN
         raise Empty
     response = client.META_QUEUE.get(timeout=5)
 except Empty:
@@ -153,6 +153,10 @@ try:
 except:
     throw_error_to_user('Failed to open your microphone. Maybe it\'s not plugged in?')
 
+
+# ==========
+#  MAINLOOP
+# ==========
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 while client.running and RUNNING:
     for chunk in aud.pending():

@@ -14,6 +14,7 @@ Low Priority Features
 - client-side cue indicators, like "you're coming up", notified via meta, for UI
 - timed ping pong metas in the event we can silence clients; client/session dies after some time of no signal
 - in channeller we could have keybound functions in config, easy HALT
+- channeller gets programmable indicator lights? can show connected to externals
 - UI scaling
 - pleasant UI
 - wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
