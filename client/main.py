@@ -139,8 +139,8 @@ try:
     cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
 except IOError as e:
     throw_error_to_user(str(e))
-except:
-    throw_error_to_user('Wow, your webcam absolutely imploded. Restart I guess?')
+except Exception as e:
+    throw_error_to_user('Wow, your webcam absolutely imploded. Restart I guess?\n'+repr(e)+'  '+str(e))
 
 text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=True)

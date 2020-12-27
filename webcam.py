@@ -2,6 +2,8 @@ import cv2 as cv
 import numpy
 from sys import getsizeof
 
+import platform
+PLATFORM = platform.system()
 
 def crop(frame, x1, y1, x2, y2):
     return frame[x1:x2, y1:y2]
