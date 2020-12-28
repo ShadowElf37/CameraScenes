@@ -2,9 +2,10 @@ from socket import *
 import threading
 from network_common import *
 import json
+from collections import defaultdict
 
 class UDPClient:
-    def __init__(self, host, port=37001, override_uuid=None):
+    def __init__(self, host, port=37001, override_uuid=None, frag=False):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
@@ -25,13 +26,17 @@ class UDPClient:
             else:
                 break
 
-        self.session = UDPSession(self, self.host, self.port)
+        self.session = UDPSession(self, self.host, self.port, fragment=frag)
         if override_uuid:
             self.session.uuid = override_uuid
         self.session.start_send_thread()
 
         self.running = False
         self.thread = threading.Thread(target=self._handle_data, daemon=True)
+
+        self.frag = frag
+        self.fragments = defaultdict(list)
+        self.incomplete_fragments = []
 
     def init(self):
         self.running = True
@@ -40,36 +45,68 @@ class UDPClient:
         self.running = False
         self.socket.close()
 
-
     def _handle_data(self):
         try:
+            # 0 - uuid
+            # 1 - pid
+            # 2 - reason
+            # 3 - frag
+            # 4 - data
             while self.running:
-                data = UDPSession.decompile(self.socket.recvfrom(56000)[0])
+                decomp = UDPSession.decompile(self.socket.recvfrom(56000)[0])
+                pid = decomp[1]
+                frag_opts = decomp[3]
 
-                if not self.session.verify_pid(data[1]) and data[2] not in ('DIE', 'RESET'):
-                    print('Out of order packet rejected', data[:3])
+                incomplete = False
+                if self.frag and frag_opts[0] != 0:
+                    self.fragments[pid].append((frag_opts[1], decomp[4]))
+
+
+                    if (found_incomplete:=(pid in self.incomplete_fragments)) or frag_opts[1] == 1:
+                        if found_incomplete: print('FOUND INCOMPLETE PACKET')
+                        fragments = self.fragments[pid]
+                        for i, frag in enumerate(fragments):
+                            if frag[0] != i+1:
+                                self.incomplete_fragments.append(pid)
+                                incomplete = True
+                                break
+
+                        if incomplete: continue
+
+                        data = *decomp[:3], (0,0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
+                        del self.fragments[pid]
+                        if found_incomplete: self.incomplete_fragments.remove(pid)
+                    else:
+                        continue
+                else:
+                    data = decomp
+
+
+                if not self.session.verify_pid(pid) and data[2] not in ('DIE', 'RESET'):
+                    print('Out of order packet rejected', data[:4])
                     continue
-                self.session.packet_id_recv = data[1]
+                self.session.packet_id_recv = pid
 
-                print(*data[:3])
+                print(*data[:4])
 
                 if data[2] == 'INFO': # DATATYPE
-                    self.INFO_QUEUE.put((data[0], data[3]))
+                    self.INFO_QUEUE.put((data[0], data[4]))
                 elif data[2] == 'AUDIO':
-                    self.AUDIO_QUEUE.put((data[0], data[3]))
+                    self.AUDIO_QUEUE.put((data[0], data[4]))
                 elif data[2] == 'VIDEO':
-                    self.VIDEO_QUEUE.put((data[0], data[3]))
+                    self.VIDEO_QUEUE.put((data[0], data[4]))
                 elif data[2] == 'KEEPALIVE':
                     pass
                 elif data[2] == 'PRINT':
-                    print('PRINT REQUEST:', data[3])
+                    print('PRINT REQUEST:', data[4])
                 elif data[2] in ('CONTINUE', 'DIE', 'DUPLICATE'):
                     self.META_QUEUE.put(data[2])
                 else:
                     ...  # can do stuff if necessary
 
         except (ConnectionAbortedError, ConnectionError, OSError):
-            print('Connection imploded!')
-            self.close()
+            if self.running:
+                print('Connection imploded!')
+                self.close()
         finally:
-            print('FATAL ERROR')
+            print('Don\'t be alarmed, but a fatal error occurred and I fucking died :)')

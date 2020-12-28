@@ -13,10 +13,12 @@ class SceneManager:
         self.current_i = -1
         self.current_scene: Optional[Scene] = None
 
-        self.cues = Pipe()
+        self.cues = Pipe(at=38051)
 
         if use_pipe:
+            print('The SceneManager Pipe has been created. Please establish the other end now.')
             self.cues.open()
+            print('Pipe established!')
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
@@ -50,7 +52,7 @@ class SceneManager:
 
     def draw(self, screen):
         for command in iter(self.cues):
-            exec(command, __globals=globals(), __locals=locals())
+            exec(command)
 
         self.current_scene.draw(screen)
         for obj in self.persistent_objects:

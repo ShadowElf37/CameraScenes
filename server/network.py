@@ -1,9 +1,10 @@
 from socket import *
 import threading
 from network_common import *
+from collections import defaultdict
 
 class UDPManager:
-    def __init__(self, port=37001):
+    def __init__(self, port=37001, frag=False):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
@@ -19,6 +20,10 @@ class UDPManager:
         self.running = False
         self.thread = threading.Thread(target=self._handle_data, daemon=True)
 
+        self.frag = frag
+        self.fragments = defaultdict(list)
+        self.incomplete_fragments = []
+
     def init(self):
         self.running = True
         self.thread.start()
@@ -28,21 +33,52 @@ class UDPManager:
 
     def session_by_addr(self, addr) -> UDPSession:
         for s in self.sessions.values():
-            if s.ip == addr[0] and s.port == addr[1]:
+            if s.addr == addr:
                 return s
         return None
 
     def _handle_data(self):
+        # 0 - uuid
+        # 1 - pid
+        # 2 - reason
+        # 3 - frag
+        # 4 - data
         while self.running:
-            data, addr = self.socket.recvfrom(100000)
-            data = UDPSession.decompile(data)
+            raw, addr = self.socket.recvfrom(100000)
+            decomp = UDPSession.decompile(raw)
+            pid = decomp[1]
+            frag_opts = decomp[3]
+
+            incomplete = False
+            if self.frag and frag_opts[0] != 0:
+                self.fragments[pid].append((frag_opts[1], decomp[4]))
+
+                if (found_incomplete := (pid in self.incomplete_fragments)) or frag_opts[1] == 1:
+                    if found_incomplete: print('FOUND INCOMPLETE PACKET')
+                    fragments = self.fragments[pid]
+                    for i, frag in enumerate(fragments):
+                        if frag[0] != i + 1:
+                            self.incomplete_fragments.append(pid)
+                            incomplete = True
+                            break
+
+                    if incomplete: continue
+
+                    data = *decomp[:3], (0, 0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
+                    del self.fragments[pid]
+                    if found_incomplete: self.incomplete_fragments.remove(pid)
+                else:
+                    continue
+            else:
+                data = decomp
+
             uuid = data[0]
             reason = data[2]
 
             print(*data[:3], addr[0]+':'+str(addr[1]))
 
             if self.sessions.get(uuid) is None:
-                self.sessions[uuid] = session = UDPSession(self, *addr, uuid=uuid)
+                self.sessions[uuid] = session = UDPSession(self, *addr, uuid=uuid, fragment=self.frag)
 
                 # If they're sending us something but we have no records, i.e. zombie that we have to get rid of
                 if reason != 'OPEN':
@@ -63,15 +99,15 @@ class UDPManager:
 
             # DATATYPE
             if data[2] == 'INFO':
-                self.INFO_QUEUE.put((session.uuid, data[3]))
+                self.INFO_QUEUE.put((session.uuid, data[4]))
             elif data[2] == 'AUDIO':
-                self.AUDIO_QUEUE.put((session.uuid, data[3]))
+                self.AUDIO_QUEUE.put((session.uuid, data[4]))
             elif data[2] == 'VIDEO':
-                self.VIDEO_QUEUE.put((session.uuid, data[3]))
+                self.VIDEO_QUEUE.put((session.uuid, data[4]))
             elif data[2] == 'KEEPALIVE':
                 pass
             elif data[2] == 'PRINT':
-                print('PRINT REQUEST:', data[3])
+                print('PRINT REQUEST:', data[4])
             elif data[2] == 'OPEN' or data[2] == 'CLOSE':
                 self.META_QUEUE.put(data)
             else:

@@ -1,4 +1,5 @@
 ALPHA v0.0.7
+- Added application-layer fragmentation; maybe we won't need sudo anymore?
 - Added pipe.py
 - Fixed many bugs, especially with the layouts
 

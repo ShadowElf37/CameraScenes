@@ -94,16 +94,16 @@ def is_admin():
         return ctypes.windll.shell32.IsUserAnAdmin() != 0
 
 PLATFORM = platform.system()
-if PLATFORM == 'Darwin':
-    if not is_admin():
-        throw_error_to_user('Please start this program with sudo.')
-    import os
-    os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
+if PLATFORM == 'Darwin':...
+    #if not is_admin():
+    #    throw_error_to_user('Please start this program with sudo.')
+    #import os
+    #os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
 
 
 change_loading_text('Starting client...')
 print('Initializing client...')
-client = network.UDPClient('73.166.38.74', 37001, override_uuid=uuid)
+client = network.UDPClient('73.166.38.74', 37001, override_uuid=uuid, frag=True)
 client.init()
 
 change_loading_text('Waiting for server...')
@@ -140,7 +140,7 @@ try:
 except IOError as e:
     throw_error_to_user(str(e))
 except Exception as e:
-    throw_error_to_user('Wow, your webcam absolutely imploded. Restart I guess?\n'+repr(e)+'  '+str(e))
+    throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
 
 text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=True)
