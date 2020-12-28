@@ -17,10 +17,11 @@ Low Priority Features
 - timed ping pong metas in the event we can silence clients; client/session dies after some time of no signal
 - in channeller we could have keybound functions in config, easy HALT
 - channeller gets programmable indicator lights? can show connected to externals
+- mouse can move objects around and it prints out position - good for scene editing
+- proper logging, log packets per second instead of every packet because that's a lot with 12 people
 - UI scaling
 - pleasant UI
 - wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
-- fragmented video frames so we can respect macs' low udp size limits; otherwise we need sudo, and that can be problematic
 
 Low Priority Bugs
 -
