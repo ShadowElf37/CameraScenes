@@ -1,7 +1,7 @@
 from uuid import getnode
 from queue import Queue
 from threading import Thread
-from math import ceil
+from collections import defaultdict
 
 FRAG_LIMIT = 4192
 
@@ -49,7 +49,7 @@ class UDPSession:
         frag = data[indices[2]+1:indices[3]].decode()
         data = data[indices[3]+1:]
 
-        print(uuid, pid, type_, frag)
+        #print(uuid, pid, type_, frag)
         return uuid, int(pid), type_, tuple(map(int, frag.split())), data
 
     def compile(self, datatype: str, data: bytes, override_uuid=None, frag_num=0, frag_final=0):
@@ -78,28 +78,33 @@ class UDPSession:
         self.sending = False
 
     def _sendloop_nofrag(self):
-        while self.sending:
-            self._send(*self.send_buffer.get())
+        try:
+            while self.sending:
+                self._send(*self.send_buffer.get())
+        except OSError:
+            print('Socket disconnected suddenly.')
     def _sendloop_frag(self):
-        while self.sending:
-            data = self.send_buffer.get()
-            self.packet_id_send += 1
+        try:
+            while self.sending:
+                data = self.send_buffer.get()
+                self.packet_id_send += 1
 
-            if FRAG_LIMIT >= len(data[1]):
-                self._send(*data, ignore_pid=True)
-                continue
+                if FRAG_LIMIT >= len(data[1]):
+                    self._send(*data, ignore_pid=True)
+                    continue
 
-            for num, i in enumerate(range(0, len(data[1]), FRAG_LIMIT)):
-                print(i)
-                self._send(
-                    data[0],
-                    data[1][i:min(i+FRAG_LIMIT, len(data[1]))],
-                    data[2],
-                    frag_num=num+1,
-                    frag_final=1 if i+FRAG_LIMIT >= len(data[1]) else 0,
-                    ignore_pid=True
-                )
-
+                for num, i in enumerate(range(0, len(data[1]), FRAG_LIMIT)):
+                    #print(i)
+                    self._send(
+                        data[0],
+                        data[1][i:min(i+FRAG_LIMIT, len(data[1]))],
+                        data[2],
+                        frag_num=num+1,
+                        frag_final=1 if i+FRAG_LIMIT >= len(data[1]) else 0,
+                        ignore_pid=True
+                    )
+        except OSError:
+            print('Socket disconnected suddenly.')
 
 def iterq(queue: Queue):
     """Creates an iterator over a Queue object"""

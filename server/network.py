@@ -21,8 +21,8 @@ class UDPManager:
         self.thread = threading.Thread(target=self._handle_data, daemon=True)
 
         self.frag = frag
-        self.fragments = defaultdict(list)
-        self.incomplete_fragments = []
+        self.fragments = defaultdict(lambda: defaultdict(list))
+        self.incomplete_packets = defaultdict(list)
 
     def init(self):
         self.running = True
@@ -46,27 +46,31 @@ class UDPManager:
         while self.running:
             raw, addr = self.socket.recvfrom(100000)
             decomp = UDPSession.decompile(raw)
+            uuid = decomp[0]
             pid = decomp[1]
             frag_opts = decomp[3]
 
             incomplete = False
             if self.frag and frag_opts[0] != 0:
-                self.fragments[pid].append((frag_opts[1], decomp[4]))
+                self.fragments[uuid][pid].append((frag_opts[0], decomp[4]))
 
-                if (found_incomplete := (pid in self.incomplete_fragments)) or frag_opts[1] == 1:
-                    if found_incomplete: print('FOUND INCOMPLETE PACKET')
-                    fragments = self.fragments[pid]
-                    for i, frag in enumerate(fragments):
+                if (found_incomplete := (pid in self.incomplete_packets)) or frag_opts[1] == 1:
+                    fragments = self.fragments[uuid][pid]
+
+                    # discovers newly incomplete packets, and proceeds if a previously incomplete packet is now complete
+                    for i, frag in enumerate(sorted(fragments, key=lambda f: f[0])):
                         if frag[0] != i + 1:
-                            self.incomplete_fragments.append(pid)
+                            self.incomplete_packets[uuid].append(pid)
                             incomplete = True
                             break
 
-                    if incomplete: continue
+                    if incomplete:
+                        continue
 
+                    print('Packet %s was reassembled successfully.' % pid, 'It arrived out of order.' if found_incomplete else '')
                     data = *decomp[:3], (0, 0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
-                    del self.fragments[pid]
-                    if found_incomplete: self.incomplete_fragments.remove(pid)
+                    del self.fragments[uuid][pid]
+                    if found_incomplete: self.incomplete_packets[uuid].remove(pid)
                 else:
                     continue
             else:

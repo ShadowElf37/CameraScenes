@@ -62,52 +62,62 @@ scene_manager.first()
 scene_manager.persistent_objects.append(text)
 
 print('Server started!')
-while server.running and RUNNING:
-    for data in iterq(server.META_QUEUE):
-        uuid = data[0]
-        session = server.sessions[uuid]
-        if data[2] == 'OPEN':
-            if not session.is_open:
-                session.is_open = True
-                session.send('CONTINUE')
-            else:  # the session is already open!
-                session.send('DUPLICATE')
+try:
+    while server.running and RUNNING:
+        for data in iterq(server.META_QUEUE):
+            uuid = data[0]
+            session = server.sessions[uuid]
+            if data[2] == 'OPEN':
+                if not session.is_open:
+                    session.is_open = True
+                    session.send('CONTINUE')
+                else:  # the session is already open!
+                    session.send('DUPLICATE')
+                    continue
+                # add an audio processor for them
+                aud.new_output(uuid)
+                # make a cam viewer
+                scene_manager.register_camera(uuid, graphics.WebcamViewer(w=CAM_WIDTH, h=CAM_HEIGHT, enforce_dim=True))
+                scene1.add(uuid, *[None]*4)
+            elif data[2] == 'CLOSE':
+                session.is_open = False
+                scene_manager.unregister_camera(uuid)
+                aud.close_output(uuid)
+
+        for uuid, frame in iterq(server.VIDEO_QUEUE):
+            if (cam := scene_manager.cameras.get(uuid)) is None:
                 continue
-            # add an audio processor for them
-            aud.new_output(uuid)
-            # make a cam viewer
-            scene_manager.register_camera(uuid, graphics.WebcamViewer(w=CAM_WIDTH, h=CAM_HEIGHT, enforce_dim=True))
-            scene1.add(uuid, *[None]*4)
-        elif data[2] == 'CLOSE':
-            session.is_open = False
-            scene_manager.unregister_camera(uuid)
-            aud.close_output(uuid)
+            cam.take_frame(pickle.loads(frame))
+            #server.sessions[uuid].send('PRINT', b'hello fren')
 
-    for uuid, frame in iterq(server.VIDEO_QUEUE):
-        if (cam := scene_manager.cameras.get(uuid)) is None:
-            continue
-        cam.take_frame(pickle.loads(frame))
-        #server.sessions[uuid].send('PRINT', b'hello fren')
+        scene_manager.draw(screen)
 
-    scene_manager.draw(screen)
+        # PLAY AUDIO FROM CLIENTS
+        for chunk in iterq(server.AUDIO_QUEUE):
+            aud.process(*chunk)
 
-    # PLAY AUDIO FROM CLIENTS
-    for chunk in iterq(server.AUDIO_QUEUE):
-        aud.process(*chunk)
+        pygame.display.update()
 
-    pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print('User quit.')
+                for session in server.sessions.values():
+                    session._send('DIE')
+                RUNNING = False
+                break
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            print('User quit.')
-            RUNNING = False
-            break
+        clock.tick(FPS)
 
-    clock.tick(FPS)
+except Exception as e:
+    for session in server.sessions.values():
+        session._send('DIE')
+    RUNNING = False
+    server.close()
+    raise e
 
-for session in server.sessions.values():
-    session._send('DIE')
-server.close()
-pygame.display.quit()
-print('Died safely.')
-exit(0)
+finally:
+    server.close()
+    pygame.quit()
+    print('Closed safely.')
+    exit(0)
+

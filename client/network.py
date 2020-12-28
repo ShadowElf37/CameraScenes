@@ -36,14 +36,18 @@ class UDPClient:
 
         self.frag = frag
         self.fragments = defaultdict(list)
-        self.incomplete_fragments = []
+        self.incomplete_packets = []
 
     def init(self):
         self.running = True
         self.thread.start()
     def close(self):
         self.running = False
-        self.socket.close()
+        self.session.close()
+        try:
+            self.socket.close()
+        except OSError:
+            pass
 
     def _handle_data(self):
         try:
@@ -59,23 +63,26 @@ class UDPClient:
 
                 incomplete = False
                 if self.frag and frag_opts[0] != 0:
-                    self.fragments[pid].append((frag_opts[1], decomp[4]))
+                    self.fragments[pid].append((frag_opts[0], decomp[4]))
 
 
-                    if (found_incomplete:=(pid in self.incomplete_fragments)) or frag_opts[1] == 1:
-                        if found_incomplete: print('FOUND INCOMPLETE PACKET')
+                    if (found_incomplete:=(pid in self.incomplete_packets)) or frag_opts[1] == 1:
                         fragments = self.fragments[pid]
-                        for i, frag in enumerate(fragments):
+
+                        # discovers newly incomplete packets, and proceeds if a previously incomplete packet is now complete
+                        for i, frag in enumerate(sorted(fragments, key=lambda f: f[0])):
                             if frag[0] != i+1:
-                                self.incomplete_fragments.append(pid)
+                                self.incomplete_packets.append(pid)
                                 incomplete = True
                                 break
 
                         if incomplete: continue
 
+                        print('Packet %s was reassembled successfully.' % pid,
+                              'It arrived out of order.' if pid in self.incomplete_packets else '')
                         data = *decomp[:3], (0,0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
                         del self.fragments[pid]
-                        if found_incomplete: self.incomplete_fragments.remove(pid)
+                        if found_incomplete: self.incomplete_packets.remove(pid)
                     else:
                         continue
                 else:
@@ -108,5 +115,3 @@ class UDPClient:
             if self.running:
                 print('Connection imploded!')
                 self.close()
-        finally:
-            print('Don\'t be alarmed, but a fatal error occurred and I fucking died :)')

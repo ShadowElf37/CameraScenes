@@ -1,10 +1,12 @@
 High Priority Features
-- SceneManager pipe/socket for cues, can mute on cue and do lots of things
+- SceneManager can mute on cue and do lots of things
 - client-side audio/video mutes
-- scenes can set background image
+- scenes can set background image properly
+- separate pid for audio and video - maybe establish flexible pid groups that can be set at will
 
 High Priority Bugs
 - very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
+- random tcl_findhashentry error thrown on mac at random time - seems unpythonic? tk isn't dying properly?
 
 Low Priority Features
 - debug labels on camera viewers - user uuid

@@ -1,3 +1,9 @@
+ALPHA v0.0.8
+- Fixed fragmentation bug
+- Fixed client exit bug
+- Fully removed permissions check in client main.py
+- Cleaned up exit process for server and client; added more error protection
+
 ALPHA v0.0.7
 - Added application-layer fragmentation; maybe we won't need sudo anymore?
 - Added pipe.py

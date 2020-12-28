@@ -46,7 +46,11 @@ submit.pack(pady=10)
 try:
     root.mainloop()
 except tk.TclError:
-    pass
+    uid_text.destroy()
+    uid_entry.destroy()
+    submit.destroy()
+    root.quit()
+
 # END GET UUID
 uuid = uid.get()
 if not uuid:
@@ -82,23 +86,6 @@ def throw_error_to_user(text):
                 exit()
         pygame.display.update()
         clock.tick(FPS)
-
-
-# SUDO CHECK
-import platform
-def is_admin():
-    import ctypes, os
-    try:
-        return os.getuid() == 0
-    except AttributeError:
-        return ctypes.windll.shell32.IsUserAnAdmin() != 0
-
-PLATFORM = platform.system()
-if PLATFORM == 'Darwin':...
-    #if not is_admin():
-    #    throw_error_to_user('Please start this program with sudo.')
-    #import os
-    #os.system('sudo sysctl -w net.inet.udp.maxdgram=65535')
 
 
 change_loading_text('Starting client...')
@@ -158,46 +145,57 @@ except:
 #  MAINLOOP
 # ==========
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
-while client.running and RUNNING:
-    for chunk in aud.pending():
-        client.session.send('AUDIO', chunk)
+try:
+    while client.running and RUNNING:
+        for chunk in aud.pending():
+            client.session.send('AUDIO', chunk)
 
-    for chunk in iterq(client.AUDIO_QUEUE):
-        aud.write(*chunk)
+        for chunk in iterq(client.AUDIO_QUEUE):
+            aud.write(*chunk)
 
-    for data in iterq(client.META_QUEUE):
-        if data == 'DIE':
-            break
+        for data in iterq(client.META_QUEUE):
+            if data == 'DIE':
+                print('Server forced a quit.')
+                RUNNING = False
+                client.close()
+                break
 
-    frame = cam.read()
-    client.session.send('VIDEO', pickle.dumps(frame))
+        frame = cam.read()
+        client.session.send('VIDEO', pickle.dumps(frame))
 
-    screen.fill(BLACK)
+        screen.fill(BLACK)
 
-    cam_viewer.take_frame(frame)
-    cam_viewer.draw(screen, webcam.jpeg_decode)
-    text.draw(screen)
+        cam_viewer.take_frame(frame)
+        cam_viewer.draw(screen, webcam.jpeg_decode)
+        text.draw(screen)
 
-    pygame.display.update()
+        pygame.display.update()
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            print('User quit.')
-            RUNNING = False
-            break
-        #elif event.type == VIDEORESIZE:
-        #    screen.blit(pygame.transform.scale(pic, event.dict['size']), (0, 0))
-        #    pygame.display.update()
-        #elif event.type == VIDEOEXPOSE:  # handles window minimising/maximising
-        #    screen.fill((0, 0, 0))
-        #    screen.blit(pygame.transform.scale(pic, screen.get_size()), (0, 0))
-        #    pygame.display.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                print('User quit.')
+                client.session._send('CLOSE')
+                RUNNING = False
+                client.close()
+                break
+            #elif event.type == VIDEORESIZE:
+            #    screen.blit(pygame.transform.scale(pic, event.dict['size']), (0, 0))
+            #    pygame.display.update()
+            #elif event.type == VIDEOEXPOSE:  # handles window minimising/maximising
+            #    screen.fill((0, 0, 0))
+            #    screen.blit(pygame.transform.scale(pic, screen.get_size()), (0, 0))
+            #    pygame.display.update()
 
-    clock.tick(FPS)
+        clock.tick(FPS)
 
+except Exception as e:
+    client.session._send('CLOSE')
+    RUNNING = False
+    client.close()
+    raise e
 
-client.session._send('CLOSE')
-client.close()
-pygame.quit()
-print('Died safely.')
-exit(0)
+finally:
+    client.close()
+    pygame.quit()
+    print('Closed safely.')
+    exit(0)
