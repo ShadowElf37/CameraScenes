@@ -112,8 +112,10 @@ class UDPManager:
                 pass
             elif data[2] == 'PRINT':
                 print('PRINT REQUEST:', data[4])
-            elif data[2] == 'OPEN' or data[2] == 'CLOSE':
+            elif data[2] in ('OPEN', 'CLOSE'):
                 self.META_QUEUE.put(data)
+            elif data[2] == 'PONG':
+                ...
             else:
                 ... # can do stuff if necessary
                 # possible keep-alive, auth, etc.

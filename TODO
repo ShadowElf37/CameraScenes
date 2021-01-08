@@ -1,12 +1,13 @@
 High Priority Features
-- SceneManager can mute on cue and do lots of things
+- CUES: mute audio/video, unmute audio/video, change scene
 - client-side audio/video mutes
+- timed ping pong manager in the server; client/session dies after some time of no signal
 - scenes can set background image properly
 - separate pid for audio and video - maybe establish flexible pid groups that can be set at will
 
 High Priority Bugs
+- second person inconsistent join? may have something to do with frag - client isn't sending sometimes, possibly, may have fixed itself in solving other bugs
 - very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
-- random tcl_findhashentry error thrown on mac at random time - seems unpythonic? tk isn't dying properly?
 
 Low Priority Features
 - debug labels on camera viewers - user uuid
@@ -14,7 +15,6 @@ Low Priority Features
 - Load scenes from JSON
 - client-side video scaling (server is transforming fine but we can avoid it at least a bit)
 - client-side cue indicators, like "you're coming up", notified via meta, for UI
-- timed ping pong metas in the event we can silence clients; client/session dies after some time of no signal
 - in channeller we could have keybound functions in config, easy HALT
 - channeller gets programmable indicator lights? can show connected to externals
 - mouse can move objects around and it prints out position - good for scene editing

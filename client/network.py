@@ -88,26 +88,29 @@ class UDPClient:
                 else:
                     data = decomp
 
+                reason = data[2]
 
-                if not self.session.verify_pid(pid) and data[2] not in ('DIE', 'RESET'):
+                if not self.session.verify_pid(pid) and reason not in ('DIE', 'RESET'):
                     print('Out of order packet rejected', data[:4])
                     continue
                 self.session.packet_id_recv = pid
 
                 print(*data[:4])
 
-                if data[2] == 'INFO': # DATATYPE
+                if reason == 'INFO': # DATATYPE
                     self.INFO_QUEUE.put((data[0], data[4]))
-                elif data[2] == 'AUDIO':
+                elif reason == 'AUDIO':
                     self.AUDIO_QUEUE.put((data[0], data[4]))
-                elif data[2] == 'VIDEO':
+                elif reason == 'VIDEO':
                     self.VIDEO_QUEUE.put((data[0], data[4]))
-                elif data[2] == 'KEEPALIVE':
+                elif reason == 'KEEPALIVE':
                     pass
-                elif data[2] == 'PRINT':
+                elif reason == 'PRINT':
                     print('PRINT REQUEST:', data[4])
-                elif data[2] in ('CONTINUE', 'DIE', 'DUPLICATE'):
-                    self.META_QUEUE.put(data[2])
+                elif reason in ('CONTINUE', 'DIE', 'DUPLICATE', 'MUTE_AUDIO', 'MUTE_VIDEO', 'UNMUTE_AUDIO', 'UNMUTE_VIDEO'):
+                    self.META_QUEUE.put(data[2]) # these go straight up to main
+                elif reason == 'PING':
+                    self.session.send('PONG')
                 else:
                     ...  # can do stuff if necessary
 

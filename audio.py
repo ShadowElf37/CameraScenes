@@ -2,7 +2,7 @@ import pyaudio
 from threading import Thread
 from time import sleep
 from queue import Queue
-import g729a
+
 
 def iterq(queue: Queue):
     """Creates an iterator over a Queue object"""
@@ -56,7 +56,7 @@ class AudioInput(Throughput):
                 try:
                     self.buffer.put(self.stream.read(CHUNK, exception_on_overflow=False))
                 except OSError as e:
-                    print('MIC IMPLODED LUL')
+                    print('MIC IMPLODED LUL', str(e))
                     pass
             else:
                 sleep(0.01)
@@ -105,11 +105,14 @@ class MultipleAudioOutput:
 
 
 class AudioInterface:
-    def __init__(self):
+    def __init__(self, output=True, input=True):
         self.inp = AudioInput()
-        self.out = AudioOutput()
         self.ithread = Thread(target=self.inp.activate, daemon=True)
+        self.out = AudioOutput()
         self.othread = Thread(target=self.out.activate, daemon=True)
+
+        self.use_output = output
+        self.use_input = input
 
     def read(self):
         return self.inp.read()
@@ -121,8 +124,8 @@ class AudioInterface:
         self.out.write(data)
 
     def activate(self):
-        self.ithread.start()
-        self.othread.start()
+        if self.use_input: self.ithread.start()
+        if self.use_output: self.othread.start()
 
     def mute(self):
         self.inp.pause()
@@ -141,6 +144,8 @@ class AudioInterface:
         self.othread = None
 
 
+"""
+from g729a import g729a
 
 class G729ABufferedAudioInterface(AudioInterface):
     ENCODED_FRAME_SIZE = 640  # size of encoded frame to send (should be multiple of 10) (>150)
@@ -207,10 +212,10 @@ class G729ABufferedAudioInterface(AudioInterface):
             for frame in frames:
                 #print(frame)
                 self.out.process(uuid, bytes(self.decoder.process(frame)))
-
+"""
 
 if __name__ == '__main__':
-    aud = G729ABufferedAudioInterface()
+    aud = AudioInterface()
     aud.activate()
 
     while True:

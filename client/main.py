@@ -55,7 +55,7 @@ except tk.TclError:
 uuid = uid.get()
 if not uuid:
     exit()
-del uid, root, tk, submit, uid_entry, uid_text
+del uid, tk, submit, uid_entry, uid_text
 # ACCESS WITH uuid
 
 
@@ -135,7 +135,7 @@ cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=
 print('Opening microphone...')
 change_loading_text('Opening microphone...')
 try:
-    aud = audio.AudioInterface()
+    aud = audio.AudioInterface(output=False)
     aud.activate()
 except:
     throw_error_to_user('Failed to open your microphone. Maybe it\'s not plugged in?')
@@ -150,8 +150,8 @@ try:
         for chunk in aud.pending():
             client.session.send('AUDIO', chunk)
 
-        for chunk in iterq(client.AUDIO_QUEUE):
-            aud.write(*chunk)
+        #for chunk in iterq(client.AUDIO_QUEUE):
+        #    aud.write(*chunk)
 
         for data in iterq(client.META_QUEUE):
             if data == 'DIE':
@@ -159,9 +159,18 @@ try:
                 RUNNING = False
                 client.close()
                 break
+            elif data == 'MUTE_AUDIO':
+                aud.mute()
+            elif data == 'UNMUTE_AUDIO':
+                aud.unmute()
+            elif data == 'MUTE_VIDEO':
+                cam.mute()
+            elif data == 'UNMUTE_VIDEO':
+                cam.unmute()
 
-        frame = cam.read()
-        client.session.send('VIDEO', pickle.dumps(frame))
+        if not cam.muted:
+            frame = cam.read()
+            client.session.send('VIDEO', pickle.dumps(frame))
 
         screen.fill(BLACK)
 

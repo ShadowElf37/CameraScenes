@@ -84,6 +84,9 @@ class UDPSession:
         except OSError:
             print('Socket disconnected suddenly.')
     def _sendloop_frag(self):
+        # 0 - reason
+        # 1 - data
+        # 2 - uuid
         try:
             while self.sending:
                 data = self.send_buffer.get()
@@ -94,7 +97,6 @@ class UDPSession:
                     continue
 
                 for num, i in enumerate(range(0, len(data[1]), FRAG_LIMIT)):
-                    #print(i)
                     self._send(
                         data[0],
                         data[1][i:min(i+FRAG_LIMIT, len(data[1]))],
@@ -103,6 +105,7 @@ class UDPSession:
                         frag_final=1 if i+FRAG_LIMIT >= len(data[1]) else 0,
                         ignore_pid=True
                     )
+
         except OSError:
             print('Socket disconnected suddenly.')
 

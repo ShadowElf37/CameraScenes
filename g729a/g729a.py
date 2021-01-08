@@ -14,7 +14,7 @@ elif p == 'Linux':
 else:
     raise RuntimeError("Unknown OS")
 
-g729a_lib_path = os.path.join('..', g729a_lib_path)
+g729a_lib_path = os.path.join('../..', g729a_lib_path)
 
 class G729Acoder:
     SAMPLES_IN_FRAME = 80

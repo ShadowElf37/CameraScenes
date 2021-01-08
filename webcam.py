@@ -54,7 +54,12 @@ class Webcam:
         self.flip = mirror
         self.swap_axes = swap_axes # switches x and y axes, necessary for pygame for unknown reasons
 
+        self.muted = False
+
     def read(self):
+        if self.muted:
+            return
+
         frame: numpy.ndarray = self.cap.read()[1]
         if frame is None:
             return
@@ -69,6 +74,11 @@ class Webcam:
             frame = jpeg_encode(frame, self.compress_quality)
 
         return frame
+
+    def mute(self):
+        self.muted = True
+    def unmute(self):
+        self.muted = False
 
     def close(self):
         self.cap.release()
