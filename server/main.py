@@ -47,7 +47,7 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001, frag=True)
 server.init()
 
-scene_manager = scenes.SceneManager(server, use_pipe=True)
+scene_manager = scenes.SceneManager(server, WIDTH, HEIGHT, use_pipe=True)
 
 preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 scene1 = scenes.Scene(scene_manager, layout=preview_tiler, background=BLACK)

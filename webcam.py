@@ -62,6 +62,7 @@ class Webcam:
 
         frame: numpy.ndarray = self.cap.read()[1]
         if frame is None:
+            print('webcam.read() DEAD FRAME')
             return
 
         if self.swap_axes:

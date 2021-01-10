@@ -9,13 +9,16 @@ import threading
 class SceneManager:
     UNDEFINED_COMMAND = object()
 
-    def __init__(self, server, use_pipe=True, block_pipe=False):
+    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
         self.scenes: [Scene] = []
         self.current_i = -1
         self.current_scene: Optional[Scene] = None
+
+        self.screen_width = screen_width
+        self.screen_height = screen_height
 
         self.cues = Pipe(at=38051)
 
@@ -68,24 +71,30 @@ class SceneManager:
                 'first': self.first,
                 'test': lambda: print('pipe test!')
             }.get(command, lambda: self.UNDEFINED_COMMAND)() is self.UNDEFINED_COMMAND:
-                cmd, *args = command.split(' ')
-
-                if cmd == 'set_scene':
-                    self.set_scene(int(args[0]))
-                elif cmd in ('mute_audio', 'mutea', 'mute'):
-                    self.server.sessions[args[0]].send('MUTE_AUDIO')
-                    self.server.muted(args[0])
-                elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
-                    self.server.sessions[args[0]].send('UNMUTE_AUDIO')
-                    self.server.unmuted(args[0])
-                elif cmd in ('mute_video', 'mutev'):
-                    self.server.sessions[args[0]].send('MUTE_VIDEO')
-                    self.server.muted(args[0])
-                elif cmd in ('unmute_video', 'unmutev'):
-                    self.server.sessions[args[0]].send('UNMUTE_VIDEO')
-                    self.server.unmuted(args[0])
+                if command[:3] == 'py:':
+                    try:
+                        eval(command[3:].strip())
+                    except SyntaxError:
+                        exec(command[3:].strip())
                 else:
-                    exec(command)
+                    cmd, *args = command.split(' ')
+
+                    if cmd == 'set_scene':
+                        self.set_scene(int(args[0]))
+                    elif cmd in ('mute_audio', 'mutea', 'mute'):
+                        self.server.sessions[args[0]].send('MUTE_AUDIO')
+                        self.server.muted(args[0])
+                    elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
+                        self.server.sessions[args[0]].send('UNMUTE_AUDIO')
+                        self.server.unmuted(args[0])
+                    elif cmd in ('mute_video', 'mutev'):
+                        self.server.sessions[args[0]].send('MUTE_VIDEO')
+                        self.server.muted(args[0])
+                    elif cmd in ('unmute_video', 'unmutev'):
+                        self.server.sessions[args[0]].send('UNMUTE_VIDEO')
+                        self.server.unmuted(args[0])
+                    else:
+                        print('Bad pipe command', command)
 
         self.current_scene.draw(screen)
         for obj in self.persistent_objects:
@@ -99,6 +108,11 @@ class Scene:
         self.objects: [graphics.Object] = []
         self.background: Optional[pygame.Surface, tuple] = background
         self.manager.add_scenes(self)
+
+    def fp_to_surface(self, fp):
+        surf = pygame.image.load(fp)
+        surf = pygame.transform.scale(surf, (self.manager.screen_width, self.manager.screen_height))
+        return surf
 
     def update_cameras(self):
         for uuid, _ in self.cameras:
@@ -142,7 +156,7 @@ class Scene:
         elif self.background:
             screen.blit(self.background, (0,0))
         else:
-            screen.fill((0,0,0))
+            screen.fill((0, 0, 0))
 
         for uuid, funcs in self.cameras:
             if cam := self.manager.cameras.get(uuid):
