@@ -15,6 +15,7 @@ from cv2 import COLOR_BGR2RGB
 from network_common import iterq
 from queue import Empty
 from time import sleep
+import traceback
 
 
 BLACK = (0,0,0)
@@ -32,6 +33,7 @@ import tkinter as tk
 
 root = tk.Tk()
 root.title('ID Entry')
+root.focus()
 uid = tk.StringVar(value='')
 
 uid_text = tk.Label(root, text='Enter ID')
@@ -52,7 +54,7 @@ except tk.TclError:
     root.quit()
 
 # END GET UUID
-uuid = uid.get()
+uuid = uid.get().strip()
 if not uuid:
     exit()
 del uid, tk, submit, uid_entry, uid_text
@@ -128,6 +130,7 @@ except IOError as e:
     throw_error_to_user(str(e))
 except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
+cam  # pycharm is dumb
 
 text = graphics.Text('Client POGGERS', WIDTH/2, 600)
 cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=True)
@@ -139,7 +142,7 @@ try:
     aud.activate()
 except:
     throw_error_to_user('Failed to open your microphone. Maybe it\'s not plugged in?')
-
+aud  # pycharm is dumb
 
 # ==========
 #  MAINLOOP
@@ -171,10 +174,10 @@ try:
         if not cam.muted:
             frame = cam.read()
             client.session.send('VIDEO', pickle.dumps(frame))
+            cam_viewer.take_frame(frame)
 
         screen.fill(BLACK)
 
-        cam_viewer.take_frame(frame)
         cam_viewer.draw(screen, webcam.jpeg_decode)
         text.draw(screen)
 
@@ -198,6 +201,8 @@ try:
         clock.tick(FPS)
 
 except Exception as e:
+    traceback.print_exc()
+    print(type(e).__qualname__, str(e))
     client.session._send('CLOSE')
     RUNNING = False
     client.close()

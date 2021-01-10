@@ -1,8 +1,11 @@
 ALPHA v0.0.9
 - Cleaned up redundant audio code
 - Added UDP ping pong
+- Server now kills feeds for clients that fail their ping pongs
 - Added mute for Webcam and integrated all mutes with client main
+- Added command system in SceneManager to handle pipe input
 - Fixed a bug that caused Tcl to crash on macOS whenever the pygame window was unfocused and refocused (very weird bug)
+- Minor improvements
 
 ALPHA v0.0.8
 - Fragmentation now works properly with multiple clients

@@ -21,7 +21,7 @@ class Throughput:
     def __init__(self):
         self.buffer = []
         self.open = False
-        self.stream = None
+        self.stream: pyaudio.Stream = None
         self.running = False
 
     def pause(self):
@@ -29,8 +29,8 @@ class Throughput:
         self.stream.stop_stream()
 
     def unpause(self):
-        self.open = True
         self.stream.start_stream()
+        self.open = True
 
     def close(self):
         self.running = False
@@ -44,6 +44,7 @@ class AudioInput(Throughput):
         self.stream = AUDIO.open(format=FORMAT, channels=CHANNELS,
                     rate=RATE, input=True,
                     frames_per_buffer=CHUNK)
+        print('Audio input has latency', self.stream.get_input_latency())
         self.buffer = Queue(100)
         self.running = True
 
@@ -52,6 +53,7 @@ class AudioInput(Throughput):
         while self.running:  # running is for dead/alive
             if self.open:
                 if self.buffer.full():
+                    self.stream.read(CHUNK, exception_on_overflow=False)
                     continue
                 try:
                     self.buffer.put(self.stream.read(CHUNK, exception_on_overflow=False))
@@ -97,8 +99,9 @@ class MultipleAudioOutput:
         thread.start()
 
     def close_output(self, uuid):
-        self.outputs[uuid].close()
-        del self.outputs[uuid]
+        if uuid in self.outputs:
+            self.outputs[uuid].close()
+            del self.outputs[uuid]
 
     def process(self, uuid, chunk):
         self.outputs[uuid].write(chunk)
@@ -215,10 +218,17 @@ class G729ABufferedAudioInterface(AudioInterface):
 """
 
 if __name__ == '__main__':
+
     aud = AudioInterface()
     aud.activate()
 
+    def onoff():
+        sleep(1)
+        aud.mute()
+        sleep(1)
+        aud.unmute()
+    import threading
+    threading.Thread(target=onoff, daemon=True).start()
+
     while True:
-        frame = aud.read()
-        print(len(frame), frame)
-        aud.write(frame)
+        aud.write(aud.read())

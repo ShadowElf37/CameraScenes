@@ -40,6 +40,7 @@ class Pipe:
         return self._messages.get()
 
     def close(self):
+        self.is_open = False
         self.socket.close()
     def open(self):
         self.is_open = True
@@ -51,5 +52,16 @@ class Pipe:
         self.reader_thread.start()
 
     def _read_all(self):
-        while self.is_open:
-            self._messages.put(self.connection.recv(1024))
+        try:
+            while self.is_open:
+                self._messages.put(self.connection.recv(1024))
+        except ConnectionError:
+            self.is_open = False
+            print('Pipe broke.')
+
+
+if __name__ == "__main__":
+    p = Pipe(at=38051)
+    p.open()
+    while True:
+        p.write(input('>> '))

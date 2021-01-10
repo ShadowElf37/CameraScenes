@@ -3,10 +3,14 @@ from typing import Optional, Callable, Tuple, Set
 import graphics
 import webcam
 from pipe import Pipe
+from server.network import UDPManager
+import threading
 
 class SceneManager:
-    def __init__(self, server, use_pipe=True):
-        self.server = server
+    UNDEFINED_COMMAND = object()
+
+    def __init__(self, server, use_pipe=True, block_pipe=False):
+        self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
         self.scenes: [Scene] = []
@@ -16,9 +20,13 @@ class SceneManager:
         self.cues = Pipe(at=38051)
 
         if use_pipe:
-            print('The SceneManager Pipe has been created. Please establish the other end now.')
-            self.cues.open()
-            print('Pipe established!')
+            if block_pipe:
+                print('SceneManager Pipe has been created with blocking. Please establish the other end now.')
+                self.cues.open()
+                print('Pipe established.')
+            else:
+                print('SceneManager Pipe has been created without blocking. The other end may connect at any time.')
+                threading.Thread(target=lambda: (not self.cues.open() and print('Pipe established.')), daemon=True).start()
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
@@ -52,7 +60,32 @@ class SceneManager:
 
     def draw(self, screen):
         for command in iter(self.cues):
-            exec(command)
+            command = command.decode()
+            if {
+                'next': self.next,
+                'back': self.back,
+                'last': self.last,
+                'first': self.first,
+                'test': lambda: print('pipe test!')
+            }.get(command, lambda: self.UNDEFINED_COMMAND)() is self.UNDEFINED_COMMAND:
+                cmd, *args = command.split(' ')
+
+                if cmd == 'set_scene':
+                    self.set_scene(int(args[0]))
+                elif cmd in ('mute_audio', 'mutea', 'mute'):
+                    self.server.sessions[args[0]].send('MUTE_AUDIO')
+                    self.server.muted(args[0])
+                elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
+                    self.server.sessions[args[0]].send('UNMUTE_AUDIO')
+                    self.server.unmuted(args[0])
+                elif cmd in ('mute_video', 'mutev'):
+                    self.server.sessions[args[0]].send('MUTE_VIDEO')
+                    self.server.muted(args[0])
+                elif cmd in ('unmute_video', 'unmutev'):
+                    self.server.sessions[args[0]].send('UNMUTE_VIDEO')
+                    self.server.unmuted(args[0])
+                else:
+                    exec(command)
 
         self.current_scene.draw(screen)
         for obj in self.persistent_objects:
@@ -78,6 +111,7 @@ class Scene:
         for obj in self.objects:
             obj.reset()
 
+    # THIS SHOULD BE DONE BEFORE ACTUAL CAMERA FEEDS ARE PASSED TO MANAGER - USED TO CREATE THE SCENE DATA
     def add(self, uuid, x, y, w, h, *frame_modifying_funcs):
         for cam in self.cameras:
             # ALREADY REGISTERED

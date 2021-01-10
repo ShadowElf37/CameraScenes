@@ -2,8 +2,11 @@ from socket import *
 import threading
 from network_common import *
 from collections import defaultdict
+from time import time, sleep
 
 class UDPManager:
+    SESSION_TIMEOUT = 15
+
     def __init__(self, port=37001, frag=False):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
@@ -24,9 +27,14 @@ class UDPManager:
         self.fragments = defaultdict(lambda: defaultdict(list))
         self.incomplete_packets = defaultdict(list)
 
+        self.times: {str: float} = defaultdict(time)  # uuid: time() of last message
+        self.mutes = []  # uuids that are muted, we send them pings so they can pong and we record their time
+        self.pingpong_thread = threading.Thread(target=self._pingpong, daemon=True)
+
     def init(self):
         self.running = True
         self.thread.start()
+        self.pingpong_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
@@ -35,7 +43,26 @@ class UDPManager:
         for s in self.sessions.values():
             if s.addr == addr:
                 return s
-        return None
+
+    def muted(self, uuid):
+        self.mutes.append(uuid)
+    def unmuted(self, uuid):
+        self.mutes.remove(uuid)
+
+    def _pingpong(self):
+        while self.running:
+            t = time()
+            # send muted some pings
+            for uuid in self.mutes.copy():  # need copy for threadsafe
+                if 3.2 > t - self.times[uuid] > 3 or 8.2 > t - self.times[uuid] > 8 or 12.2 > t - self.times[uuid] > 12:
+                    self.sessions[uuid].send('PING')
+
+            # kill expired sessions
+            for uuid in self.sessions.keys():
+                if 15.1 >= t - self.times[uuid] >= 15:
+                    self.META_QUEUE.put((uuid, -7, 'CLOSE', (0,0), b''))
+
+            sleep(0.1)
 
     def _handle_data(self):
         # 0 - uuid
@@ -44,7 +71,7 @@ class UDPManager:
         # 3 - frag
         # 4 - data
         while self.running:
-            raw, addr = self.socket.recvfrom(100000)
+            raw, addr = self.socket.recvfrom(96000)
             decomp = UDPSession.decompile(raw)
             uuid = decomp[0]
             pid = decomp[1]
@@ -100,6 +127,7 @@ class UDPManager:
                     continue
 
             session.packet_id_recv = data[1]
+            self.times[uuid] = time()
 
             # DATATYPE
             if data[2] == 'INFO':

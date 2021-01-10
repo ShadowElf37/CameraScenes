@@ -17,6 +17,7 @@ import pickle
 import json
 from sys import exit
 from network_common import UDPSession, iterq
+import traceback
 
 path.append('..')
 
@@ -46,7 +47,7 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001, frag=True)
 server.init()
 
-scene_manager = scenes.SceneManager(server, use_pipe=False)
+scene_manager = scenes.SceneManager(server, use_pipe=True)
 
 preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 scene1 = scenes.Scene(scene_manager, layout=preview_tiler, background=BLACK)
@@ -65,6 +66,7 @@ print('Server started!')
 try:
     while server.running and RUNNING:
         for data in iterq(server.META_QUEUE):
+            print('META', data)
             uuid = data[0]
             session = server.sessions[uuid]
             if data[2] == 'OPEN':
@@ -109,6 +111,8 @@ try:
         clock.tick(FPS)
 
 except Exception as e:
+    traceback.print_exc()
+    print(type(e).__qualname__, str(e))
     for session in server.sessions.values():
         session._send('DIE')
     RUNNING = False
