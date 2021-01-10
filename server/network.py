@@ -54,7 +54,7 @@ class UDPManager:
             t = time()
             # send muted some pings
             for uuid in self.mutes.copy():  # need copy for threadsafe
-                if 3.2 > t - self.times[uuid] > 3 or 8.2 > t - self.times[uuid] > 8 or 12.2 > t - self.times[uuid] > 12:
+                if 3.1 > t - self.times[uuid] > 3 or 8.1 > t - self.times[uuid] > 8 or 12.1 > t - self.times[uuid] > 12:
                     self.sessions[uuid].send('PING')
 
             # kill expired sessions

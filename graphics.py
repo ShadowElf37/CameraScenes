@@ -110,16 +110,14 @@ class WebcamViewer(Object):
         self.w, self.h = w, h
 
     def draw(self, screen, *modifiers):
-        # debug
-        if self.new_frame is None:
-            self.surf.fill(WHITE)
-
         # see take_frame - otherwise it would flicker abhorrently
         if numpy.array_equal(self.old_frame, self.new_frame):
             self.selective_blit(screen, self.surf)
             return
 
         self.surf.fill(WHITE)
+        if self.new_frame is None:
+            return
 
         # MODIFIERS SHOULD BE FUNCTIONS THAT CAN ACT ON THE FRAME ALONE
         # CAN BE USED FOR EASY CROP AND SCALE

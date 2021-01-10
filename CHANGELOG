@@ -1,4 +1,7 @@
-ALPHA v0.0.9
+ALPHA v0.0.10
+-
+
+ALPHA v0.0.9 (MUTES)
 - Cleaned up redundant audio code
 - Added UDP ping pong
 - Server now kills feeds for clients that fail their ping pongs
@@ -7,7 +10,7 @@ ALPHA v0.0.9
 - Fixed a bug that caused Tcl to crash on macOS whenever the pygame window was unfocused and refocused (very weird bug)
 - Minor improvements
 
-ALPHA v0.0.8
+ALPHA v0.0.8 (FRAGMENTATION)
 - Fragmentation now works properly with multiple clients
 - Fixed fragmentation bug
 - Fixed client exit bug
@@ -15,24 +18,24 @@ ALPHA v0.0.8
 - Fully removed permissions check in client main.py
 - Cleaned up exit process for server and client; added more error protection
 
-ALPHA v0.0.7
+ALPHA v0.0.7 (PIPES)
 - Added application-layer fragmentation; maybe we won't need sudo anymore?
 - Added pipe.py
 - Fixed many bugs, especially with the layouts
 
-ALPHA v0.0.6
+ALPHA v0.0.6 (SCENES)
 - Added SceneManager, Scene, Layout
 - Integrated the server mainloop and BasicTiler with the new Scene structure
 - Fixed some bugs
 
-ALPHA v0.0.5
+ALPHA v0.0.5 (ERROR MESSAGES)
 - Client has user-friendly error messages for many situations during startup
 - Client loading screen now mirrors log output
 - Clearer startup logging
 - graphics.Text has rudimentary support for multiple lines; please don't use this seriously
 - Cleaned up redundant code
 
-ALPHA v0.0.4
+ALPHA v0.0.4 (AUDIO & COMMS)
 - UNIMPLEMENTED: G729A audio encoding support for all OS, G729ABufferedAudioInterface in audio.py; this may not get used now that audio broadcasting is undoable
 - Server gets raw audio from clients and plays it
 - Client now formally tells the server when it opens and closes, and the server manages video + audio outputs accordingly
@@ -42,19 +45,19 @@ ALPHA v0.0.4
 - Added loading message to client
 - Lots of bug fixes
 
-ALPHA v0.0.3
+ALPHA v0.0.3 (BASE)
 - MAC address used for uuid, allowing devices to connect and disconnect without breaking the server's session with it
 - Sessions are now stored by uuid - pid is the only thing verified
 - Bug fixes
 
-ALPHA v0.0.2
+ALPHA v0.0.2 (BASE)
 - Buffered send()
 - Added scale_to() in webcam.py
 - Added enforce_dim option to WebcamViewer so you don't have to manually rescale in mainloop
 - Now works properly on macOS
 - Bug fixes
 
-ALPHA v0.0.1
+ALPHA v0.0.1 (BASE)
 - First working tech demo
 - Mature webcam class
 - Basic 2-way UDP controls in network.py files

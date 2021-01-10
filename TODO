@@ -9,16 +9,18 @@ Low Priority Features
 - debug labels on camera viewers - user uuid
 - scenes can create sprites; Sprite should be animated, as in looping frames on draw(); need objects list that mainloop can draw, or maybe the scene gets a draw call
 - Load scenes from JSON
-- client-side video scaling (server is transforming fine but we can avoid it at least a bit)
+- client-side video scaling (server is transforming fine but offloading never hurt)
 - client-side cue indicators, like "you're coming up", notified via meta, for UI
-- in channeller we could have keybound functions in config, easy HALT
-- channeller gets programmable indicator lights? can show connected to externals
-- mouse can move objects around and it prints out position - good for scene editing
 - proper logging, log packets per second instead of every packet because that's a lot with 12 people
-- UI scaling, maybe
-- pleasant UI
-- wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
 
 Low Priority Bugs
 - second person inconsistent join? may have something to do with frag - client isn't sending sometimes, possibly, may have fixed itself in solving other bugs
 - very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
+
+Extra Features
+- in channeller we could have keybound functions in config, easy HALT
+- channeller gets programmable indicator lights? can show connected to externals
+- mouse can move objects around and it prints out position - good for scene editing
+- UI scaling, maybe
+- pleasant UI
+- wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
