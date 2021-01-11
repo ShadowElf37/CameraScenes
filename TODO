@@ -1,4 +1,5 @@
 High Priority Features
+- fractional positions/scales in JSON are interpreted as fraction of window
 - debug labels on camera viewers - user uuid
 - scenes can create sprites; Sprite should be animated, as in looping frames on draw(); need objects list that mainloop can draw, or maybe the scene gets a draw call
 - text and other objects in scene JSON
@@ -6,7 +7,7 @@ High Priority Features
 - channeller needs pipe device
 
 High Priority Bugs
--
+- on join, cams go to the final scene's spots
 
 Low Priority Features
 - client-side video scaling (server is transforming fine but offloading never hurts)
