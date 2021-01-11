@@ -18,7 +18,7 @@ class Object:
 
     @property
     def center(self):
-        return (self.x - self.w / 2, self.y - self.h / 2)
+        return (self.x - self.w // 2, self.y - self.h // 2)
     @property
     def top_left(self):
         return (self.x, self.y)
@@ -50,6 +50,25 @@ class Object:
             screen.blit(py_object, (self.bottom_left[0] + xoffset, self.bottom_left[1] + yoffset))
         elif self.corner == 4:
             screen.blit(py_object, (self.bottom_right[0] + xoffset, self.bottom_right[1] + yoffset))
+        else:
+            raise ValueError('Invalid draw corner %s' % self.corner)
+
+
+class Rect(Object):
+    def __init__(self, x=0, y=0, w=0, h=0, corner=0):
+        super().__init__(x, y, w, h, corner)
+
+    def draw(self, screen, xoffset=0, yoffset=0):
+        if self.corner == 0:
+            pygame.draw.rect(screen, WHITE, (self.center[0] + xoffset, self.center[1] + yoffset, self.w, self.h))
+        elif self.corner == 1:
+            pygame.draw.rect(screen, WHITE, (self.top_left[0] + xoffset, self.top_left[1] + yoffset, self.w, self.h))
+        elif self.corner == 2:
+            pygame.draw.rect(screen, WHITE, (self.top_right[0] + xoffset, self.top_right[1] + yoffset, self.w, self.h))
+        elif self.corner == 3:
+            pygame.draw.rect(screen, WHITE, (self.bottom_left[0] + xoffset, self.bottom_left[1] + yoffset, self.w, self.h))
+        elif self.corner == 4:
+            pygame.draw.rect(screen, WHITE, (self.bottom_right[0] + xoffset, self.bottom_right[1] + yoffset, self.w, self.h))
         else:
             raise ValueError('Invalid draw corner %s' % self.corner)
 

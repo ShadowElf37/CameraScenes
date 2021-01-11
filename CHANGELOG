@@ -1,6 +1,19 @@
+ALPHA v0.1.0 (SHOW JSON)
+- Scenes are now loaded from JSON - these files hold scene initialization data
+- Added shows folder for show JSON and test.json
+- Added debug mode where missing feeds appear as white rects
+- Added config.json for cached options - not useful for user at the moment
+- Added show JSON selection menu, very similar to Channeler's
+- Added Rect to graphics.py
+
+
+======= MAJOR =======
+
+
 ALPHA v0.0.10 (BACKGROUNDS)
 - Scenes can set backgrounds - scales to window's original w/h
 - PID groups are now created for every datatype on the fly through a defaultdict - frames assembled slowly will no longer get drowned out by audio, for example
+- Moved client and server code to top folder to ease file structure
 - Band-aid fix for a bug on Windows where PyAudio's start_stream() made the stream explode
 
 ALPHA v0.0.9 (MUTES)

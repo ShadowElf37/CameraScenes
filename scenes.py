@@ -9,7 +9,7 @@ import threading
 class SceneManager:
     UNDEFINED_COMMAND = object()
 
-    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False):
+    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, show_unregistered_cams=False):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
@@ -19,6 +19,7 @@ class SceneManager:
 
         self.screen_width = screen_width
         self.screen_height = screen_height
+        self.show_unregistered_cams = show_unregistered_cams
 
         self.cues = Pipe(at=38051)
 
@@ -57,7 +58,7 @@ class SceneManager:
     def back(self):
         self.set_scene(self.current_i - 1)
     def last(self):
-        self.set_scene(len(self.scenes))
+        self.set_scene(len(self.scenes)-1)
     def first(self):
         self.set_scene(0)
 
@@ -103,13 +104,15 @@ class SceneManager:
         for obj in self.persistent_objects:
             obj.draw(screen)
 
+
 class Scene:
     def __init__(self, manager, layout=None, background=None):
         self.manager: SceneManager = manager
         self.layout: Layout = layout or Layout()
         self.cameras: [Tuple[str, Set[Callable]]] = []
+        self.debug_rects: {str: graphics.Rect} = {}
         self.objects: [graphics.Object] = []
-        self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) is tuple else None
+        self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
         self.manager.add_scenes(self)
 
     def fp_to_surface(self, fp):
@@ -138,9 +141,8 @@ class Scene:
         uuid = str(uuid)
         self.cameras.append((uuid, set(frame_modifying_funcs+(webcam.jpeg_decode,))))
         self.layout.register(uuid, x, y, w, h)
-        if cam := self.manager.cameras.get(uuid):
-            cam.set_pos(*self.layout.get_pos(uuid))
-            cam.set_dim(*self.layout.get_dim(uuid))
+        if self.manager.show_unregistered_cams:
+            self.debug_rects[uuid] = graphics.Rect(x, y, w, h)
 
     def add_object(self, obj):
         self.objects.append(obj)
@@ -154,7 +156,7 @@ class Scene:
         self.update_cameras()
 
     def draw(self, screen: pygame.Surface):
-        if type(self.background) is tuple:
+        if type(self.background) in (tuple, list, set):
             screen.fill(self.background)
         elif self.background:
             screen.blit(self.background, (0,0))
@@ -164,6 +166,8 @@ class Scene:
         for uuid, funcs in self.cameras:
             if cam := self.manager.cameras.get(uuid):
                 cam.draw(screen, *funcs)
+            elif self.manager.show_unregistered_cams:
+                self.debug_rects[uuid].draw(screen)
 
         for obj in self.objects:
             obj.draw(screen)

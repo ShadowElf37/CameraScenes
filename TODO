@@ -1,19 +1,20 @@
 High Priority Features
-- Load scenes from JSON
-
-High Priority Bugs
-- after unmuting a muted client on Windows the mic throws "unanticipated host error" and dies gloriously
-
-Low Priority Features
 - debug labels on camera viewers - user uuid
 - scenes can create sprites; Sprite should be animated, as in looping frames on draw(); need objects list that mainloop can draw, or maybe the scene gets a draw call
+- text and other objects in scene JSON
+- client-side cue indicators, like "you're coming up", notified via meta, for UI - general client UI is good
+
+High Priority Bugs
+-
+
+Low Priority Features
 - client-side video scaling (server is transforming fine but offloading never hurt)
-- client-side cue indicators, like "you're coming up", notified via meta, for UI
 - proper logging, log packets per second instead of every packet because that's a lot with 12 people
 
 Low Priority Bugs
 - BasicTiler is quite broken, just move away from it
 - very inconsistent webcam experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
+- (temp fixed) after unmuting a muted client on Windows the mic throws "unanticipated host error" and dies gloriously
 
 Extra Features
 - in channeller we could have keybound functions in config, easy HALT
