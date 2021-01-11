@@ -52,6 +52,7 @@ class SceneManager:
         self.current_i = i
         self.current_scene = self.scenes[i]
         self.current_scene.activate()
+        print(f'Switched to scene {i}. UUIDS available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
 
     def next(self):
         self.set_scene(self.current_i + 1)

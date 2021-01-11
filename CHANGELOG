@@ -1,9 +1,12 @@
+ALPHA v0.1.1
+- 
+
 ALPHA v0.1.0 (SHOW JSON)
 - Scenes are now loaded from JSON - these files hold scene initialization data
 - Added shows folder for show JSON and test.json
 - Added debug mode where missing feeds appear as white rects
 - Added config.json for cached options - not useful for user at the moment
-- Added show JSON selection menu, very similar to Channeler's
+- Added show JSON selection menu, very similar to Channeller's
 - Added Rect to graphics.py
 
 
