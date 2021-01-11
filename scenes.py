@@ -3,7 +3,7 @@ from typing import Optional, Callable, Tuple, Set
 import graphics
 import webcam
 from pipe import Pipe
-from server.network import UDPManager
+from network_server import UDPManager
 import threading
 
 class SceneManager:
@@ -47,7 +47,7 @@ class SceneManager:
             self.scenes.append(scene)
 
     def set_scene(self, i):
-        if i > len(self.scenes) or i < 0: return
+        if i > len(self.scenes)-1 or i < 0: return
         self.current_i = i
         self.current_scene = self.scenes[i]
         self.current_scene.activate()
@@ -71,30 +71,33 @@ class SceneManager:
                 'first': self.first,
                 'test': lambda: print('pipe test!')
             }.get(command, lambda: self.UNDEFINED_COMMAND)() is self.UNDEFINED_COMMAND:
-                if command[:3] == 'py:':
-                    try:
-                        eval(command[3:].strip())
-                    except SyntaxError:
-                        exec(command[3:].strip())
-                else:
-                    cmd, *args = command.split(' ')
-
-                    if cmd == 'set_scene':
-                        self.set_scene(int(args[0]))
-                    elif cmd in ('mute_audio', 'mutea', 'mute'):
-                        self.server.sessions[args[0]].send('MUTE_AUDIO')
-                        self.server.muted(args[0])
-                    elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
-                        self.server.sessions[args[0]].send('UNMUTE_AUDIO')
-                        self.server.unmuted(args[0])
-                    elif cmd in ('mute_video', 'mutev'):
-                        self.server.sessions[args[0]].send('MUTE_VIDEO')
-                        self.server.muted(args[0])
-                    elif cmd in ('unmute_video', 'unmutev'):
-                        self.server.sessions[args[0]].send('UNMUTE_VIDEO')
-                        self.server.unmuted(args[0])
+                try:
+                    if command[:3] == 'py:':
+                        try:
+                            eval(command[3:].strip())
+                        except SyntaxError:
+                            exec(command[3:].strip())
                     else:
-                        print('Bad pipe command', command)
+                        cmd, *args = command.split(' ')
+
+                        if cmd == 'set_scene':
+                            self.set_scene(int(args[0]))
+                        elif cmd in ('mute_audio', 'mutea', 'mute'):
+                            self.server.sessions[args[0]].send('MUTE_AUDIO')
+                            self.server.muted(args[0])
+                        elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
+                            self.server.sessions[args[0]].send('UNMUTE_AUDIO')
+                            self.server.unmuted(args[0])
+                        elif cmd in ('mute_video', 'mutev'):
+                            self.server.sessions[args[0]].send('MUTE_VIDEO')
+                            self.server.muted(args[0])
+                        elif cmd in ('unmute_video', 'unmutev'):
+                            self.server.sessions[args[0]].send('UNMUTE_VIDEO')
+                            self.server.unmuted(args[0])
+                        else:
+                            print('Bad pipe command', '"'+command+'"')
+                except Exception as e:
+                    print(f'Pipe command "{command}" failed:', str(e))
 
         self.current_scene.draw(screen)
         for obj in self.persistent_objects:
@@ -106,7 +109,7 @@ class Scene:
         self.layout: Layout = layout or Layout()
         self.cameras: [Tuple[str, Set[Callable]]] = []
         self.objects: [graphics.Object] = []
-        self.background: Optional[pygame.Surface, tuple] = background
+        self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) is tuple else None
         self.manager.add_scenes(self)
 
     def fp_to_surface(self, fp):

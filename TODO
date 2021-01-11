@@ -1,6 +1,4 @@
 High Priority Features
-- scenes can set background image properly
-- separate pid for audio and video - maybe establish flexible pid groups that can be set at will
 - Load scenes from JSON
 
 High Priority Bugs
@@ -14,8 +12,8 @@ Low Priority Features
 - proper logging, log packets per second instead of every packet because that's a lot with 12 people
 
 Low Priority Bugs
-- second person inconsistent join? may have something to do with frag - client isn't sending sometimes, possibly, may have fixed itself in solving other bugs
-- very inconsistent experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
+- BasicTiler is quite broken, just move away from it
+- very inconsistent webcam experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
 
 Extra Features
 - in channeller we could have keybound functions in config, easy HALT

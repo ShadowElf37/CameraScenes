@@ -26,10 +26,10 @@ class Throughput:
 
     def pause(self):
         self.open = False
-        self.stream.stop_stream()
+        #self.stream.stop_stream()
 
     def unpause(self):
-        self.stream.start_stream()
+        #self.stream.start_stream()
         self.open = True
 
     def close(self):
@@ -59,7 +59,7 @@ class AudioInput(Throughput):
                     self.buffer.put(self.stream.read(CHUNK, exception_on_overflow=False))
                 except OSError as e:
                     print('MIC IMPLODED LUL', str(e))
-                    pass
+                    sleep(0.01)
             else:
                 sleep(0.01)
 
@@ -223,10 +223,11 @@ if __name__ == '__main__':
     aud.activate()
 
     def onoff():
-        sleep(1)
-        aud.mute()
-        sleep(1)
-        aud.unmute()
+        while True:
+            sleep(1)
+            aud.mute()
+            sleep(1)
+            aud.unmute()
     import threading
     threading.Thread(target=onoff, daemon=True).start()
 

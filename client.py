@@ -1,5 +1,5 @@
 from sys import path
-path.append('..')
+path.append('')
 
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
@@ -8,7 +8,7 @@ import pygame.freetype
 from sys import exit
 import webcam
 import graphics
-import network
+import network_client as network
 import audio
 import pickle
 from cv2 import COLOR_BGR2RGB

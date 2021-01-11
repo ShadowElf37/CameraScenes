@@ -1,5 +1,7 @@
-ALPHA v0.0.10
--
+ALPHA v0.0.10 (BACKGROUNDS)
+- Scenes can set backgrounds - scales to window's original w/h
+- PID groups are now created for every datatype on the fly through a defaultdict - frames assembled slowly will no longer get drowned out by audio, for example
+- Band-aid fix for a bug on Windows where PyAudio's start_stream() made the stream explode
 
 ALPHA v0.0.9 (MUTES)
 - Cleaned up redundant audio code

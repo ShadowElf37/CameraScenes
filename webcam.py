@@ -36,7 +36,7 @@ class Webcam:
             self.cap = cv.VideoCapture(device)
         if not self.cap.isOpened():
             raise IOError('Failed to open webcam. Make sure it\'s connected and not in use.')
-        elif self.cap.read()[0] is False:
+        elif self.cap.read()[1] is None:
             raise IOError('Failed to open webcam. Maybe it\'s already in use?')
         print('Webcam initialized.')
         # DONE INIT WOO
@@ -62,7 +62,7 @@ class Webcam:
 
         frame: numpy.ndarray = self.cap.read()[1]
         if frame is None:
-            print('webcam.read() DEAD FRAME')
+            print('webcam.read() didn\'t return any data - if you restart enough times it tends to work')
             return
 
         if self.swap_axes:

@@ -90,10 +90,10 @@ class UDPClient:
 
                 reason = data[2]
 
-                if not self.session.verify_pid(pid) and reason not in ('DIE', 'RESET'):
+                if not self.session.verify_pid(pid, reason) and reason not in ('DIE', 'RESET'):
                     print('Out of order packet rejected', data[:4])
                     continue
-                self.session.packet_id_recv = pid
+                self.session.packet_id_recv[reason] = pid
 
                 print(*data[:4])
 

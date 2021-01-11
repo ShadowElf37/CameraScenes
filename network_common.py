@@ -15,8 +15,9 @@ class UDPSession:
 
         # these are different because we don't care about client and server syncing perfectly when it's just streaming data
         # all we want to ensure is that we and they are not *receiving* packets out of order, and are discarding such packets
-        self.packet_id_recv = -1  # packet id of packets we receive - other end's send id
-        self.packet_id_send = -1  # packet id of packets we send - other end's receive id
+        # access by datatype
+        self.packet_id_send = defaultdict(lambda: -1)  # packet id of packets we receive - other end's send id
+        self.packet_id_recv = defaultdict(lambda: -1)  # packet id of packets we send - other end's receive id
 
         self.send_buffer = Queue()
         self.sending = False
@@ -56,15 +57,15 @@ class UDPSession:
         # datatype should be INFO, AUDIO, VIDEO, other
         # META is for manager to handle
         if self.frag:
-            return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send), datatype, f'{frag_num} {frag_final}')).encode() + b'\n' + data
-        return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send), datatype, '0 0')).encode() + b'\n' + data
+            return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send[datatype]), datatype, f'{frag_num} {frag_final}')).encode() + b'\n' + data
+        return '\n'.join((override_uuid or self.uuid, str(self.packet_id_send[datatype]), datatype, '0 0')).encode() + b'\n' + data
 
-    def verify_pid(self, pid):
-        return pid > self.packet_id_recv
+    def verify_pid(self, pid, datatype):
+        return pid > self.packet_id_recv[datatype]
 
     def _send(self, datatype: str, data: bytes=b'', send_as=None, frag_num=0, frag_final=0, ignore_pid=False):
         if not ignore_pid:
-            self.packet_id_send += 1
+            self.packet_id_send[datatype] += 1
         self.manager.socket.sendto(self.compile(datatype, data, override_uuid=send_as, frag_num=frag_num, frag_final=frag_final), self.addr)
 
     # BUFFERED STUFF
@@ -90,7 +91,7 @@ class UDPSession:
         try:
             while self.sending:
                 data = self.send_buffer.get()
-                self.packet_id_send += 1
+                self.packet_id_send[data[0]] += 1
 
                 if FRAG_LIMIT >= len(data[1]):
                     self._send(*data, ignore_pid=True)

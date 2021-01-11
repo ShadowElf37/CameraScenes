@@ -1,14 +1,11 @@
 from sys import path
-path.append('..')
+path.append('')
 
 import os
 os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
-# GUI NEEDS CUSTOM BACKGROUND
-# SPRITE ANIMATIONS
-# USEABLE GRAPHICS LIBRARY
 import pygame.locals
-import network
+import network_server as network
 import audio
 import webcam
 import graphics
@@ -19,15 +16,15 @@ from sys import exit
 from network_common import UDPSession, iterq
 import traceback
 
-path.append('..')
+path.append('')
 
 clock = pygame.time.Clock()
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
 
-WIDTH = 1000
-HEIGHT = 700
+WIDTH = 1920*2//3
+HEIGHT = 1080*2//3
 FPS = 30
 RUNNING = True
 
@@ -52,7 +49,8 @@ scene_manager = scenes.SceneManager(server, WIDTH, HEIGHT, use_pipe=True)
 preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
 scene1 = scenes.Scene(scene_manager, layout=preview_tiler, background=BLACK)
 
-scene2 = scenes.Scene(scene_manager)
+print(os.getcwd())
+scene2 = scenes.Scene(scene_manager, background='images/mh.jpg')
 
 scene2.add(7, WIDTH/4, HEIGHT/2, CAM_WIDTH, CAM_HEIGHT)
 scene2.add(1, WIDTH*3/4, HEIGHT/2, CAM_WIDTH, CAM_HEIGHT)
