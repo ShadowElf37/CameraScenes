@@ -106,6 +106,7 @@ CAM_HEIGHT = 300
 
 pygame.init()
 pygame.display.set_caption("Proscenium Server")
+pygame.display.set_icon(pygame.image.load('images/favicon.png'))
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
 aud = audio.MultipleAudioOutput()

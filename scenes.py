@@ -189,6 +189,7 @@ class Scene:
                 cam.set_pos(*self.layout.get_pos(uuid))
                 dim = self.layout.get_dim(uuid)
                 cam.set_dim(*dim)
+                print('NEW DIM', dim)
                 self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
 
     def activate(self):

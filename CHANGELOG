@@ -1,3 +1,7 @@
+BETA v0.1.6 (ICON)
+- Added icons to channeller and proscenium - credit to Benjamin Coveler
+- Fixed bug where webcam viewers died after changing dimensions
+
 BETA v0.1.5 (BUG HUNTING)
 - Actually fixed the scale_to() function that was causing so many issues
 - Fixed a bug where pipe-killing a client was NOT safe and other objects would try to access it

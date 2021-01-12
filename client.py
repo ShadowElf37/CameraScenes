@@ -63,6 +63,7 @@ del uid, tk, submit, uid_entry, uid_text
 
 pygame.init()
 pygame.display.set_caption("Proscenium Client")
+pygame.display.set_icon(pygame.image.load('images/favicon.png'))
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
@@ -164,6 +165,7 @@ try:
                 RUNNING = False
                 client.close()
                 break
+
             elif data == 'MUTE_AUDIO':
                 aud.mute()
             elif data == 'UNMUTE_AUDIO':
@@ -172,6 +174,7 @@ try:
                 cam.mute()
             elif data == 'UNMUTE_VIDEO':
                 cam.unmute()
+
             elif data[0] == 'SET_RESOLUTION':  # 'x y'
                 w, h = map(int, data[1].decode().split())
                 ENFORCED_OUTPUT_RESOLUTION = w, h
@@ -181,7 +184,8 @@ try:
                 fw = ENFORCED_OUTPUT_RESOLUTION[0]
                 fh = ENFORCED_OUTPUT_RESOLUTION[1]
                 ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
-                print('FLEXED', ENFORCED_OUTPUT_RESOLUTION)
+                print('Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+
             elif data[0] == 'UPDATE_TEXT':  # hello world
                 text.reload(text=data[1].decode())
             elif data[0] == 'UPDATE_TEXT_COLOR':  # 0,0,0

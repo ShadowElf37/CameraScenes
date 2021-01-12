@@ -1,0 +1,1 @@
+pyinstaller --windowed -i images/favicon.icns -n Proscenium client.py

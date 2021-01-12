@@ -248,7 +248,7 @@ class WebcamViewer(Object):
             return
 
         self.surf.fill(WHITE)
-        if self.new_frame is None:
+        if self.new_frame is None or not any(self.new_frame.shape[:2]):
             return
 
         # MODIFIERS SHOULD BE FUNCTIONS THAT CAN ACT ON THE FRAME ALONE
@@ -266,17 +266,28 @@ class WebcamViewer(Object):
         else:
             # if we wanna match the height and modify the width
             if self.flex_dim:
+
                 w, h, _ = self.new_frame.shape
-                self.new_frame = scale_to(self.new_frame, round(w * self.h / h), self.h)
+                nw = round(w * self.h / h)
+                self.new_frame = scale_to(self.new_frame, nw, self.h)
+
+                # if our surface is out of date, flex_dim won't change that - gotta fix it ourselves
+                # scenes do update our self.w and self.h, but if we're flexing then the surface won't get that update, and it needs to
+                # we use cw to cache surface width, and when it's out of date with our scene, we fix it
+                if self.w != nw or self.cw != nw:  # well now we need a new surface because the dims dont match
+                    self.w = self.cw = nw
+                    self.surf = pygame.Surface((self.w, self.h))
+
             # otherwise just need to get a new surface for the new size -
             else:
                 w, h, *_ = self.new_frame.shape
 
-            # this surface is cached and reused as long as the size doesn't change
-            if self.w != w or self.h != h and self.new_frame:  # well now we need a new surface because the dims dont match
-                self.w, self.h = w, h
-                self.surf = pygame.Surface((w, h))
+                # this surface is cached and reused as long as the size doesn't change
+                if self.w != w or self.h != h:  # well now we need a new surface because the dims dont match
+                    self.w, self.h = w, h
+                    self.surf = pygame.Surface((w, h))
 
+        #print('CAM', self.surf.get_width(), self.surf.get_height(), self.w, self.h, self.new_frame.shape)
         pygame.surfarray.blit_array(self.surf, self.new_frame)
 
         self.old_frame = self.new_frame
