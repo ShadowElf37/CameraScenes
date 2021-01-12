@@ -3,7 +3,7 @@ High Priority Features
 - channeller needs pipe device
 
 High Priority Bugs
-- on join, cams go to the final scene's spots
+-
 
 Low Priority Features
 - client-side video scaling (server is transforming fine but offloading never hurts)

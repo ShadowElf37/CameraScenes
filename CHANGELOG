@@ -1,3 +1,7 @@
+ALPHA v0.1.2 ()
+- 
+- Fixed a bug where cams would go to the last scene's spots outside of debug mode
+
 ALPHA v0.1.1 (EDIT MODE & SPRITES)
 - Fraction-of-window camera xywh can now be used in JSON
 - Pretty good Sprite class in graphics.py

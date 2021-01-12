@@ -90,7 +90,7 @@ WHITE = (255, 255, 255)
 WIDTH = 1920*2//3
 HEIGHT = 1080*2//3
 FPS = graphics.Sprite.REAL_FPS = 30
-DEBUG = True
+DEBUG = False
 RUNNING = True
 
 CAM_WIDTH = 400

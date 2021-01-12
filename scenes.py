@@ -152,11 +152,11 @@ class Scene:
 
     def notify_new(self, uuid):
         self.layout.notify_new(uuid)
-        self.update_cameras()
+        if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar
 
     def notify_death(self, uuid):
         self.layout.notify_death(uuid)
-        self.update_cameras()
+        if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar
 
     def draw(self, screen: pygame.Surface):
         if type(self.background) in (tuple, list, set):  # bg is color
@@ -197,6 +197,7 @@ class Scene:
 
 
 class Layout:
+    DYNAMIC = False
     def __init__(self):
         self.positions = {}
         self.dims = {}
@@ -229,6 +230,7 @@ class Layout:
 
 
 class BasicTiler(Layout):
+    DYNAMIC = True
     def __init__(self, w, h, tilew, tileh, pad_edges=False):
         super().__init__()
         self.count = -1
