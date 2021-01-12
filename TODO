@@ -1,14 +1,13 @@
 High Priority Features
-- just specify folder for a sprite to pull 123456 from - it's annoying specifying all paths
 - log packets per second instead of every packet because that's a lot with 12 people
-- wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
-    - or maybe, capture screen somehow and just crop that slowly
-    - we can have a brief capture of the second screen and put that behind as we crop
+- sprite start+end pos
+- sprite rotation
 
 High Priority Bugs
 -
 
 Low Priority Features
+-
 
 Low Priority Bugs
 - BasicTiler is quite broken, just move away from it

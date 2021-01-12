@@ -4,12 +4,13 @@ import graphics
 import webcam
 from pipe import Pipe
 from network_server import UDPManager
+import time
 import threading
 
 class SceneManager:
     UNDEFINED_COMMAND = object()
 
-    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
+    def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
@@ -17,9 +18,15 @@ class SceneManager:
         self.current_i = -1
         self.current_scene: Optional[Scene] = None
 
-        self.screen_width = screen_width
-        self.screen_height = screen_height
+        self.screen = screen
+        self.screen_width = screen.get_width()
+        self.screen_height = screen.get_height()
         self.debug = debug
+
+        self.wiping_from = None
+        self.wipe_side = ''
+        self.wipe_length = 0  # IN FRAMES
+        self.wipe_counter = 0
 
         self.cues = Pipe(at=38051, ip=pipe_ip)
 
@@ -30,6 +37,10 @@ class SceneManager:
                 print('SceneManager Pipe has been created without blocking. The other end may connect at any time.')
 
             self.cues.open(blocking=block_pipe, cb=lambda: print('Pipe established.'))
+
+    @property
+    def dim(self):
+        return self.screen_width, self.screen_height
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
@@ -46,12 +57,25 @@ class SceneManager:
         for scene in scenes:
             self.scenes.append(scene)
 
-    def set_scene(self, i):
+    def set_scene_nowipe(self, i):
         if i > len(self.scenes)-1 or i < 0: return
         self.current_i = i
         self.current_scene = self.scenes[i]
         self.current_scene.activate()
         print(f'Switched to scene {i}. UUIDs available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
+
+    def set_scene(self, i):
+        if i > len(self.scenes) - 1 or i < 0: return
+        self.current_i = i
+        self.current_scene: Scene = self.scenes[i]
+        if self.current_scene.wipe:
+            self.wiping_from = self.screen.copy()
+            self.wipe_length = self.current_scene.wipe
+            self.wipe_side = self.current_scene.wipe_side
+            self.wipe_counter = 0
+
+        self.current_scene.activate()
+        print(f'Switched to scene {i}' + (' (wiping)' if self.current_scene.wipe else '') + '. UUIDs available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
 
     def next(self):
         self.set_scene(self.current_i + 1)
@@ -62,7 +86,7 @@ class SceneManager:
     def first(self):
         self.set_scene(0)
 
-    def draw(self, screen):
+    def draw(self):
         for command in iter(self.cues):
             command = command.decode()
             if {
@@ -83,6 +107,8 @@ class SceneManager:
 
                         if cmd == 'set_scene':
                             self.set_scene(int(args[0]))
+                        elif cmd == 'set_scene_nowipe':
+                            self.set_scene_nowipe(int(args[0]))
                         elif cmd in ('mute_audio', 'mutea', 'mute'):
                             self.server.sessions[args[0]].send('MUTE_AUDIO')
                             self.server.muted(args[0])
@@ -110,13 +136,34 @@ class SceneManager:
                 except Exception as e:
                     print(f'Pipe command "{command}" failed:', str(e))
 
-        self.current_scene.draw(screen)
-        for obj in self.persistent_objects:
-            obj.draw(screen)
 
+        self.current_scene.draw(self.screen)
+
+        if self.wiping_from is not None:
+            if self.wipe_side == 'right':
+                x = int(self.wipe_counter / self.wipe_length * self.screen_width)
+                self.screen.blit(self.wiping_from, (x, 0), pygame.Rect(x, 0, self.screen_width-x, self.screen_height))
+            elif self.wipe_side == 'left':
+                x = int(self.wipe_counter / self.wipe_length * self.screen_width)
+                self.screen.blit(self.wiping_from, (0, 0), pygame.Rect(0, 0, self.screen_width - x, self.screen_height))
+            elif self.wipe_side == 'top':
+                y = int(self.wipe_counter / self.wipe_length * self.screen_height)
+                self.screen.blit(self.wiping_from, (0, 0), pygame.Rect(0, 0, self.screen_width, self.screen_height - y))
+            elif self.wipe_side == 'bottom':
+                y = int(self.wipe_counter / self.wipe_length * self.screen_height)
+                self.screen.blit(self.wiping_from, (0, y), pygame.Rect(0, y, self.screen_width, self.screen_height - y))
+            else:
+                raise ValueError('Bad wipe option %s' % self.wipe_side)
+
+            self.wipe_counter += 1
+            if self.wipe_counter == self.wipe_length:
+                self.wiping_from = None
+
+        for obj in self.persistent_objects:
+            obj.draw(self.screen)
 
 class Scene:
-    def __init__(self, manager, layout=None, background=None):
+    def __init__(self, manager, layout=None, background=None, wipe=0, wipe_side='left'):
         self.manager: SceneManager = manager
         self.layout: Layout = layout or Layout()
         self.cameras: [Tuple[str, Set[Callable]]] = []
@@ -125,6 +172,9 @@ class Scene:
         self.objects: [graphics.Object] = []
         self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
         self.manager.add_scenes(self)
+
+        self.wipe = wipe
+        self.wipe_side = wipe_side
 
     def fp_to_surface(self, fp):
         surf = pygame.image.load(fp)

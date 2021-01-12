@@ -2,6 +2,7 @@ import pygame
 import pygame.freetype
 from webcam import scale_to
 import numpy
+import os
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -79,9 +80,18 @@ class Sprite(Object):
     REAL_FPS = 30
 
     # set fps to 0 for stills
-    def __init__(self, imgfps: tuple, x, y, fps=REAL_FPS, w=0, h=0, delete_on_end=False, corner=0):
+    def __init__(self, imgfolder, x, y, fps=REAL_FPS, w=0, h=0, delete_on_end=False, corner=0):
         super().__init__(x, y, w, h, corner)
-        self.imgs = [pygame.image.load(fp) for fp in imgfps]
+
+        self.folder = os.path.join('sprites', imgfolder)
+        self.img_paths = []
+
+        for dirpath, dirnames, filenames in os.walk(self.folder):
+            for file in filenames:
+                self.img_paths.append(os.path.join(dirpath, file))
+
+        print(self.img_paths)
+        self.imgs = [pygame.image.load(fp) for fp in sorted(self.img_paths)]
         self.frame = 0
 
         self.cw = self.imgs[0].get_width()

@@ -1,5 +1,7 @@
-ALPHA v0.1.3 ()
-- Upgraded pipe
+ALPHA v0.1.3 (WIPES)
+- Improved pipe
+- Added directional wipe transitions and JSON for it
+- Sprites now pull alphabetically from a specified folder in sprites/
 
 ALPHA v0.1.2 (CLIENT UPGRADE)
 - Added comms for changing client text and color

@@ -8,13 +8,13 @@
       ["hello world", 200, 200]
     ],
     "sprites": [
-      [[
-        "sprites/test/1.png", "sprites/test/2.png", "sprites/test/3.png", "sprites/test/4.png"
-      ], 900, 500, 30]
+      ["test", 900, 500, 30]
     ]
   },
   {
     "background": "images/mh.jpg",
+    "wipe": 30,
+    "wipe_to": "left",
     "cameras": [
       [1, 600, 200, 400, 300]
     ]

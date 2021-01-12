@@ -114,14 +114,14 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001, frag=True)
 server.init()
 
-scene_manager = scenes.SceneManager(server, WIDTH, HEIGHT, use_pipe=True, debug=DEBUG)
+scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG)
 
 # ============
 # PARSE SCENES
 # ============
 
 for scene in show_data:
-    s = scenes.Scene(scene_manager, background=scene.get('background'))
+    s = scenes.Scene(scene_manager, background=scene.get('background'), wipe=scene.get('wipe', 0), wipe_side=scene.get('wipe_to', 'left'))
 
     for camera in scene.get('cameras', []):  # uuid, x, y, w, h
         uuid, x, y, w, h, *extra = camera
@@ -150,7 +150,9 @@ for scene in show_data:
 
 
 #preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
-#scene_manager.persistent_objects.append(graphics.Text('Server POGGERS', WIDTH / 2, 600))
+FPS_COUNTER = graphics.Text('FPS', 50, 20)
+if DEBUG:
+    scene_manager.persistent_objects.append(FPS_COUNTER)
 scene_manager.first()
 
 # ======
@@ -190,7 +192,7 @@ try:
             cam.take_frame(pickle.loads(frame))
             #server.sessions[uuid].send('PRINT', b'hello fren')
 
-        scene_manager.draw(screen)
+        scene_manager.draw()
 
         # PLAY AUDIO FROM CLIENTS
         for chunk in iterq(server.AUDIO_QUEUE):
@@ -248,6 +250,8 @@ try:
 
 
         clock.tick(FPS)
+        if DEBUG:
+            FPS_COUNTER.reload(text=str(round(clock.get_fps(), 1)))
 
 except Exception as e:
     traceback.print_exc()
