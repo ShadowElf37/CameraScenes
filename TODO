@@ -1,13 +1,14 @@
 High Priority Features
-- channeller needs pipe device
 - just specify folder for a sprite to pull 123456 from - it's annoying specifying all paths
-- proper logging; log packets per second instead of every packet because that's a lot with 12 people
+- log packets per second instead of every packet because that's a lot with 12 people
+- wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
+    - or maybe, capture screen somehow and just crop that slowly
+    - we can have a brief capture of the second screen and put that behind as we crop
 
 High Priority Bugs
 -
 
 Low Priority Features
-- catch an error where you specify too high webcam resolution in client and it returns frames with nonsensical shapes
 
 Low Priority Bugs
 - BasicTiler is quite broken, just move away from it
@@ -17,7 +18,7 @@ Low Priority Bugs
 Extra Features
 - in channeller we could have keybound functions in config, easy HALT
 - channeller gets programmable indicator lights? can show connected to externals
-- mouse can move objects around and it prints out position - good for scene editing
-- UI scaling, maybe
+- UI scaling, maybe - perhaps only for client?
 - pleasant client UI
-- wipe transitions - cams get told to crop and reposition themselves as an x value increments, could be pretty easy to implement
+- catch an error where you specify too high webcam resolution in client and it returns frames with nonsensical shapes
+
