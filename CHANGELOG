@@ -5,8 +5,7 @@ BETA v0.1.4 (SPRITE UPGRADE)
 - Added event reporting to UDPManager so it prints intelligent information every once in a while instead of spam
 
 
-======= MAJOR =======
-
+======= MAJOR =======  [past this point, all planned minor features have been implemented]
 
 
 ALPHA v0.1.3 (WIPES)
@@ -38,7 +37,7 @@ ALPHA v0.1.0 (SHOW JSON)
 - Added Rect to graphics.py
 
 
-======= MAJOR =======
+======= MAJOR =======  [past this point, all vital features have been implemented]
 
 
 ALPHA v0.0.10 (BACKGROUNDS)

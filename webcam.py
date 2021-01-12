@@ -18,7 +18,7 @@ def scale_by(frame, factor):
 def scale_to(frame: numpy.ndarray, x, y):
     ox, oy, _ = frame.shape  # third is color depth (3)
     if (ox,oy) != (x,y):
-        return cv.resize(frame, None, fx=x/ox, fy=y/oy)
+        return cv.resize(frame, (y, x))
     return frame
 
 def jpeg_encode(frame, quality):

@@ -256,7 +256,9 @@ class WebcamViewer(Object):
         # no clue what we're receiving sadly
         # if we want specific dimensions, use modifiers to crop or scale on client or server side, or use enforce_dim, which will scale automatically to ow/oh
         if self.enforce_dim:
+            #print(self.new_frame.shape, self.w, self.h, self.surf.get_width(), self.surf.get_height())
             self.new_frame = scale_to(self.new_frame, self.w, self.h)
+            #print(self.new_frame.shape, self.w, self.h, self.surf.get_width(), self.surf.get_height())
         else:
             # just need to get a new surface for the new size - this surface is cached and reused as long as the size doesn't change
             w, h, *_ = self.new_frame.shape
