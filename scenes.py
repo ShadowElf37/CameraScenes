@@ -9,7 +9,7 @@ import threading
 class SceneManager:
     UNDEFINED_COMMAND = object()
 
-    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, debug=False):
+    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
@@ -21,16 +21,15 @@ class SceneManager:
         self.screen_height = screen_height
         self.debug = debug
 
-        self.cues = Pipe(at=38051)
+        self.cues = Pipe(at=38051, ip=pipe_ip)
 
         if use_pipe:
             if block_pipe:
                 print('SceneManager Pipe has been created with blocking. Please establish the other end now.')
-                self.cues.open()
-                print('Pipe established.')
             else:
                 print('SceneManager Pipe has been created without blocking. The other end may connect at any time.')
-                threading.Thread(target=lambda: (not self.cues.open() and print('Pipe established.')), daemon=True).start()
+
+            self.cues.open(blocking=block_pipe, cb=lambda: print('Pipe established.'))
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)

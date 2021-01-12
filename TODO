@@ -1,11 +1,12 @@
 High Priority Features
 - channeller needs pipe device
+- just specify folder for a sprite to pull 123456 from - it's annoying specifying all paths
+- proper logging; log packets per second instead of every packet because that's a lot with 12 people
 
 High Priority Bugs
 -
 
 Low Priority Features
-- proper logging; log packets per second instead of every packet because that's a lot with 12 people
 - catch an error where you specify too high webcam resolution in client and it returns frames with nonsensical shapes
 
 Low Priority Bugs
