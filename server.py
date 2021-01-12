@@ -55,9 +55,9 @@ show_label.pack()
 show_selector.pack()
 space.pack()
 
-submit = tk.Button(root, text='Submit', command=lambda *_: root.destroy() if show_file != '' else 0, width=13)
+submit = tk.Button(root, text='Continue', command=lambda *_: root.destroy() if show_file != '' else 0, width=13)
 submit.pack()
-root.bind('<Return>', submit.invoke)
+root.bind('<Return>', lambda *_: submit.invoke())
 
 try:
     root.mainloop()
@@ -89,7 +89,8 @@ WHITE = (255, 255, 255)
 
 WIDTH = 1920*2//3
 HEIGHT = 1080*2//3
-FPS = 30
+FPS = graphics.Sprite.REAL_FPS = 30
+DEBUG = True
 RUNNING = True
 
 CAM_WIDTH = 400
@@ -99,27 +100,59 @@ pygame.init()
 pygame.display.set_caption("Scene Manager - Server")
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
-#cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75)
-text = graphics.Text('Server POGGERS', WIDTH / 2, 600)
-
 aud = audio.MultipleAudioOutput()
 
 print('Audio ready. Initializing server...')
 server = network.UDPManager(37001, frag=True)
 server.init()
 
-scene_manager = scenes.SceneManager(server, WIDTH, HEIGHT, use_pipe=True, show_unregistered_cams=True)
+scene_manager = scenes.SceneManager(server, WIDTH, HEIGHT, use_pipe=True, debug=DEBUG)
 
+# ============
 # PARSE SCENES
+# ============
+
 for scene in show_data:
     s = scenes.Scene(scene_manager, background=scene.get('background'))
-    for camera in scene['cameras']:
-        s.add(*camera)
 
-scene_manager.first()
+    for camera in scene.get('cameras', []):  # uuid, x, y, w, h
+        uuid, x, y, w, h, *extra = camera
+
+        # floats become fractions of window
+        if 0 <= x <= 1 and type(x) is float:
+            x *= WIDTH
+        if 0 <= y <= 1 and type(y) is float:
+            y *= HEIGHT
+        if 0 <= w <= 1 and type(w) is float:
+            w *= WIDTH
+        if 0 <= h <= 1 and type(h) is float:
+            h *= HEIGHT
+
+        s.add(str(uuid), x, y, w, h, *extra)
+
+
+    # ENSURE CORRECT ARGS CAN BE EASILY PASSED - THIS IS ROUGH SKETCH - NO FRACTIONAL
+    for text in scene.get('text', []):  # text, x, y     opt: font, fsize, color
+        s.objects.append(graphics.Text(*text))
+
+    # fps should be 0 for stills
+    # you may need to calculate the correct fps if you don't have one image for every frame in the second
+    for sprite in scene.get('sprites', []):  # [paths], x, y, fps     opt: w=0, h=0, delete_on_end=False, corner=0
+        s.objects.append(graphics.Sprite(*sprite))
+
 
 #preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
-scene_manager.persistent_objects.append(text)
+scene_manager.persistent_objects.append(graphics.Text('Server POGGERS', WIDTH / 2, 600))
+scene_manager.first()
+
+
+# ======
+#  LOOP
+# ======
+
+DEBUG_DRAGGING_SELECTED = None  # uuid of box dragging
+DEBUG_DRAGGING_CACHED_POSITION = None  # original box position, used for mouse offset so dragging feels more natural
+DEBUG_DRAGGING_CACHED_MOUSE = None  # original mouse position, used for mouse offset so dragging feels more natural
 
 print('Server started!')
 try:
@@ -165,6 +198,47 @@ try:
                     session._send('DIE')
                 RUNNING = False
                 break
+
+            elif DEBUG and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RIGHT:
+                    scene_manager.next()
+                elif event.key == pygame.K_LEFT:
+                    scene_manager.back()
+
+            elif DEBUG and event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+
+                # check every camera
+                for uuid, *_ in reversed(scene_manager.current_scene.cameras):
+                    # get the debug rect, we're in debug guaranteed
+                    cam_box = scene_manager.current_scene.debug_rects.get(uuid)
+                    # something dumb happened
+                    if cam_box is None:
+                        continue
+
+                    rect = cam_box.rect
+                    # clicked on rect
+                    if rect[0] < pos[0] < rect[2] and rect[1] < pos[1] < rect[3]:
+                        # we're dragging this box
+                        DEBUG_DRAGGING_SELECTED = uuid
+                        DEBUG_DRAGGING_CACHED_MOUSE = pos
+                        DEBUG_DRAGGING_CACHED_POSITION = cam_box.x, cam_box.y
+                        break
+
+            # release the drag
+            elif DEBUG and event.type == pygame.MOUSEBUTTONUP:
+                DEBUG_DRAGGING_SELECTED = None
+                DEBUG_DRAGGING_CACHED_MOUSE = None
+                DEBUG_DRAGGING_CACHED_POSITION = None
+
+
+            # while dragging, set position
+            if DEBUG_DRAGGING_SELECTED is not None:
+                ox, oy = DEBUG_DRAGGING_CACHED_POSITION
+                omx, omy = DEBUG_DRAGGING_CACHED_MOUSE
+                x, y = pygame.mouse.get_pos()
+                scene_manager.current_scene.layout.set_pos(DEBUG_DRAGGING_SELECTED, ox + x - omx, oy + y - omy)
+
 
         clock.tick(FPS)
 

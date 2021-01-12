@@ -1,8 +1,4 @@
 High Priority Features
-- fractional positions/scales in JSON are interpreted as fraction of window
-- debug labels on camera viewers - user uuid
-- scenes can create sprites; Sprite should be animated, as in looping frames on draw(); need objects list that mainloop can draw, or maybe the scene gets a draw call
-- text and other objects in scene JSON
 - client-side cue indicators, like "you're coming up", notified via meta, for UI - general client UI is good
 - channeller needs pipe device
 
@@ -12,6 +8,7 @@ High Priority Bugs
 Low Priority Features
 - client-side video scaling (server is transforming fine but offloading never hurts)
 - proper logging; log packets per second instead of every packet because that's a lot with 12 people
+- test sprites?
 
 Low Priority Bugs
 - BasicTiler is quite broken, just move away from it

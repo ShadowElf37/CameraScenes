@@ -9,7 +9,7 @@ import threading
 class SceneManager:
     UNDEFINED_COMMAND = object()
 
-    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, show_unregistered_cams=False):
+    def __init__(self, server, screen_width: int, screen_height: int, use_pipe=True, block_pipe=False, debug=False):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
@@ -19,7 +19,7 @@ class SceneManager:
 
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.show_unregistered_cams = show_unregistered_cams
+        self.debug = debug
 
         self.cues = Pipe(at=38051)
 
@@ -52,7 +52,7 @@ class SceneManager:
         self.current_i = i
         self.current_scene = self.scenes[i]
         self.current_scene.activate()
-        print(f'Switched to scene {i}. UUIDS available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
+        print(f'Switched to scene {i}. UUIDs available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
 
     def next(self):
         self.set_scene(self.current_i + 1)
@@ -111,7 +111,8 @@ class Scene:
         self.manager: SceneManager = manager
         self.layout: Layout = layout or Layout()
         self.cameras: [Tuple[str, Set[Callable]]] = []
-        self.debug_rects: {str: graphics.Rect} = {}
+        self.debug_rects: {str: graphics.Rect} = {}  # uuid: rect
+        self.debug_texts: {str: graphics.Text} = {}  # uuid: text with uuid, pos, etc
         self.objects: [graphics.Object] = []
         self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
         self.manager.add_scenes(self)
@@ -142,8 +143,9 @@ class Scene:
         uuid = str(uuid)
         self.cameras.append((uuid, set(frame_modifying_funcs+(webcam.jpeg_decode,))))
         self.layout.register(uuid, x, y, w, h)
-        if self.manager.show_unregistered_cams:
+        if self.manager.debug:
             self.debug_rects[uuid] = graphics.Rect(x, y, w, h)
+            self.debug_texts[uuid] = graphics.Text(f'{uuid}@({x},{y})', x, y, color=(255, 0, 0))
 
     def add_object(self, obj):
         self.objects.append(obj)
@@ -157,19 +159,39 @@ class Scene:
         self.update_cameras()
 
     def draw(self, screen: pygame.Surface):
-        if type(self.background) in (tuple, list, set):
+        if type(self.background) in (tuple, list, set):  # bg is color
             screen.fill(self.background)
-        elif self.background:
+        elif self.background:  # bg is surface (i.e. image)
             screen.blit(self.background, (0,0))
-        else:
+        else:  # no bg, fill black
             screen.fill((0, 0, 0))
 
         for uuid, funcs in self.cameras:
+            # if we have a feed for this uuid
             if cam := self.manager.cameras.get(uuid):
+                cam.x, cam.y = self.layout.get_pos(uuid)
                 cam.draw(screen, *funcs)
-            elif self.manager.show_unregistered_cams:
-                self.debug_rects[uuid].draw(screen)
 
+                # there's debug AND we have a feed - just text
+                if self.manager.debug:
+                    text = self.debug_texts[uuid]
+                    rect = self.debug_rects[uuid]  # just need to update these coords real quick for mouse drag purposes
+                    text.x, text.y = rect.x, rect.y = cam.x, cam.y
+                    text.reload(text=f'{uuid}@{text.x},{text.y}')
+                    text.draw(screen)
+
+            # debug and the feed is MISSING - white rect and text
+            elif self.manager.debug:
+                rect = self.debug_rects[uuid]
+                text = self.debug_texts[uuid]
+
+                text.x, text.y = rect.x, rect.y = self.layout.get_pos(uuid)
+                text.reload(text=f'{uuid}@{text.x},{text.y}')
+
+                rect.draw(screen)
+                text.draw(screen)
+
+        # draw misc
         for obj in self.objects:
             obj.draw(screen)
 
@@ -192,6 +214,11 @@ class Layout:
         return
     def notify_death(self, uuid):
         return
+
+    def set_pos(self, uuid, x, y):
+        self.positions[uuid] = x, y
+    def set_dim(self, uuid, w, h):
+        self.dims[uuid] = w, h
 
     def get_pos(self, uuid):
         uuid = str(uuid)

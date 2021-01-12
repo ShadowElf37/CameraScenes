@@ -17,6 +17,18 @@ class Object:
         self.corner = corner  # positioning - 0 1 2 3 4 by property order below; 0 is center
 
     @property
+    def rect(self):
+        try:
+            topleft = (self.center, self.top_left, self.top_right, self.bottom_left, self.bottom_right)[self.corner]
+            return *topleft, topleft[0] + self.w, topleft[1] + self.h
+        except IndexError:
+            raise ValueError('Object has invalid draw corner %s' % self.corner)
+
+    # ALL OF THESE ARE RELATIVE - DO NOT USE AS ACTUAL COORDINATES OF CENTER ETC
+    # CENTER IS ACTUALLY A SHIFTED TOP LEFT
+    # USE x,y FOR ACTUAL POSITION
+    # WHAT THAT MEANS PHYSICALLY DEPENDS ON THE CORNER CHOSEN IN DRAW FUNCTIONS
+    @property
     def center(self):
         return (self.x - self.w // 2, self.y - self.h // 2)
     @property
@@ -40,24 +52,14 @@ class Object:
         # if animated, revert to first frame etc.
 
     def selective_blit(self, screen, py_object, xoffset=0, yoffset=0):
-        if self.corner == 0:
-            screen.blit(py_object, (self.center[0] + xoffset, self.center[1] + yoffset))
-        elif self.corner == 1:
-            screen.blit(py_object, (self.top_left[0] + xoffset, self.top_left[1] + yoffset))
-        elif self.corner == 2:
-            screen.blit(py_object, (self.top_right[0] + xoffset, self.top_right[1] + yoffset))
-        elif self.corner == 3:
-            screen.blit(py_object, (self.bottom_left[0] + xoffset, self.bottom_left[1] + yoffset))
-        elif self.corner == 4:
-            screen.blit(py_object, (self.bottom_right[0] + xoffset, self.bottom_right[1] + yoffset))
-        else:
+        try:
+            true_topleft = (self.center, self.top_left, self.top_right, self.bottom_left, self.bottom_right)[self.corner]
+            screen.blit(py_object, (true_topleft[0] + xoffset, true_topleft[1] + yoffset))
+        except IndexError:
             raise ValueError('Invalid draw corner %s' % self.corner)
 
 
 class Rect(Object):
-    def __init__(self, x=0, y=0, w=0, h=0, corner=0):
-        super().__init__(x, y, w, h, corner)
-
     def draw(self, screen, xoffset=0, yoffset=0):
         if self.corner == 0:
             pygame.draw.rect(screen, WHITE, (self.center[0] + xoffset, self.center[1] + yoffset, self.w, self.h))
@@ -71,6 +73,56 @@ class Rect(Object):
             pygame.draw.rect(screen, WHITE, (self.bottom_right[0] + xoffset, self.bottom_right[1] + yoffset, self.w, self.h))
         else:
             raise ValueError('Invalid draw corner %s' % self.corner)
+
+
+class Sprite(Object):
+    REAL_FPS = 30
+
+    # set fps to 0 for stills
+    def __init__(self, imgfps: tuple, x, y, fps=REAL_FPS, w=0, h=0, delete_on_end=False, corner=0):
+        super().__init__(x, y, w, h, corner)
+        self.imgs = [pygame.image.load(fp) for fp in imgfps]
+        self.frame = 0
+
+        self.cw = self.imgs[0].get_width()
+        self.ch = self.imgs[0].get_height()
+
+        if self.w and self.h and (self.cw != self.w or self.ch != self.h):
+            new_imgs = []
+            for img in self.imgs:
+                new_imgs.append(pygame.transform.scale(img, (self.w, self.h)))
+            self.imgs = new_imgs
+        else:
+            self.w, self.h = self.cw, self.ch
+
+        self.delete_on_end = delete_on_end
+        self.fps = fps
+        self.advance_counter = 0
+        self.advance_on_frame = 0
+        if fps:
+            self.advance_on_frame = round(self.REAL_FPS / self.fps)
+
+    def reset(self):
+        self.frame = 0
+
+    def advance_frame(self):
+        self.frame += 1
+        if self.frame == len(self.imgs):
+            if self.delete_on_end:
+                self.frame = -1
+            else:
+                self.reset()
+
+    def draw(self, screen):
+        if self.frame != -1:
+            # draw image
+            self.selective_blit(screen, self.imgs[self.frame])
+            # count up the frame counter - only advance the frame when we reach show_on_frame
+            if self.fps and self.advance_on_frame != self.advance_counter:
+                self.advance_counter += 1
+                return
+            self.advance_counter = 0
+            self.advance_frame()
 
 
 class Text(Object):

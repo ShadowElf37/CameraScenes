@@ -1,8 +1,16 @@
 [
   {
     "cameras": [
-      [1, 200, 200, 400, 300],
+      [1, 250, 400, 400, 300],
       [7, 800, 200, 400, 300]
+    ],
+    "text": [
+      ["hello world", 200, 200]
+    ],
+    "sprites": [
+      [[
+        "sprites/test/1.png", "sprites/test/2.png", "sprites/test/3.png", "sprites/test/4.png"
+      ], 900, 500, 30]
     ]
   },
   {

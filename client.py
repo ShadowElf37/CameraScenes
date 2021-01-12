@@ -39,7 +39,7 @@ uid = tk.StringVar(value='')
 uid_text = tk.Label(root, text='Enter ID')
 uid_entry = tk.Entry(root, textvar=uid)
 submit = tk.Button(root, text='Submit', command=lambda *_: root.destroy() if uid_entry.get() != '' else 0)
-root.bind('<Return>', submit.invoke)
+root.bind('<Return>', lambda *_: submit.invoke())
 
 uid_text.pack()
 uid_entry.pack(padx=20)

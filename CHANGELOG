@@ -1,5 +1,9 @@
-ALPHA v0.1.1
--
+ALPHA v0.1.1 (EDIT MODE & SPRITES)
+- Fraction-of-window camera xywh can now be used in JSON
+- Pretty good Sprite class in graphics.py
+- Added text and sprite init from JSON
+- Added draggable cams and debug text with uuid@x,y to debug mode
+- Fixed a bug where the tk setup windows wouldn't submit with <enter>
 
 ALPHA v0.1.0 (SHOW JSON)
 - Scenes are now loaded from JSON - these files hold scene initialization data
@@ -32,7 +36,6 @@ ALPHA v0.0.8 (FRAGMENTATION)
 - Fragmentation now works properly with multiple clients
 - Fixed fragmentation bug
 - Fixed client exit bug
-- Hopefully fixed Tcl_FindHashEntry failure
 - Fully removed permissions check in client main.py
 - Cleaned up exit process for server and client; added more error protection
 
