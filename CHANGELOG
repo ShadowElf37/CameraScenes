@@ -1,3 +1,8 @@
+BETA v0.1.5 (BUG HUNTING)
+- Actually fixed the scale_to() function that was causing so many issues
+- Fixed a bug where pipe-killing a client was NOT safe and other objects would try to access it
+- Implemented intelligent and flexible resolution scaling for diverse aspect ratios - we currently match height, can implement crops if necessary
+
 BETA v0.1.4 (SPRITE UPGRADE)
 - Sprites can be programmed to move to a position, and die after moving, and loop their movements, and stuff
 - Sprites can be rotated at the start

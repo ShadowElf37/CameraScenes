@@ -9,6 +9,7 @@ import threading
 
 class SceneManager:
     UNDEFINED_COMMAND = object()
+    RESOLUTION_SETTER = 'FLEX_RESOLUTION'
 
     def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
         self.server: UDPManager = server
@@ -188,7 +189,7 @@ class Scene:
                 cam.set_pos(*self.layout.get_pos(uuid))
                 dim = self.layout.get_dim(uuid)
                 cam.set_dim(*dim)
-                self.manager.server.sessions[uuid].send('SET_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+                self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
 
     def activate(self):
         self.update_cameras()
@@ -215,7 +216,7 @@ class Scene:
     def notify_new(self, uuid):
         if self.manager.current_scene is self:
             dim = self.layout.get_dim(uuid)
-            self.manager.server.sessions[uuid].send('SET_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+            self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
 
         self.layout.notify_new(uuid)
         if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar
@@ -236,7 +237,7 @@ class Scene:
             # if we have a feed for this uuid
             if cam := self.manager.cameras.get(uuid):
                 cam.x, cam.y = self.layout.get_pos(uuid)
-                cam.draw(screen, *funcs)
+                text = None
 
                 # there's debug AND we have a feed - just text
                 if self.manager.debug:
@@ -244,7 +245,10 @@ class Scene:
                     rect = self.debug_rects[uuid]  # just need to update these coords real quick for mouse drag purposes
                     text.x, text.y = rect.x, rect.y = cam.x, cam.y
                     text.reload(text=f'{uuid}@{text.x},{text.y}')
-                    text.draw(screen)
+                    rect.draw(screen)
+
+                cam.draw(screen, *funcs)
+                if text: text.draw(screen)
 
             # debug and the feed is MISSING - white rect and text
             elif self.manager.debug:

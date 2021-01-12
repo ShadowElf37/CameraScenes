@@ -88,7 +88,9 @@ class AudioOutput(Throughput):
     def write(self, data):
         self.buffer.put(data)
 
+
 class MultipleAudioOutput:
+    DUMMY = type('', (object,), {'write': lambda x: None})
     def __init__(self):
         self.outputs: {str: AudioOutput} = {}  # USE UUIDS
         self.threads = {}
@@ -104,7 +106,7 @@ class MultipleAudioOutput:
             del self.outputs[uuid]
 
     def process(self, uuid, chunk):
-        self.outputs[uuid].write(chunk)
+        self.outputs.get(uuid, self.DUMMY).write(chunk)
 
 
 class AudioInterface:

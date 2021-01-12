@@ -1,20 +1,16 @@
 High Priority Features
--
+- icon
 
 High Priority Bugs
--
+- 720p is diff aspect ratio than 480p :(
 
 Low Priority Features
--
-
-Low Priority Bugs
-- BasicTiler is quite broken, just move away from it
-- very inconsistent webcam experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
-- (temp fixed) after unmuting a muted client on Windows the mic throws "unanticipated host error" and dies gloriously
-
-Extra Features
 - in channeller we could have keybound functions in config, easy HALT
 - channeller gets programmable indicator lights? can show connected to externals
 - UI scaling, maybe - perhaps only for client?
 - pleasant client UI
 
+Low Priority Bugs
+- BasicTiler is quite broken, just move away from it
+- very inconsistent webcam experience on mac first launch ?  https://medium.com/@kassiaxy_60505/how-to-turn-camera-on-mac-os-x-b217274b6c8a
+- (temp fixed) after unmuting a muted client on Windows the mic throws "unanticipated host error" and dies gloriously

@@ -218,7 +218,7 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, x=0, y=0, w=0, h=0, enforce_dim=False):
+    def __init__(self, x=0, y=0, w=0, h=0, enforce_dim=False, flex_dim=False):
         # NOTE: used to contain a cam/buffer input, this is now handled in mainloop for direct control of webcam data
         super().__init__(x, y, w, h)
         self.surf = pygame.Surface((self.w, self.h))
@@ -226,7 +226,11 @@ class WebcamViewer(Object):
         self.new_frame: numpy.ndarray = None
 
         self.enforce_dim = enforce_dim
+        self.flex_dim = flex_dim
 
+        if w == h == 0:
+            self.enforce_dim = False
+            self.flex_dim = False
 
     # this is necessary so that if we draw without a new frame (because of lag or something) the viewer won't be drawn as a black square
     def take_frame(self, frame):
@@ -260,8 +264,15 @@ class WebcamViewer(Object):
             self.new_frame = scale_to(self.new_frame, self.w, self.h)
             #print(self.new_frame.shape, self.w, self.h, self.surf.get_width(), self.surf.get_height())
         else:
-            # just need to get a new surface for the new size - this surface is cached and reused as long as the size doesn't change
-            w, h, *_ = self.new_frame.shape
+            # if we wanna match the height and modify the width
+            if self.flex_dim:
+                w, h, _ = self.new_frame.shape
+                self.new_frame = scale_to(self.new_frame, round(w * self.h / h), self.h)
+            # otherwise just need to get a new surface for the new size -
+            else:
+                w, h, *_ = self.new_frame.shape
+
+            # this surface is cached and reused as long as the size doesn't change
             if self.w != w or self.h != h and self.new_frame:  # well now we need a new surface because the dims dont match
                 self.w, self.h = w, h
                 self.surf = pygame.Surface((w, h))

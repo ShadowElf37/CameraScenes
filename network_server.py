@@ -178,5 +178,5 @@ class UDPManager:
                     ... # can do stuff if necessary
                     # possible keep-alive, auth, etc.
 
-        except OSError:
-            print('Server thread died.')
+        except OSError as e:
+            print('Server thread died.', str(e))

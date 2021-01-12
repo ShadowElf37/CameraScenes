@@ -15,10 +15,15 @@ def scale_by(frame, factor):
         return cv.resize(frame, factor, interpolation=cv.INTER_LINEAR)
     return frame
 
-def scale_to(frame: numpy.ndarray, x, y):
-    ox, oy, _ = frame.shape  # third is color depth (3)
-    if (ox,oy) != (x,y):
-        return cv.resize(frame, (y, x))
+def scale_to(frame: numpy.ndarray, x=0, y=0):
+    # no scaling passed
+    if x == y == 0:
+        return frame
+    ox, oy, _ = frame.shape  # third is colors
+    # scaling passed that's not just old vals
+    if (ox, oy) != (x, y):
+        return cv.resize(frame, (y, x), interpolation=cv.INTER_AREA)
+    # it was the old vals
     return frame
 
 def jpeg_encode(frame, quality):

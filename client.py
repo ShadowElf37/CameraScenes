@@ -147,7 +147,7 @@ aud  # pycharm is dumb
 # ==========
 #  MAINLOOP
 # ==========
-ENFORCED_OUTPUT_RESOLUTION = 1280, 720
+ENFORCED_OUTPUT_RESOLUTION = cam.width, cam.height
 
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 try:
@@ -176,6 +176,12 @@ try:
                 w, h = map(int, data[1].decode().split())
                 ENFORCED_OUTPUT_RESOLUTION = w, h
                 #print('Set resolution to', w, h)
+            elif data[0] == 'FLEX_RESOLUTION': # 'x y'
+                w, h = map(int, data[1].decode().split())
+                fw = ENFORCED_OUTPUT_RESOLUTION[0]
+                fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
+                print('FLEXED', ENFORCED_OUTPUT_RESOLUTION)
             elif data[0] == 'UPDATE_TEXT':  # hello world
                 text.reload(text=data[1].decode())
             elif data[0] == 'UPDATE_TEXT_COLOR':  # 0,0,0
@@ -184,7 +190,7 @@ try:
         if not cam.muted:
             frame = cam.read(with_jpeg_encode=False)
             enc_frame = webcam.scale_to(frame, *ENFORCED_OUTPUT_RESOLUTION)
-            client.session.send('VIDEO', pickle.dumps(webcam.jpeg_encode(frame, cam.compress_quality)))
+            client.session.send('VIDEO', pickle.dumps(webcam.jpeg_encode(enc_frame, cam.compress_quality)))
             cam_viewer.take_frame(frame)
 
         screen.fill(BLACK)
