@@ -3,6 +3,7 @@ import pygame.freetype
 from webcam import scale_to
 import numpy
 import os
+from itertools import tee
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
@@ -80,7 +81,22 @@ class Sprite(Object):
     REAL_FPS = 30
 
     # set fps to 0 for stills
-    def __init__(self, imgfolder, x, y, fps=REAL_FPS, w=0, h=0, delete_on_end=False, corner=0):
+    def __init__(self, imgfolder, x, y, fps=REAL_FPS, w=0, h=0, delete_on_end_frames=False, delete_on_end_move=False, loop_move=True, end_pos=(), move_duration=0, rotation=0, corner=0):
+        """
+        :param imgfolder: folder with alphabetically sorted frames for the animation
+        :param x: x pos
+        :param y: y pos
+        :param fps: frames of the animation to play per second - FPS/fps is how many times it loops in one second - set to 0 for stills
+        :param w: mandated width (dont use)
+        :param h: mandated height (dont use)
+        :param delete_on_end_frames: delete after looping through all frames
+        :param delete_on_end_move: delete after completing one movement loop
+        :param loop_move: loop the movement frames indefinitely
+        :param end_pos: final position for movement to take you
+        :param move_duration: duration, in frames, of movement - set to 0 for static sprites
+        :param rotation: degrees rotation of image
+        :param corner: see Object for more info
+        """
         super().__init__(x, y, w, h, corner)
 
         self.folder = os.path.join('sprites', imgfolder)
@@ -90,8 +106,10 @@ class Sprite(Object):
             for file in filenames:
                 self.img_paths.append(os.path.join(dirpath, file))
 
-        print(self.img_paths)
-        self.imgs = [pygame.image.load(fp) for fp in sorted(self.img_paths)]
+        print('Loaded sprite from', self.img_paths)
+        self.rotation = rotation
+
+        self.imgs = [pygame.transform.rotate(pygame.image.load(fp), -self.rotation) for fp in sorted(self.img_paths)]
         self.frame = 0
 
         self.cw = self.imgs[0].get_width()
@@ -105,7 +123,19 @@ class Sprite(Object):
         else:
             self.w, self.h = self.cw, self.ch
 
-        self.delete_on_end = delete_on_end
+        self.delete_on_end_move = delete_on_end_move
+        self.loop_move = loop_move
+        self.end_pos = end_pos
+        self.movement_duration = move_duration
+        self.move_counter = 0
+        self.move_on_frame = 0
+        self.dx = self.end_pos[0] - self.x
+        self.dy = self.end_pos[1] - self.y
+        self.baked_move_frames = ((self.ox + self.dx / self.movement_duration * i, self.oy + self.dy / self.movement_duration * i) for i in range(self.movement_duration+1))
+        if self.end_pos:
+            self.move_on_frame = self.REAL_FPS / self.movement_duration
+
+        self.delete_on_end_frames = delete_on_end_frames
         self.fps = fps
         self.advance_counter = 0
         self.advance_on_frame = 0
@@ -114,14 +144,16 @@ class Sprite(Object):
 
     def reset(self):
         self.frame = 0
+        self.move_counter = 0
+        self.baked_move_frames = ((self.ox + self.dx / self.movement_duration * i, self.oy + self.dy / self.movement_duration * i) for i in range(self.movement_duration+1))
 
     def advance_frame(self):
         self.frame += 1
         if self.frame == len(self.imgs):
-            if self.delete_on_end:
+            if self.delete_on_end_frames:
                 self.frame = -1
             else:
-                self.reset()
+                self.frame = 0
 
     def draw(self, screen):
         if self.frame != -1:
@@ -130,9 +162,24 @@ class Sprite(Object):
             # count up the frame counter - only advance the frame when we reach show_on_frame
             if self.fps and self.advance_on_frame != self.advance_counter:
                 self.advance_counter += 1
-                return
-            self.advance_counter = 0
-            self.advance_frame()
+            else:
+                self.advance_counter = 0
+                self.advance_frame()
+
+            if self.movement_duration and self.move_counter != -1 and self.move_on_frame != self.move_counter:
+                self.move_counter += 1
+            else:
+                try:
+                    self.x, self.y = next(self.baked_move_frames)
+                except StopIteration:
+                    if self.delete_on_end_move:
+                        self.frame = -1
+                    elif self.loop_move:
+                        self.baked_move_frames = ((self.ox + self.dx / self.movement_duration * i, self.oy + self.dy / self.movement_duration * i) for i in range(self.movement_duration+1))
+                        self.x, self.y = next(self.baked_move_frames)
+                    else:
+                        self.move_counter = -1
+
 
 
 class Text(Object):

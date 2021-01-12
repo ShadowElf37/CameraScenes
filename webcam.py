@@ -48,6 +48,8 @@ class Webcam:
             self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, resolution[1])
         self.width = self.cap.get(cv.CAP_PROP_FRAME_WIDTH)  # float
         self.height = self.cap.get(cv.CAP_PROP_FRAME_HEIGHT)
+        if resolution and (self.width, self.height) != resolution:
+            raise ValueError(f'Webcam can\'t manually handle resolution {resolution[0]}x{resolution[1]}')
 
         self.cap.set(cv.CAP_PROP_FPS, 30)
 

@@ -8,9 +8,19 @@
       ["hello world", 200, 200]
     ],
     "sprites": [
-      ["test", 900, 500, 30]
+      {
+        "folder": "test",
+        "start_pos": [900, 500],
+        "end_pos": [700, 600],
+        "move_duration": 15,
+        "fps": 30,
+        "delete_on_end_move": false,
+        "loop_move": true,
+        "rotation": 90
+      }
     ]
   },
+
   {
     "background": "images/mh.jpg",
     "wipe": 30,

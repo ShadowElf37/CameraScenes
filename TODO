@@ -1,7 +1,5 @@
 High Priority Features
-- log packets per second instead of every packet because that's a lot with 12 people
-- sprite start+end pos
-- sprite rotation
+-
 
 High Priority Bugs
 -
@@ -19,5 +17,4 @@ Extra Features
 - channeller gets programmable indicator lights? can show connected to externals
 - UI scaling, maybe - perhaps only for client?
 - pleasant client UI
-- catch an error where you specify too high webcam resolution in client and it returns frames with nonsensical shapes
 

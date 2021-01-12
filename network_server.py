@@ -6,6 +6,8 @@ from time import time, sleep
 
 class UDPManager:
     SESSION_TIMEOUT = 15
+    DEBUG_ALL = False
+    REPORT_INTERVAL = 15
 
     def __init__(self, port=37001, frag=False):
         self.AUDIO_QUEUE = Queue()
@@ -31,10 +33,14 @@ class UDPManager:
         self.mutes = []  # uuids that are muted, we send them pings so they can pong and we record their time
         self.pingpong_thread = threading.Thread(target=self._pingpong, daemon=True)
 
+        self.reports = defaultdict(int)
+        self.reporter_thread = threading.Thread(target=self._print_reports, daemon=True)
+
     def init(self):
         self.running = True
         self.thread.start()
         self.pingpong_thread.start()
+        self.reporter_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
@@ -48,6 +54,24 @@ class UDPManager:
         self.mutes.append(uuid)
     def unmuted(self, uuid):
         self.mutes.remove(uuid)
+
+    def _print_reports(self):
+        sleep(1)
+        while self.running:
+            print('=======REPORT=======')
+            print('Reassembled %s packets.' % self.reports['frag'])
+            del self.reports['frag']
+            print('%s out of order packets were dropped.' % self.reports['out of order'])
+            del self.reports['out of order']
+            print('Clients:', ', '.join(self.sessions.keys()), '(%s)' % len(self.sessions.keys()))
+            if self.reports:
+                print('Packet report:\n\t' + '\n\t'.join(f'{key} - {i}' for key,i in self.reports.items()))
+            else:
+                print('No other packets received.')
+            self.reports.clear()
+            print('============')
+            sleep(self.REPORT_INTERVAL)
+
 
     def _pingpong(self):
         while self.running:
@@ -95,7 +119,8 @@ class UDPManager:
                         if incomplete:
                             continue
 
-                        print('Packet %s-%s was reassembled successfully.' % (decomp[2].lower(), pid), 'The fragments arrived out of order.' if found_incomplete else '')
+                        self.reports['frag'] += 1
+                        if self.DEBUG_ALL: print('Packet %s-%s was reassembled successfully.' % (decomp[2].lower(), pid), 'The fragments arrived out of order.' if found_incomplete else '')
                         data = *decomp[:3], (0, 0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
                         del self.fragments[uuid][pid]
                         if found_incomplete: self.incomplete_packets[uuid].remove(pid)
@@ -107,7 +132,8 @@ class UDPManager:
                 uuid = data[0]
                 reason = data[2]
 
-                print(*data[:3], addr[0]+':'+str(addr[1]))
+                if self.DEBUG_ALL: print(*data[:3], addr[0]+':'+str(addr[1]))
+                self.reports[reason] += 1
 
                 if self.sessions.get(uuid) is None:
                     self.sessions[uuid] = session = UDPSession(self, *addr, uuid=uuid, fragment=self.frag)
@@ -124,7 +150,8 @@ class UDPManager:
                     # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
                     # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
                     if not session.verify_pid(pid, reason) and reason != 'OPEN':
-                        print('Out of order packet rejected')
+                        self.reports['out of order'] += 1
+                        if self.DEBUG_ALL: print('Out of order packet rejected!')
                         continue
                     elif reason == 'OPEN':
                         session.packet_id_recv.clear()

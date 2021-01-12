@@ -138,7 +138,10 @@ class SceneManager:
 
 
         self.current_scene.draw(self.screen)
+        for obj in self.persistent_objects:  # we should do this before wipes because otherwise they're on top of each other and it looks bad
+            obj.draw(self.screen)
 
+        # EXECUTE ANY WIPES NECESSARY
         if self.wiping_from is not None:
             if self.wipe_side == 'right':
                 x = int(self.wipe_counter / self.wipe_length * self.screen_width)
@@ -159,8 +162,6 @@ class SceneManager:
             if self.wipe_counter == self.wipe_length:
                 self.wiping_from = None
 
-        for obj in self.persistent_objects:
-            obj.draw(self.screen)
 
 class Scene:
     def __init__(self, manager, layout=None, background=None, wipe=0, wipe_side='left'):

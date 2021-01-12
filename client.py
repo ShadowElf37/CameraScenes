@@ -126,7 +126,7 @@ print('Opening webcam...')
 change_loading_text('Opening webcam...')
 try:
     cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
-except IOError as e:
+except (ValueError, IOError) as e:
     throw_error_to_user(str(e))
 except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')

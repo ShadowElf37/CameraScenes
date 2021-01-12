@@ -146,7 +146,21 @@ for scene in show_data:
     # fps should be 0 for stills
     # you may need to calculate the correct fps if you don't have one image for every frame in the second
     for sprite in scene.get('sprites', []):  # [paths], x, y, fps     opt: w=0, h=0, delete_on_end=False, corner=0
-        s.objects.append(graphics.Sprite(*sprite))
+
+        s.objects.append(graphics.Sprite(
+            sprite.get('folder'),
+            *sprite.get('start_pos'),
+            sprite.get('fps', graphics.Sprite.REAL_FPS),
+            delete_on_end_frames=sprite.get('delete_on_end_frames', False),
+            delete_on_end_move=sprite.get('delete_on_end_move', False),
+            loop_move=sprite.get('loop_move', True),
+            end_pos=sprite.get('end_pos', ()),
+            move_duration=sprite.get('move_duration', 0),
+            rotation=sprite.get('rotation', 0),
+            corner=sprite.get('corner', 0),
+            w=sprite.get('w', 0),
+            h=sprite.get('h', 0)
+        ))
 
 
 #preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
