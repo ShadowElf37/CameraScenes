@@ -62,7 +62,7 @@ del uid, tk, submit, uid_entry, uid_text
 
 
 pygame.init()
-pygame.display.set_caption("Scene Manager - Client")
+pygame.display.set_caption("Proscenium Client")
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 

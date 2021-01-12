@@ -105,7 +105,7 @@ CAM_WIDTH = 400
 CAM_HEIGHT = 300
 
 pygame.init()
-pygame.display.set_caption("Scene Manager - Server")
+pygame.display.set_caption("Proscenium Server")
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
 
 aud = audio.MultipleAudioOutput()

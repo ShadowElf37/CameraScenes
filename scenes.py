@@ -103,6 +103,8 @@ class SceneManager:
                             self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
                         elif cmd == 'exit':
                             raise SystemExit('Exit by pipe command')
+                        elif cmd == 'print':
+                            print('From pipe:', *args)
                         else:
                             print('Bad pipe command', '"'+command+'"')
                 except Exception as e:
