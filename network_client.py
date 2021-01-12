@@ -65,7 +65,6 @@ class UDPClient:
                 if self.frag and frag_opts[0] != 0:
                     self.fragments[pid].append((frag_opts[0], decomp[4]))
 
-
                     if (found_incomplete:=(pid in self.incomplete_packets)) or frag_opts[1] == 1:
                         fragments = self.fragments[pid]
 
@@ -78,7 +77,7 @@ class UDPClient:
 
                         if incomplete: continue
 
-                        print('Packet %s was reassembled successfully.' % pid,
+                        print('Packet %s-%s was reassembled successfully.' % (decomp[2].lower(), pid),
                               'It arrived out of order.' if pid in self.incomplete_packets else '')
                         data = *decomp[:3], (0,0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
                         del self.fragments[pid]
@@ -93,6 +92,8 @@ class UDPClient:
                 if not self.session.verify_pid(pid, reason) and reason not in ('DIE', 'RESET'):
                     print('Out of order packet rejected', data[:4])
                     continue
+                elif reason == 'RESET':
+                    self.session.packet_id_recv.clear()
                 self.session.packet_id_recv[reason] = pid
 
                 print(*data[:4])
@@ -109,6 +110,8 @@ class UDPClient:
                     print('PRINT REQUEST:', data[4])
                 elif reason in ('CONTINUE', 'DIE', 'DUPLICATE', 'MUTE_AUDIO', 'MUTE_VIDEO', 'UNMUTE_AUDIO', 'UNMUTE_VIDEO'):
                     self.META_QUEUE.put(data[2]) # these go straight up to main
+                elif reason in ('SET_RESOLUTION', 'UPDATE_TEXT', 'UPDATE_TEXT_COLOR'):
+                    self.META_QUEUE.put((data[2], data[4]))
                 elif reason == 'PING':
                     self.session.send('PONG')
                 else:

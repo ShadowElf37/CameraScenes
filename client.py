@@ -74,11 +74,11 @@ def change_loading_text(text, color=WHITE):
     loading_text.reload(text=text, color=color)
     loading_text.draw(screen)
     pygame.display.flip()
-def throw_error_to_user(text):
+def throw_error_to_user(text, close=True):
     global clock, client
     change_loading_text(text+'\nYou may exit the application.', color=RED)
     try:
-        client.session._send('CLOSE')
+        if close: client.session._send('CLOSE')
     except OSError:
         pass
     while True:
@@ -114,7 +114,7 @@ if response == 'CONTINUE':
     pass
 elif response == 'DUPLICATE':
     print('The server already has this ID registered AND marked as open. Fuck.')
-    throw_error_to_user('This ID is already in use. Please ask your manager for help.')
+    throw_error_to_user('This ID is already in use. Please ask your manager for help.', close=False)
 else:
     print('Couldn\'t connect to server.')
     throw_error_to_user('Failed to connect to the server. It may be closed, or your internet may be down.\nPlease ask your manager for help if you cannot resolve the issue.')
@@ -125,15 +125,15 @@ else:
 print('Opening webcam...')
 change_loading_text('Opening webcam...')
 try:
-    cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, resolution=(640, 480), compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
+    cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
 except IOError as e:
     throw_error_to_user(str(e))
 except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
 cam  # pycharm is dumb
 
-text = graphics.Text('Client POGGERS', WIDTH/2, 600)
-cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2, 640, 480, enforce_dim=True)
+text = graphics.Text('Welcome!', WIDTH/2, 620, fontsize=56)
+cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2 - 50, 640, 480, enforce_dim=True)
 
 print('Opening microphone...')
 change_loading_text('Opening microphone...')
@@ -147,6 +147,8 @@ aud  # pycharm is dumb
 # ==========
 #  MAINLOOP
 # ==========
+ENFORCED_OUTPUT_RESOLUTION = 1280, 720
+
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 try:
     while client.running and RUNNING:
@@ -170,15 +172,24 @@ try:
                 cam.mute()
             elif data == 'UNMUTE_VIDEO':
                 cam.unmute()
+            elif data[0] == 'SET_RESOLUTION':  # 'x y'
+                w, h = map(int, data[1].decode().split())
+                ENFORCED_OUTPUT_RESOLUTION = w, h
+                #print('Set resolution to', w, h)
+            elif data[0] == 'UPDATE_TEXT':  # hello world
+                text.reload(text=data[1].decode())
+            elif data[0] == 'UPDATE_TEXT_COLOR':  # 0,0,0
+                text.reload(color=tuple(map(int, data[1].decode().split(','))))
 
         if not cam.muted:
-            frame = cam.read()
-            client.session.send('VIDEO', pickle.dumps(frame))
+            frame = cam.read(with_jpeg_encode=False)
+            enc_frame = webcam.scale_to(frame, *ENFORCED_OUTPUT_RESOLUTION)
+            client.session.send('VIDEO', pickle.dumps(webcam.jpeg_encode(frame, cam.compress_quality)))
             cam_viewer.take_frame(frame)
 
         screen.fill(BLACK)
 
-        cam_viewer.draw(screen, webcam.jpeg_decode)
+        cam_viewer.draw(screen)
         text.draw(screen)
 
         pygame.display.update()

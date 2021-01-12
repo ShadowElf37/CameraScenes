@@ -201,8 +201,9 @@ class WebcamViewer(Object):
         if self.enforce_dim:
             self.new_frame = scale_to(self.new_frame, self.w, self.h)
         else:
+            # just need to get a new surface for the new size - this surface is cached and reused as long as the size doesn't change
             w, h, *_ = self.new_frame.shape
-            if self.w != w or self.h != h and self.new_frame:
+            if self.w != w or self.h != h and self.new_frame:  # well now we need a new surface because the dims dont match
                 self.w, self.h = w, h
                 self.surf = pygame.Surface((w, h))
 

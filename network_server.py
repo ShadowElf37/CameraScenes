@@ -95,7 +95,7 @@ class UDPManager:
                         if incomplete:
                             continue
 
-                        print('Packet %s was reassembled successfully.' % pid, 'It arrived out of order.' if found_incomplete else '')
+                        print('Packet %s-%s was reassembled successfully.' % (decomp[2].lower(), pid), 'The fragments arrived out of order.' if found_incomplete else '')
                         data = *decomp[:3], (0, 0), b''.join(frag[1] for frag in sorted(fragments, key=lambda f: f[0]))
                         del self.fragments[uuid][pid]
                         if found_incomplete: self.incomplete_packets[uuid].remove(pid)
@@ -123,11 +123,13 @@ class UDPManager:
                     session: UDPSession = self.sessions[uuid]
                     # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
                     # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
-                    if not session.verify_pid(data[1], reason) and data[2] != 'OPEN':
+                    if not session.verify_pid(pid, reason) and reason != 'OPEN':
                         print('Out of order packet rejected')
                         continue
+                    elif reason == 'OPEN':
+                        session.packet_id_recv.clear()
 
-                session.packet_id_recv[reason] = data[1]
+                session.packet_id_recv[reason] = pid
                 self.times[uuid] = time()
 
                 # DATATYPE

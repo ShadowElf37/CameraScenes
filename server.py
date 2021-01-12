@@ -41,6 +41,12 @@ def load_cfg(sv=None):
         sv.set(ntpath.basename(path) or last_show_file or 'Select...')
     show_file = path
 
+done = False
+def quit_tk(*_):
+    global done
+    done = True
+    root.destroy()
+
 root = tk.Tk()
 root.geometry('200x100')
 root.title('Load Files')
@@ -59,6 +65,8 @@ submit = tk.Button(root, text='Continue', command=lambda *_: root.destroy() if s
 submit.pack()
 root.bind('<Return>', lambda *_: submit.invoke())
 
+root.protocol("WM_DELETE_WINDOW", quit_tk)
+
 try:
     root.mainloop()
 except tk.TclError:
@@ -67,7 +75,7 @@ except tk.TclError:
     submit.destroy()
     root.quit()
 
-if not show_file:
+if not show_file or done:
     exit()
 
 config['last_show_file'] = show_file
@@ -90,7 +98,7 @@ WHITE = (255, 255, 255)
 WIDTH = 1920*2//3
 HEIGHT = 1080*2//3
 FPS = graphics.Sprite.REAL_FPS = 30
-DEBUG = False
+DEBUG = True
 RUNNING = True
 
 CAM_WIDTH = 400
@@ -142,9 +150,8 @@ for scene in show_data:
 
 
 #preview_tiler = scenes.BasicTiler(WIDTH, HEIGHT, CAM_WIDTH, CAM_HEIGHT, True)
-scene_manager.persistent_objects.append(graphics.Text('Server POGGERS', WIDTH / 2, 600))
+#scene_manager.persistent_objects.append(graphics.Text('Server POGGERS', WIDTH / 2, 600))
 scene_manager.first()
-
 
 # ======
 #  LOOP
@@ -250,6 +257,11 @@ except Exception as e:
     RUNNING = False
     server.close()
     raise e
+
+except SystemExit:
+    for session in server.sessions.values():
+        session._send('DIE')
+    RUNNING = False
 
 finally:
     server.close()

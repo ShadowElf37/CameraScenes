@@ -17,7 +17,9 @@ def scale_by(frame, factor):
 
 def scale_to(frame: numpy.ndarray, x, y):
     ox, oy, _ = frame.shape  # third is color depth (3)
-    return cv.resize(frame, None, fx=x/ox, fy=y/oy)
+    if (ox,oy) != (x,y):
+        return cv.resize(frame, None, fx=x/ox, fy=y/oy)
+    return frame
 
 def jpeg_encode(frame, quality):
     _, frame = cv.imencode('.jpg', frame, (int(cv.IMWRITE_JPEG_QUALITY), quality))
@@ -55,8 +57,9 @@ class Webcam:
         self.swap_axes = swap_axes # switches x and y axes, necessary for pygame for unknown reasons
 
         self.muted = False
+        self.enforced_resolution = None
 
-    def read(self):
+    def read(self, with_jpeg_encode=False):
         if self.muted:
             return
 
@@ -71,7 +74,9 @@ class Webcam:
             frame = cv.cvtColor(frame, flag)
         if self.flip:
             frame = cv.flip(frame, 0)
-        if self.compress_quality < 100:
+        if self.enforced_resolution:
+            frame = scale_to(frame, *self.enforced_resolution)
+        if with_jpeg_encode and self.compress_quality < 100:
             frame = jpeg_encode(frame, self.compress_quality)
 
         return frame
@@ -80,6 +85,9 @@ class Webcam:
         self.muted = True
     def unmute(self):
         self.muted = False
+
+    def enforce_output_resolution(self, x, y):
+        self.enforced_resolution = x,y
 
     def close(self):
         self.cap.release()
@@ -95,6 +103,9 @@ class Webcam:
             c = cv.waitKey(1)
             if c == ord('q'):
                 break
+            elif c == ord('d'):
+                self.cap.set(cv.CAP_PROP_FRAME_WIDTH, 300)
+                self.cap.set(cv.CAP_PROP_FRAME_HEIGHT, 400)
 
         self.close()
         cv.destroyAllWindows()

@@ -96,6 +96,14 @@ class SceneManager:
                         elif cmd in ('unmute_video', 'unmutev'):
                             self.server.sessions[args[0]].send('UNMUTE_VIDEO')
                             self.server.unmuted(args[0])
+                        elif cmd in ('update_text', 'text'):
+                            self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
+                        elif cmd in ('update_text_color', 'color'):
+                            self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
+                        elif cmd == 'kill':
+                            self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
+                        elif cmd == 'exit':
+                            raise SystemExit('Exit by pipe command')
                         else:
                             print('Bad pipe command', '"'+command+'"')
                 except Exception as e:
@@ -126,7 +134,9 @@ class Scene:
         for uuid, _ in self.cameras:
             if cam := self.manager.cameras.get(uuid):
                 cam.set_pos(*self.layout.get_pos(uuid))
-                cam.set_dim(*self.layout.get_dim(uuid))
+                dim = self.layout.get_dim(uuid)
+                cam.set_dim(*dim)
+                self.manager.server.sessions[uuid].send('SET_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
     def activate(self):
         self.update_cameras()
@@ -151,6 +161,10 @@ class Scene:
         self.objects.append(obj)
 
     def notify_new(self, uuid):
+        if self.manager.current_scene is self:
+            dim = self.layout.get_dim(uuid)
+            self.manager.server.sessions[uuid].send('SET_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+
         self.layout.notify_new(uuid)
         if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar
 
