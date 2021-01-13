@@ -1,8 +1,10 @@
 High Priority Features
-- icon
+- cropping
+- x preservation
+- fade to white and black
 
 High Priority Bugs
-- 720p is diff aspect ratio than 480p :(
+-
 
 Low Priority Features
 - in channeller we could have keybound functions in config, easy HALT
