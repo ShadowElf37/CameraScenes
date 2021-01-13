@@ -134,7 +134,7 @@ except Exception as e:
 cam  # pycharm is dumb
 
 text = graphics.Text('Welcome!', WIDTH/2, 620, fontsize=56)
-cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2 - 50, 640, 480, enforce_dim=True)
+cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2 - 50, 640, 480, flex_dim=True)
 
 print('Opening microphone...')
 change_loading_text('Opening microphone...')
