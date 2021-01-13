@@ -1,3 +1,7 @@
+BETA v0.1.7 (BUGFIXES)
+- Fixed a bug that killed executables because pygame wanted the actual icon file
+- Fixed a bug that killed clients when you switched a scene containing them if they weren't in the original scene they joined on
+
 BETA v0.1.6 (ICON)
 - Added icons to channeller and proscenium - credit to Benjamin Coveler
 - Fixed bug where webcam viewers died after changing dimensions

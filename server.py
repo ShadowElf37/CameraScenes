@@ -195,8 +195,10 @@ try:
                 # add an audio processor for them
                 aud.new_output(uuid)
                 # make a cam viewer
-                w,h = scene_manager.current_scene.layout.get_dim(uuid)
+
+                w, h = scene_manager.current_scene.layout.get_dim(uuid)
                 scene_manager.register_camera(uuid, graphics.WebcamViewer(w=w, h=h, flex_dim=True))
+
             elif data[2] == 'CLOSE':
                 session.is_open = False
                 scene_manager.unregister_camera(uuid)

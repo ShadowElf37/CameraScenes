@@ -217,6 +217,7 @@ class Scene:
     def notify_new(self, uuid):
         if self.manager.current_scene is self:
             dim = self.layout.get_dim(uuid)
+            #print('NEW GUY IN TOWN HAS DIMS', dim)
             self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
 
         self.layout.notify_new(uuid)
@@ -293,11 +294,9 @@ class Layout:
         self.dims[uuid] = w, h
 
     def get_pos(self, uuid):
-        uuid = str(uuid)
-        return self.positions[uuid]
+        return self.positions.get(str(uuid), (0, 0))
     def get_dim(self, uuid):
-        uuid = str(uuid)
-        return self.dims[uuid]
+        return self.dims.get(str(uuid), (0, 0))
 
 
 class BasicTiler(Layout):

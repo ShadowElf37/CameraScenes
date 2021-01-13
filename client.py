@@ -63,7 +63,7 @@ del uid, tk, submit, uid_entry, uid_text
 
 pygame.init()
 pygame.display.set_caption("Proscenium Client")
-pygame.display.set_icon(pygame.image.load('images/favicon.png'))
+#pygame.display.set_icon(pygame.image.load('images/favicon.png'))
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
@@ -181,10 +181,13 @@ try:
                 #print('Set resolution to', w, h)
             elif data[0] == 'FLEX_RESOLUTION': # 'x y'
                 w, h = map(int, data[1].decode().split())
-                fw = ENFORCED_OUTPUT_RESOLUTION[0]
-                fh = ENFORCED_OUTPUT_RESOLUTION[1]
-                ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
-                print('Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                if w != h != 0:
+                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
+                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
+                    print('Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                else:
+                    print('Ignored 0x0 flex request.')
 
             elif data[0] == 'UPDATE_TEXT':  # hello world
                 text.reload(text=data[1].decode())
