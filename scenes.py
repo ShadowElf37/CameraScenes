@@ -9,7 +9,7 @@ import threading
 
 class SceneManager:
     UNDEFINED_COMMAND = object()
-    RESOLUTION_SETTER = 'FLEX_RESOLUTION'
+    RESOLUTION_SETTER = 'CROP'  # SET, W_FLEX, H_FLEX, CROP
 
     def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
         self.server: UDPManager = server
@@ -175,25 +175,26 @@ class Scene:
         self.debug_rects: {str: graphics.Rect} = {}  # uuid: rect
         self.debug_texts: {str: graphics.Text} = {}  # uuid: text with uuid, pos, etc
         self.objects: [graphics.Object] = []
-        self.background: Optional[pygame.Surface, tuple] = self.fp_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
+        self.background: Optional[pygame.Surface, tuple] = self.bg_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
         self.manager.add_scenes(self)
 
         self.wipe = wipe
         self.wipe_side = wipe_side
 
-    def fp_to_surface(self, fp):
+    def bg_to_surface(self, fp):
         surf = pygame.image.load(fp)
         surf = pygame.transform.scale(surf, (self.manager.screen_width, self.manager.screen_height))
         return surf
 
     def update_cameras(self):
+        # updates all CLIENTS that are CURRENTLY REGISTERED (i.e. logged in) with the manager
         for uuid, _ in self.cameras:
             if cam := self.manager.cameras.get(uuid):
                 cam.set_pos(*self.layout.get_pos(uuid))
                 dim = self.layout.get_dim(uuid)
                 cam.set_dim(*dim)
-                print('NEW DIM', dim)
-                self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
+                print('Set dim %sx%s for %s' % (*dim, uuid))
+                self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
     def activate(self):
         self.update_cameras()
@@ -221,7 +222,7 @@ class Scene:
         if self.manager.current_scene is self:
             dim = self.layout.get_dim(uuid)
             #print('NEW GUY IN TOWN HAS DIMS', dim)
-            self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER, f'{dim[0]} {dim[1]}'.encode())
+            self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
         self.layout.notify_new(uuid)
         if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar

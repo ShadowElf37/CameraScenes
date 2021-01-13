@@ -26,7 +26,8 @@ RED = (255, 0, 0)
 WIDTH = 1000
 HEIGHT = 700
 FPS = 30
-RUNNING = True
+RUNNING = False
+FIXED_VIEWER = False
 
 
 # GET UUID
@@ -74,7 +75,6 @@ pygame.init()
 pygame.display.set_caption("Proscenium Client")
 
 import sys
-
 if getattr(sys, 'frozen', False):
     pygame.display.set_icon(pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png')))
 else:
@@ -83,6 +83,17 @@ else:
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
+
+# keep the window updated so it doesnt freeze and lag and be sad during startup
+def update_pygame_loop():
+    global RUNNING
+    while not RUNNING:
+        print('u')
+        pygame.display.update()
+        clock.tick()
+from threading import Thread
+Thread(target=update_pygame_loop, daemon=True).start()
+
 
 loading_text = graphics.Text('', WIDTH/2, HEIGHT/2)
 
@@ -151,7 +162,7 @@ except Exception as e:
 cam  # pycharm is dumb
 
 text = graphics.Text('Welcome!', WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
-cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT * 4 / 9, 640, 480, flex_dim=True)
+cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT * 4 / 9, 640, 480, dim_enforcer=graphics.scale.NONE if FIXED_VIEWER else graphics.scale.WFLEX)
 
 print('Opening microphone...')
 change_loading_text('Opening microphone...')
@@ -166,6 +177,9 @@ aud  # pycharm is dumb
 #  MAINLOOP
 # ==========
 ENFORCED_OUTPUT_RESOLUTION = cam.width, cam.height
+CROP_X1_X2 = 0, 0
+
+RUNNING = True
 
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 try:
@@ -194,17 +208,46 @@ try:
 
             elif data[0] == 'SET_RESOLUTION':  # 'x y'
                 w, h = map(int, data[1].decode().split())
-                ENFORCED_OUTPUT_RESOLUTION = w, h
+                if w != 0 and h != 0:
+                    ENFORCED_OUTPUT_RESOLUTION = w, h
+                else:
+                    print('Ignored 0x0 resolution set request.')
                 #print('Set resolution to', w, h)
-            elif data[0] == 'FLEX_RESOLUTION': # 'x y'
+            elif data[0] == 'W_FLEX_RESOLUTION': # 'x y'
                 w, h = map(int, data[1].decode().split())
-                if w != h != 0:
+                if w != 0 and h != 0:
                     fw = ENFORCED_OUTPUT_RESOLUTION[0]
                     fh = ENFORCED_OUTPUT_RESOLUTION[1]
                     ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
-                    print('Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                    print('H-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
                 else:
-                    print('Ignored 0x0 flex request.')
+                    print('Ignored 0x0 wflex request.')
+            elif data[0] == 'H_FLEX_RESOLUTION':
+                w, h = map(int, data[1].decode().split())
+                if w != 0 and h != 0:
+                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
+                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    ENFORCED_OUTPUT_RESOLUTION = w, round(fh * w / fw)
+                    print('W-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                else:
+                    print('Ignored 0x0 hflex request.')
+            elif data[0] == 'CROP_RESOLUTION':
+                w, h = map(int, data[1].decode().split())
+                if w != 0 and h != 0:
+                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
+                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    nw = round(fw * h / fh)
+                    ENFORCED_OUTPUT_RESOLUTION = nw, h
+
+                    diff = nw - w  # distance to box bounds
+                    if diff > 0:  # if this is false, the frame is actually smaller than the box, and it's not like we can expand it
+                        CROP_X1_X2 = diff // 2, nw - diff // 2
+                    else:
+                        CROP_X1_X2 = 0,0
+
+                    print('Cropped output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                else:
+                    print('Ignored 0x0 crop request.')
 
             elif data[0] == 'UPDATE_TEXT':  # hello world
                 text.reload(text=data[1].decode())
@@ -214,8 +257,11 @@ try:
         if not cam.muted:
             frame = cam.read(with_jpeg_encode=False)
             enc_frame = webcam.scale_to(frame, *ENFORCED_OUTPUT_RESOLUTION)
+            if any(CROP_X1_X2):
+                # print(CROP_X1_X2[0], 0, CROP_X1_X2[1], ENFORCED_OUTPUT_RESOLUTION[1])
+                enc_frame = webcam.crop(enc_frame, CROP_X1_X2[0], 0, CROP_X1_X2[1], ENFORCED_OUTPUT_RESOLUTION[1])
             client.session.send('VIDEO', pickle.dumps(webcam.jpeg_encode(enc_frame, cam.compress_quality)))
-            cam_viewer.take_frame(frame)
+            cam_viewer.take_frame(frame if FIXED_VIEWER else enc_frame)
 
         screen.fill(BLACK)
 

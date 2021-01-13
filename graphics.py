@@ -1,12 +1,20 @@
 import pygame
 import pygame.freetype
-from webcam import scale_to
+from webcam import scale_to, crop
 import numpy
 import os
-from itertools import tee
+from enum import Enum
 
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
+
+class scale(Enum):
+    CROP = 'crop'
+    WFLEX = 'wflex'
+    HFLEX = 'hflex'
+    SET = FORCE = 'set'
+    NONE = 'none'
+
 
 class Object:
     def __init__(self, x=0, y=0, w=0, h=0, corner=0):
@@ -218,19 +226,17 @@ class Text(Object):
 
 
 class WebcamViewer(Object):
-    def __init__(self, x=0, y=0, w=0, h=0, enforce_dim=False, flex_dim=False):
+    def __init__(self, x=0, y=0, w=0, h=0, dim_enforcer=None):
         # NOTE: used to contain a cam/buffer input, this is now handled in mainloop for direct control of webcam data
         super().__init__(x, y, w, h)
         self.surf = pygame.Surface((self.w, self.h))
         self.old_frame: numpy.ndarray = None
         self.new_frame: numpy.ndarray = None
 
-        self.enforce_dim = enforce_dim
-        self.flex_dim = flex_dim
+        self.dim_enforcer = dim_enforcer
 
         if w == h == 0:
-            self.enforce_dim = False
-            self.flex_dim = False
+            self.dim_enforcer = None
 
     # this is necessary so that if we draw without a new frame (because of lag or something) the viewer won't be drawn as a black square
     def take_frame(self, frame):
@@ -257,35 +263,66 @@ class WebcamViewer(Object):
             self.new_frame: numpy.ndarray = func(self.new_frame)
 
         # we will be compatible with all possible frame sizes
-        # no clue what we're receiving sadly
-        # if we want specific dimensions, use modifiers to crop or scale on client or server side, or use enforce_dim, which will scale automatically to ow/oh
-        if self.enforce_dim:
+        # set just scales it in all dims to the box size
+        if self.dim_enforcer == scale.SET:
             #print(self.new_frame.shape, self.w, self.h, self.surf.get_width(), self.surf.get_height())
             self.new_frame = scale_to(self.new_frame, self.w, self.h)
             #print(self.new_frame.shape, self.w, self.h, self.surf.get_width(), self.surf.get_height())
+
+        # preserve box height and crop width if it's too big
+        elif self.dim_enforcer == scale.CROP:
+            w, h, _ = self.new_frame.shape  # note that we throw out client h and preserve preset box h
+            nw = round(w * self.h / h)
+            self.new_frame = scale_to(self.new_frame, nw, self.h)  # first preserve the h and flex the w down to a proportional level
+
+            diff = nw - w  # distance to box bounds
+            if diff > 0:  # if this is false, the frame is actually smaller than the box, and it's not like we can expand it
+                self.new_frame = crop(self.new_frame, diff//2, 0, nw-diff//2, self.h)
+
+            # if our surface is out of date, flex_dim won't change that - gotta fix it ourselves
+            # scenes do update our self.w and self.h, but if we're flexing then the surface won't get that update, and it needs to
+            # we use cw to cache surface width, and when it's out of date with our scene, we fix it
+            if self.w != (nw-diff//2) or self.cw != (nw-diff//2):  # well now we need a new surface because the dims dont match
+                self.w = self.cw = nw
+                self.surf = pygame.Surface((self.w, self.h))
+
+        # preserve box width/height but keep the other proportional, even if it's outside or inside the box dims
         else:
             # if we wanna match the height and modify the width
-            if self.flex_dim:
+            if self.dim_enforcer == scale.WFLEX:
 
-                w, h, _ = self.new_frame.shape
+                w, h, _ = self.new_frame.shape  # note that we throw out client h and preserve preset box h
                 nw = round(w * self.h / h)
                 self.new_frame = scale_to(self.new_frame, nw, self.h)
 
                 # if our surface is out of date, flex_dim won't change that - gotta fix it ourselves
                 # scenes do update our self.w and self.h, but if we're flexing then the surface won't get that update, and it needs to
-                # we use cw to cache surface width, and when it's out of date with our scene, we fix it
+                # we use cw to cache surface width, and when it's out of date with our scene (it lags behind w), we fix it
                 if self.w != nw or self.cw != nw:  # well now we need a new surface because the dims dont match
                     self.w = self.cw = nw
                     self.surf = pygame.Surface((self.w, self.h))
 
-            # otherwise just need to get a new surface for the new size -
+            elif self.dim_enforcer == scale.HFLEX:
+
+                w, h, _ = self.new_frame.shape  # note that we throw out client w and preserve preset box w
+                nh = round(h * self.w / w)
+                self.new_frame = scale_to(self.new_frame, self.w, nh)
+
+                # if our surface is out of date, flex_dim won't change that - gotta fix it ourselves
+                # scenes do update our self.w and self.h, but if we're flexing then the surface won't get that update, and it needs to
+                # we use ch to cache surface height, and when it's out of date with our scene (it lags behind h), we fix it
+                if self.h != nh or self.ch != nh:  # well now we need a new surface because the dims dont match
+                    self.h = self.ch = nh
+                    self.surf = pygame.Surface((self.w, self.h))
+
+            # if we're not doing any of this then we have to adjust our w/h to client's frame, regardless of how big it is
             else:
                 w, h, *_ = self.new_frame.shape
 
                 # this surface is cached and reused as long as the size doesn't change
-                if self.w != w or self.h != h:  # well now we need a new surface because the dims dont match
-                    self.w, self.h = w, h
-                    self.surf = pygame.Surface((w, h))
+                if self.cw != w or self.ch != h:  # well now we need a new surface because the dims dont match
+                    self.w, self.h = self.cw, self.ch = w, h  # cached as well since scenes directly set w/h, cached will lag behind and we can use that
+                    self.surf = pygame.Surface((self.w, self.h))
 
         #print('CAM', self.surf.get_width(), self.surf.get_height(), self.w, self.h, self.new_frame.shape)
         pygame.surfarray.blit_array(self.surf, self.new_frame)

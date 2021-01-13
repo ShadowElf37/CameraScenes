@@ -110,7 +110,7 @@ class UDPClient:
                     print('PRINT REQUEST:', data[4])
                 elif reason in ('CONTINUE', 'DIE', 'DUPLICATE', 'MUTE_AUDIO', 'MUTE_VIDEO', 'UNMUTE_AUDIO', 'UNMUTE_VIDEO'):
                     self.META_QUEUE.put(data[2]) # these go straight up to main
-                elif reason in ('SET_RESOLUTION', 'CROP_RESOLUTION', 'FLEX_RESOLUTION', 'UPDATE_TEXT', 'UPDATE_TEXT_COLOR'):
+                elif reason in ('SET_RESOLUTION', 'CROP_RESOLUTION', 'H_FLEX_RESOLUTION', 'W_FLEX_RESOLUTION', 'UPDATE_TEXT', 'UPDATE_TEXT_COLOR'):
                     self.META_QUEUE.put((data[2], data[4]))
                 elif reason == 'PING':
                     self.session.send('PONG')

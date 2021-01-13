@@ -1,3 +1,10 @@
+BETA v0.1.10 (CROPPING)
+- Added crop scaling option for large aspect ratios
+- Added height-flexible scaling option and rebranded old flex as width-flexible
+- Fixed yet another issue with the unscaled scaling option
+- Canonized scaling options and added a variable to client that controlled whether they see their camera as we see it, or as the webcam sees it - maybe we can add a button to toggle this
+- Improved setup.py compatibility
+
 BETA v0.1.9 (RESIZABLE CLIENT)
 - Fixed text vertical centering - it was off by one line every time
 - Fixed a bug where if you went back two scenes through a wipe, the wipe would continue into the new scene, even if it had no wipe itself

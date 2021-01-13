@@ -100,6 +100,7 @@ HEIGHT = 1080*2//3
 FPS = graphics.Sprite.REAL_FPS = 30
 DEBUG = True
 RUNNING = True
+SCALE_METHOD = graphics.scale.CROP
 
 def frac_to_coord(x=None, y=None):
     """doesn't convert if they're not floats between 0 and 1"""
@@ -200,7 +201,7 @@ try:
                 # make a cam viewer
 
                 w, h = scene_manager.current_scene.layout.get_dim(uuid)
-                scene_manager.register_camera(uuid, graphics.WebcamViewer(w=w, h=h, flex_dim=True))
+                scene_manager.register_camera(uuid, graphics.WebcamViewer(w=w, h=h, dim_enforcer=SCALE_METHOD))
 
             elif data[2] == 'CLOSE':
                 session.is_open = False
