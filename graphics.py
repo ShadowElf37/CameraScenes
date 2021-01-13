@@ -207,7 +207,7 @@ class Text(Object):
             self.selective_blit(screen, self.py_text)
         # MULTILINE
         else:
-            self.y = self.oy - len(self.text) * self.fontsize / 2
+            self.y = self.oy - (len(self.text)-1) * self.fontsize / 2
             for i, line in enumerate(self.text):
                 py_text, py_textbox = self.py_font.render(line, self.color)
                 self.w = py_textbox.width

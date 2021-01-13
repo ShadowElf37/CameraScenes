@@ -1,8 +1,14 @@
+BETA v0.1.9 (RESIZABLE CLIENT)
+- Fixed text vertical centering - it was off by one line every time
+- Fixed a bug where if you went back two scenes through a wipe, the wipe would continue into the new scene, even if it had no wipe itself
+- Client has a resizable window now
+- Server window is no longer resizable
+
 BETA v0.1.8 (BUILD)
 - Proper setup.py that packages the application on any platform
 - Fixed issues with getting the icon to exist in the executable
 
-BETA v0.1.7 (BUGFIXES)
+BETA v0.1.7 (BUGS)
 - Fixed a bug that killed executables because pygame wanted the actual icon file
 - Fixed a bug that killed clients when you switched a scene containing them if they weren't in the original scene they joined on
 
@@ -10,7 +16,7 @@ BETA v0.1.6 (ICON)
 - Added icons to channeller and proscenium - credit to Benjamin Coveler
 - Fixed bug where webcam viewers died after changing dimensions
 
-BETA v0.1.5 (BUG HUNTING)
+BETA v0.1.5 (BUGS)
 - Actually fixed the scale_to() function that was causing so many issues
 - Fixed a bug where pipe-killing a client was NOT safe and other objects would try to access it
 - Implemented intelligent and flexible resolution scaling for diverse aspect ratios - we currently match height, can implement crops if necessary

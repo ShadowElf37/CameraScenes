@@ -101,13 +101,21 @@ FPS = graphics.Sprite.REAL_FPS = 30
 DEBUG = True
 RUNNING = True
 
-CAM_WIDTH = 400
-CAM_HEIGHT = 300
+def frac_to_coord(x=None, y=None):
+    """doesn't convert if they're not floats between 0 and 1"""
+    if x is y is None:
+        return tuple()
+
+    if type(x) is float and 0 <= x <= 1:
+        x *= WIDTH
+    if type(y) is float and 0 <= y <= 1:
+        y *= HEIGHT
+    return x, y
 
 pygame.init()
 pygame.display.set_caption("Proscenium Server")
 pygame.display.set_icon(pygame.image.load('images/favicon.png'))
-screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.locals.RESIZABLE)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 aud = audio.MultipleAudioOutput()
 
@@ -128,21 +136,16 @@ for scene in show_data:
         uuid, x, y, w, h, *extra = camera
 
         # floats become fractions of window
-        if 0 <= x <= 1 and type(x) is float:
-            x *= WIDTH
-        if 0 <= y <= 1 and type(y) is float:
-            y *= HEIGHT
-        if 0 <= w <= 1 and type(w) is float:
-            w *= WIDTH
-        if 0 <= h <= 1 and type(h) is float:
-            h *= HEIGHT
+        x, y = frac_to_coord(x, y)
+        w, h = frac_to_coord(w, h)
 
         s.add(str(uuid), x, y, w, h, *extra)
 
-
     # ENSURE CORRECT ARGS CAN BE EASILY PASSED - THIS IS ROUGH SKETCH - NO FRACTIONAL
     for text in scene.get('text', []):  # text, x, y     opt: font, fsize, color
-        s.objects.append(graphics.Text(*text))
+        t, x, y, *args = text
+        x, y = frac_to_coord(x, y)
+        s.objects.append(graphics.Text(t, x, y, *args))
 
     # fps should be 0 for stills
     # you may need to calculate the correct fps if you don't have one image for every frame in the second
@@ -150,12 +153,12 @@ for scene in show_data:
 
         s.objects.append(graphics.Sprite(
             sprite.get('folder'),
-            *sprite.get('start_pos'),
+            *frac_to_coord(*sprite.get('start_pos')),
             sprite.get('fps', graphics.Sprite.REAL_FPS),
             delete_on_end_frames=sprite.get('delete_on_end_frames', False),
             delete_on_end_move=sprite.get('delete_on_end_move', False),
             loop_move=sprite.get('loop_move', True),
-            end_pos=sprite.get('end_pos', ()),
+            end_pos=frac_to_coord(*sprite.get('end_pos', (None, None))),
             move_duration=sprite.get('move_duration', 0),
             rotation=sprite.get('rotation', 0),
             corner=sprite.get('corner', 0),

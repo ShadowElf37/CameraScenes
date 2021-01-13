@@ -1,5 +1,21 @@
 [
   {
+    "text": [
+      ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]
+    ]
+  },
+
+  {
+    "background": "images/mh.jpg",
+    "wipe": 120,
+    "wipe_to": "top",
+    "cameras": [
+      [1, 600, 200, 400, 300]
+    ]
+  },
+
+  {
+    "wipe": 10,
     "cameras": [
       [1, 250, 400, 400, 225],
       [7, 800, 200, 400, 225]
@@ -18,15 +34,6 @@
         "loop_move": true,
         "rotation": 90
       }
-    ]
-  },
-
-  {
-    "background": "images/mh.jpg",
-    "wipe": 30,
-    "wipe_to": "left",
-    "cameras": [
-      [1, 600, 200, 400, 300]
     ]
   },
 

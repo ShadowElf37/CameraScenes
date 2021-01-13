@@ -81,8 +81,7 @@ else:
     pygame.display.set_icon(pygame.image.load('images/favicon.png'))
 
 
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
 loading_text = graphics.Text('', WIDTH/2, HEIGHT/2)
@@ -151,8 +150,8 @@ except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
 cam  # pycharm is dumb
 
-text = graphics.Text('Welcome!', WIDTH/2, 620, fontsize=56)
-cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT / 2 - 50, 640, 480, flex_dim=True)
+text = graphics.Text('Welcome!', WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
+cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT * 4 / 9, 640, 480, flex_dim=True)
 
 print('Opening microphone...')
 change_loading_text('Opening microphone...')
@@ -232,9 +231,11 @@ try:
                 RUNNING = False
                 client.close()
                 break
-            #elif event.type == VIDEORESIZE:
-            #    screen.blit(pygame.transform.scale(pic, event.dict['size']), (0, 0))
-            #    pygame.display.update()
+            elif event.type == pygame.VIDEORESIZE:
+                WIDTH, HEIGHT = pygame.display.get_window_size()
+                cam_viewer.set_pos(WIDTH/2, HEIGHT * 4 / 9)
+                text.x = WIDTH/2
+                text.y = HEIGHT * 7 / 8
             #elif event.type == VIDEOEXPOSE:  # handles window minimising/maximising
             #    screen.fill((0, 0, 0))
             #    screen.blit(pygame.transform.scale(pic, screen.get_size()), (0, 0))

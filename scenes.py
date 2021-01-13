@@ -67,6 +67,7 @@ class SceneManager:
 
     def set_scene(self, i):
         if i > len(self.scenes) - 1 or i < 0: return
+        self.wiping_from = None
         self.current_i = i
         self.current_scene: Scene = self.scenes[i]
         if self.current_scene.wipe:
