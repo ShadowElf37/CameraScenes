@@ -32,6 +32,12 @@ RUNNING = True
 # GET UUID
 import tkinter as tk
 
+done = False
+def quit_tk(*_):
+    global done
+    done = True
+    root.destroy()
+
 root = tk.Tk()
 root.title('ID Entry')
 root.focus()
@@ -46,6 +52,8 @@ uid_text.pack()
 uid_entry.pack(padx=20)
 submit.pack(pady=10)
 
+root.protocol("WM_DELETE_WINDOW", quit_tk)
+
 try:
     root.mainloop()
 except tk.TclError:
@@ -56,7 +64,7 @@ except tk.TclError:
 
 # END GET UUID
 uuid = uid.get().strip()
-if not uuid:
+if done or not uuid:
     exit()
 del uid, tk, submit, uid_entry, uid_text
 # ACCESS WITH uuid
@@ -246,4 +254,6 @@ finally:
     client.close()
     pygame.quit()
     print('Closed safely.')
-    exit(0)
+    exit()
+
+exit(0)

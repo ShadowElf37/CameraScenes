@@ -1,1 +1,0 @@
-pyinstaller --windowed --add-data="images/favicon.png:images" --icon="images/favicon.icns" --name="Proscenium" client.py

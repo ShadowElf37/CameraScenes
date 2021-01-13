@@ -289,5 +289,6 @@ finally:
     server.close()
     pygame.quit()
     print('Closed safely.')
-    exit(0)
+    exit()
 
+exit(0)

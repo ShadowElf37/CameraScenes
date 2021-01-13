@@ -1,3 +1,7 @@
+BETA v0.1.8 (BUILD)
+- Proper setup.py that packages the application on any platform
+- Fixed issues with getting the icon to exist in the executable
+
 BETA v0.1.7 (BUGFIXES)
 - Fixed a bug that killed executables because pygame wanted the actual icon file
 - Fixed a bug that killed clients when you switched a scene containing them if they weren't in the original scene they joined on
