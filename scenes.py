@@ -89,54 +89,56 @@ class SceneManager:
         self.set_scene(0)
 
     def draw(self):
-        for command in iter(self.cues):
-            command = command.decode()
-            if {
-                'next': self.next,
-                'back': self.back,
-                'last': self.last,
-                'first': self.first,
-                'test': lambda: print('pipe test!')
-            }.get(command, lambda: self.UNDEFINED_COMMAND)() is self.UNDEFINED_COMMAND:
-                try:
-                    if command[:3] == 'py:':
-                        try:
-                            eval(command[3:].strip())
-                        except SyntaxError:
-                            exec(command[3:].strip())
-                    else:
-                        cmd, *args = command.split(' ')
-
-                        if cmd == 'set_scene':
-                            self.set_scene(int(args[0]))
-                        elif cmd == 'set_scene_nowipe':
-                            self.set_scene_nowipe(int(args[0]))
-                        elif cmd in ('mute_audio', 'mutea', 'mute'):
-                            self.server.sessions[args[0]].send('MUTE_AUDIO')
-                            self.server.muted(args[0])
-                        elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
-                            self.server.sessions[args[0]].send('UNMUTE_AUDIO')
-                            self.server.unmuted(args[0])
-                        elif cmd in ('mute_video', 'mutev'):
-                            self.server.sessions[args[0]].send('MUTE_VIDEO')
-                            self.server.muted(args[0])
-                        elif cmd in ('unmute_video', 'unmutev'):
-                            self.server.sessions[args[0]].send('UNMUTE_VIDEO')
-                            self.server.unmuted(args[0])
-                        elif cmd in ('update_text', 'text'):
-                            self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
-                        elif cmd in ('update_text_color', 'color'):
-                            self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
-                        elif cmd == 'kill':
-                            self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
-                        elif cmd == 'exit':
-                            raise SystemExit('Exit by pipe command')
-                        elif cmd == 'print':
-                            print('From pipe:', *args)
+        for full_command in iter(self.cues):
+            full_command = full_command.decode()
+            for command in full_command.split(';'):
+                command = command.strip()
+                if {
+                    'next': self.next,
+                    'back': self.back,
+                    'last': self.last,
+                    'first': self.first,
+                    'test': lambda: print('pipe test!')
+                }.get(command, lambda: self.UNDEFINED_COMMAND)() is self.UNDEFINED_COMMAND:
+                    try:
+                        if command[:3] == 'py:':
+                            try:
+                                eval(command[3:].strip())
+                            except SyntaxError:
+                                exec(command[3:].strip())
                         else:
-                            print('Bad pipe command', '"'+command+'"')
-                except Exception as e:
-                    print(f'Pipe command "{command}" failed:', str(e))
+                            cmd, *args = command.split(' ')
+
+                            if cmd == 'set_scene':
+                                self.set_scene(int(args[0]))
+                            elif cmd == 'set_scene_nowipe':
+                                self.set_scene_nowipe(int(args[0]))
+                            elif cmd in ('mute_audio', 'mutea', 'mute'):
+                                self.server.sessions[args[0]].send('MUTE_AUDIO')
+                                self.server.muted(args[0])
+                            elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
+                                self.server.sessions[args[0]].send('UNMUTE_AUDIO')
+                                self.server.unmuted(args[0])
+                            elif cmd in ('mute_video', 'mutev'):
+                                self.server.sessions[args[0]].send('MUTE_VIDEO')
+                                self.server.muted(args[0])
+                            elif cmd in ('unmute_video', 'unmutev'):
+                                self.server.sessions[args[0]].send('UNMUTE_VIDEO')
+                                self.server.unmuted(args[0])
+                            elif cmd in ('update_text', 'text'):
+                                self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
+                            elif cmd in ('update_text_color', 'color'):
+                                self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
+                            elif cmd == 'kill':
+                                self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
+                            elif cmd == 'exit':
+                                raise SystemExit('Exit by pipe command')
+                            elif cmd == 'print':
+                                print('From pipe:', *args)
+                            else:
+                                print('Bad pipe command', '"'+command+'"')
+                    except Exception as e:
+                        print(f'Pipe command "{command}" failed:', str(e))
 
 
         self.current_scene.draw(self.screen)
