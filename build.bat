@@ -1,1 +1,1 @@
-pyinstaller --onefile --console -i images/favicon.ico -n Proscenium client.py
+pyinstaller --onefile --windowed --add-data="images/favicon.png;images" --icon="images/favicon.ico" --name="Proscenium" client.py

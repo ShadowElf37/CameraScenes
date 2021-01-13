@@ -6,6 +6,7 @@ os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 
 import pygame.freetype
 from sys import exit
+import sys
 import webcam
 import graphics
 import network_client as network
@@ -63,7 +64,16 @@ del uid, tk, submit, uid_entry, uid_text
 
 pygame.init()
 pygame.display.set_caption("Proscenium Client")
-#pygame.display.set_icon(pygame.image.load('images/favicon.png'))
+
+import sys
+
+if getattr(sys, 'frozen', False):
+    pygame.display.set_icon(pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png')))
+else:
+    pygame.display.set_icon(pygame.image.load('images/favicon.png'))
+
+
+
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 clock = pygame.time.Clock()
 
