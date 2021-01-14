@@ -1,8 +1,8 @@
 BETA v0.1.11 (FADES)
 - Server mutes before the client officially does, in case the mute message gets lost in the mail
 - Added fade transitions
-- Made the transition structure more flexible
-- Fixed scaling ONCE AGAIN
+- Made the transition code more flexible
+- Fixed scaling ONCE AGAIN - client is wflex while server crops, it's the only stable combination
 
 BETA v0.1.10 (CROPPING)
 - Added crop scaling option for large aspect ratios

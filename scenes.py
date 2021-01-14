@@ -9,7 +9,7 @@ import threading
 
 class SceneManager:
     UNDEFINED_COMMAND = object()
-    RESOLUTION_SETTER = 'CROP'  # SET, W_FLEX, H_FLEX, CROP
+    RESOLUTION_SETTER = 'W_FLEX'  # SET, W_FLEX, H_FLEX, CROP
 
     def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
         self.server: UDPManager = server

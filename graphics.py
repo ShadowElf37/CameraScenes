@@ -284,10 +284,10 @@ class WebcamViewer(Object):
 
 
             diff = nw - self.w  # distance to box bounds
-            print(self.w, nw, w, self.surf.get_width(), diff)
+            #print(self.w, nw, w, self.surf.get_width(), diff)
             #print('1:', (self.w, self.h), (self.cw, self.ch), (w,h), (self.surf.get_width(), self.surf.get_height()), diff, nw)
             if diff > 0:  # if this is false, the frame is actually smaller than the box, and it's not like we can expand it
-                self.new_frame = crop(self.new_frame, floor(diff/2), 0, floor(nw-diff/2), self.h)
+                self.new_frame = crop(self.new_frame, diff//2, 0, nw-diff//2, self.h)
 
             # if our surface is out of date, flex_dim won't change that - gotta fix it ourselves
             # scenes do update our self.w and self.h, but if we're flexing then the surface won't get that update, and it needs to
