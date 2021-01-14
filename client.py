@@ -84,17 +84,6 @@ else:
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
-# keep the window updated so it doesnt freeze and lag and be sad during startup
-def update_pygame_loop():
-    global RUNNING
-    while not RUNNING:
-        print('u')
-        pygame.display.update()
-        clock.tick()
-from threading import Thread
-Thread(target=update_pygame_loop, daemon=True).start()
-
-
 loading_text = graphics.Text('', WIDTH/2, HEIGHT/2)
 
 # THIS WILL LET US GIVE THE USER LOADING MESSAGES

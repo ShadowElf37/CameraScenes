@@ -1,3 +1,9 @@
+BETA v0.1.11 (FADES)
+- Server mutes before the client officially does, in case the mute message gets lost in the mail
+- Added fade transitions
+- Made the transition structure more flexible
+- Fixed scaling ONCE AGAIN
+
 BETA v0.1.10 (CROPPING)
 - Added crop scaling option for large aspect ratios
 - Added height-flexible scaling option and rebranded old flex as width-flexible

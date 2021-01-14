@@ -131,7 +131,11 @@ scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG)
 # ============
 
 for scene in show_data:
-    s = scenes.Scene(scene_manager, background=scene.get('background'), wipe=scene.get('wipe', 0), wipe_side=scene.get('wipe_to', 'left'))
+    s = scenes.Scene(scene_manager,
+                     background=scene.get('background'),
+                     transition_duration=scene.get('transition_duration', 0),
+                     transition=scene.get('transition', None),
+                     wipe_side=scene.get('wipe_to', 'left'))
 
     for camera in scene.get('cameras', []):  # uuid, x, y, w, h
         uuid, x, y, w, h, *extra = camera
@@ -207,6 +211,11 @@ try:
                 session.is_open = False
                 scene_manager.unregister_camera(uuid)
                 aud.close_output(uuid)
+
+            elif data[2] == 'MUTE':
+                aud.mute(uuid)
+            elif data[2] == 'UNMUTE':
+                aud.unmute(uuid)
 
         for uuid, frame in iterq(server.VIDEO_QUEUE):
             if (cam := scene_manager.cameras.get(uuid)) is None:

@@ -94,6 +94,7 @@ class MultipleAudioOutput:
     def __init__(self):
         self.outputs: {str: AudioOutput} = {}  # USE UUIDS
         self.threads = {}
+        self.muted = []
 
     def new_output(self, uuid):
         self.outputs[uuid] = out = AudioOutput()
@@ -105,8 +106,14 @@ class MultipleAudioOutput:
             self.outputs[uuid].close()
             del self.outputs[uuid]
 
+    def mute(self, uuid):
+        self.muted.append(uuid)
+    def unmute(self, uuid):
+        self.muted.remove(uuid)
+
     def process(self, uuid, chunk):
-        self.outputs.get(uuid, self.DUMMY).write(chunk)
+        if uuid not in self.muted:
+            self.outputs.get(uuid, self.DUMMY).write(chunk)  # dummy is for thread safety
 
 
 class AudioInterface:

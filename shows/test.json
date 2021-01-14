@@ -7,7 +7,8 @@
 
   {
     "background": "images/mh.jpg",
-    "wipe": 120,
+    "transition": "fade",
+    "transition_duration": 30,
     "wipe_to": "top",
     "cameras": [
       [1, 600, 200, 400, 300]
@@ -15,7 +16,8 @@
   },
 
   {
-    "wipe": 10,
+    "transition": "fade",
+    "transition_duration": 30,
     "cameras": [
       [1, 250, 400, 400, 225],
       [7, 800, 200, 400, 225]
@@ -38,7 +40,8 @@
   },
 
   {
-    "wipe": 90,
+    "transition": "wipe",
+    "transition_duration": 90,
     "wipe_to": "bottom",
     "cameras": [
       [1, 0.25, 0.25, 300, 300],
