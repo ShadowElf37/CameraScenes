@@ -102,8 +102,9 @@ class SceneManager:
     def draw(self):
         for full_command in iter(self.cues):
             full_command = full_command.decode()
+            full_command.replace('\\;', 'SUPERAWESOMEAMAZINGNONCE')  # they can escape semicolons
             for command in full_command.split(';'):
-                command = command.strip()
+                command = command.strip().replace('SUPERAWESOMEAMAZINGNONCE', '\\;')
                 if {
                     'next': self.next,
                     'back': self.back,
@@ -125,26 +126,28 @@ class SceneManager:
                             elif cmd == 'set_scene_nowipe':
                                 self.set_scene_notrans(int(args[0]))
                             elif cmd in ('mute_audio', 'mutea', 'mute'):
-                                self.server.sessions[args[0]].send('MUTE_AUDIO')
-                                self.server.muted(args[0])
-                                self.server.META_QUEUE.put((args[0], -7, 'MUTE', (0,0), b''))
+                                for u in args:
+                                    self.server.sessions[u].send('MUTE_AUDIO')
+                                    self.server.META_QUEUE.put((u, -7, 'MUTE', (0,0), b''))
                             elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
-                                self.server.sessions[args[0]].send('UNMUTE_AUDIO')
-                                self.server.unmuted(args[0])
-                                self.server.META_QUEUE.put((args[0], -7, 'UNMUTE', (0,0), b''))
+                                for u in args:
+                                    self.server.sessions[u].send('UNMUTE_AUDIO')
+                                    self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0,0), b''))
                             elif cmd in ('mute_video', 'mutev'):
-                                self.server.sessions[args[0]].send('MUTE_VIDEO')
-                                self.server.muted(args[0])
+                                for u in args:
+                                    self.server.sessions[u].send('MUTE_VIDEO')
+                                    self.server.muted(u)
                             elif cmd in ('unmute_video', 'unmutev'):
-                                self.server.sessions[args[0]].send('UNMUTE_VIDEO')
-                                self.server.unmuted(args[0])
+                                for u in args:
+                                    self.server.sessions[u].send('UNMUTE_VIDEO')
+                                    self.server.unmuted(u)
                             elif cmd in ('update_text', 'text'):
                                 self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
                             elif cmd in ('update_text_color', 'color'):
                                 self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
                             elif cmd == 'kill':
                                 self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
-                            elif cmd == 'exit':
+                            elif cmd == 'force-exit':
                                 raise SystemExit('Exit by pipe command')
                             elif cmd == 'print':
                                 print('From pipe:', *args)
@@ -257,7 +260,7 @@ class Scene:
         self.layout.register(uuid, x, y, w, h)
         if self.manager.debug:
             self.debug_rects[uuid] = graphics.Rect(x, y, w, h)
-            self.debug_texts[uuid] = graphics.Text(f'{uuid}@({x},{y})', x, y, color=(255, 0, 0))
+            self.debug_texts[uuid] = graphics.Text(f'{uuid}@({round(x)},{round(x)})', x, y, color=(255, 0, 0))
 
     def add_object(self, obj):
         self.objects.append(obj)
@@ -294,7 +297,7 @@ class Scene:
                     text = self.debug_texts[uuid]
                     rect = self.debug_rects[uuid]  # just need to update these coords real quick for mouse drag purposes
                     text.x, text.y = rect.x, rect.y = cam.x, cam.y
-                    text.reload(text=f'{uuid}@{text.x},{text.y}')
+                    text.reload(text=f'{uuid}@{round(text.x)},{round(text.y)}')
                     rect.draw(screen)
 
                 cam.draw(screen, *funcs)
@@ -306,7 +309,7 @@ class Scene:
                 text = self.debug_texts[uuid]
 
                 text.x, text.y = rect.x, rect.y = self.layout.get_pos(uuid)
-                text.reload(text=f'{uuid}@{text.x},{text.y}')
+                text.reload(text=f'{uuid}@{round(text.x)},{round(text.y)}')
 
                 rect.draw(screen)
                 text.draw(screen)

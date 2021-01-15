@@ -3,7 +3,7 @@ from queue import Queue
 from threading import Thread
 from collections import defaultdict
 
-FRAG_LIMIT = 4192
+FRAG_LIMIT = 2048
 
 class UDPSession:
     def __init__(self, manager, ip, port, uuid=None, fragment=False):

@@ -11,7 +11,7 @@ import webcam
 import graphics
 import scenes
 import pickle
-import json
+import pyjson5 as json
 from sys import exit
 from network_common import UDPSession, iterq
 import traceback
@@ -28,13 +28,13 @@ import ntpath
 
 
 with open('config.json') as config_file:
-    config = json.load(config_file)
+    config = json.decode_io(config_file)
 last_show_file = show_file = config['last_show_file']
 
 def load_cfg(sv=None):
     global show_file
     path = fd.askopenfilename(initialdir='shows', filetypes=(
-                                        ("Config/JSON files", "*.json;*.cfg"),
+                                        ("Config/JSON files", "*.json;*.cfg;*.json5"),
                                         ("All files", "*.*")
                                             ))
     if sv:
@@ -75,14 +75,14 @@ except tk.TclError:
     submit.destroy()
     root.quit()
 
+config['last_show_file'] = show_file
+with open('config.json', 'wb') as config_file:
+    json.encode_io(config, config_file)
+
 if not show_file or done:
     exit()
 
-config['last_show_file'] = show_file
-with open('config.json', 'w') as config_file:
-    json.dump(config, config_file)
-
-show_data = json.load(open(show_file))
+show_data = json.decode_io(open(show_file))
 
 # ===================
 #        START
@@ -95,8 +95,9 @@ clock = pygame.time.Clock()
 BLACK = (0,0,0)
 WHITE = (255, 255, 255)
 
-WIDTH = 1920*2//3
-HEIGHT = 1080*2//3
+WIDTH = 1920
+HEIGHT = 1080
+os.environ['SDL_VIDEO_WINDOW_POS'] = '%i,%i' % (8,30)
 FPS = graphics.Sprite.REAL_FPS = 30
 DEBUG = True
 RUNNING = True
@@ -131,8 +132,9 @@ scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG)
 # ============
 
 for scene in show_data:
+    bg = scene.get('background', '')
     s = scenes.Scene(scene_manager,
-                     background=scene.get('background'),
+                     background=os.path.join('images', bg) if bg else None,
                      transition_duration=scene.get('transition_duration', 0),
                      transition=scene.get('transition', None),
                      wipe_side=scene.get('wipe_to', 'left'))
@@ -214,8 +216,10 @@ try:
 
             elif data[2] == 'MUTE':
                 aud.mute(uuid)
+                server.muted(uuid)
             elif data[2] == 'UNMUTE':
                 aud.unmute(uuid)
+                server.unmuted(uuid)
 
         for uuid, frame in iterq(server.VIDEO_QUEUE):
             if (cam := scene_manager.cameras.get(uuid)) is None:

@@ -43,4 +43,4 @@ elif system() == 'Darwin':
 
     if getuser() == 'speedyturtle':
         import subprocess
-        subprocess.run('codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)" '+os.path.join(*__file__.split('/')[:-1], 'dist', 'Proscenium.app'))
+        subprocess.Popen(['codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)"', os.path.join(*__file__.split('/')[:-1], 'dist', 'Proscenium.app'])

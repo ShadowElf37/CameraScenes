@@ -63,7 +63,7 @@ class UDPManager:
             del self.reports['frag']
             print('%s out of order packets were dropped.' % self.reports['out of order'])
             del self.reports['out of order']
-            print('Clients:', ', '.join(self.sessions.keys()), '(%s)' % len(self.sessions.keys()))
+            print('Clients:', ', '.join(uuid for uuid, s in self.sessions.items() if s.is_open), '(%s)' % len(self.sessions.keys()))
             if self.reports:
                 print('Packet report:\n\t' + '\n\t'.join(f'{key} - {i}' for key,i in self.reports.items()))
             else:
