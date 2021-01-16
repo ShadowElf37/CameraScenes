@@ -32,7 +32,6 @@ if system() == 'Windows':
 elif system() == 'Darwin':
     pyi.run([
         'client.py',
-        '--onefile',
         '--clean',
         '--osx-bundle-identifier=com.keycohen.Proscenium',
         '--windowed',
