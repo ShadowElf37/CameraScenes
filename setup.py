@@ -42,4 +42,6 @@ elif system() == 'Darwin':
 
     if getuser() == 'speedyturtle':
         import subprocess
-        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', os.path.join('dist', 'Proscenium.app')])
+        path = os.path.join('dist', 'Proscenium.app')
+        # subprocess.Popen(['xattr', '-cr', path])
+        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', path])
