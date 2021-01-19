@@ -96,6 +96,7 @@ def change_loading_text(text, color=WHITE):
 def throw_error_to_user(text, close=True):
     global clock, client
     change_loading_text(text+'\nYou may exit the application.', color=RED)
+    print('Threw error to user:', text.encode())
     try:
         if close: client.session._send('CLOSE')
     except OSError:
