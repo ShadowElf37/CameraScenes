@@ -1,3 +1,7 @@
+BETA v0.1.12 (LOGGING)
+- Added logging to client so we can see app output in emergencies
+- Fixed macOS build process
+
 BETA v0.1.11 (FADES)
 - Server mutes before the client officially does, in case the mute message gets lost in the mail
 - Added fade transitions
