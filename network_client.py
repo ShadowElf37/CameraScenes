@@ -3,7 +3,7 @@ import threading
 from network_common import *
 import json
 from collections import defaultdict
-import logging
+import autolog
 
 class UDPClient:
     def __init__(self, host, port=37001, override_uuid=None, frag=False):

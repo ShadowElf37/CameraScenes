@@ -17,7 +17,7 @@ from network_common import iterq
 from queue import Empty
 from time import sleep
 import traceback
-import logging
+import autolog
 
 
 BLACK = (0,0,0)
