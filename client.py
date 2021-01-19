@@ -263,6 +263,12 @@ try:
         cam_viewer.draw(screen)
         text.draw(screen)
 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_BACKQUOTE] and keys[pygame.K_LSHIFT]:
+            EASTER_EGG = True
+        else:
+            EASTER_EGG = False
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 print('User quit.')
@@ -277,17 +283,10 @@ try:
                 text.x = WIDTH/2
                 text.y = HEIGHT * 7 / 8
 
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_BACKQUOTE and event.mod & pygame.KMOD_LSHIFT:
-                    EASTER_EGG = True
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_BACKQUOTE or event.key == pygame.K_LSHIFT:
-                    EASTER_EGG = False
+        if EASTER_EGG:
+            screen.blit(easter_egg_image, (0, 0))
 
-            if EASTER_EGG:
-                screen.blit(easter_egg_image, (0, 0))
-
-            pygame.display.update()
+        pygame.display.update()
 
             #elif event.type == VIDEOEXPOSE:  # handles window minimising/maximising
             #    screen.fill((0, 0, 0))

@@ -279,7 +279,6 @@ class WebcamViewer(Object):
             w, h, _ = self.new_frame.shape  # note that we throw out client h and preserve preset box h
             nw = round(w * self.h / h)
             #print(w, h, nw, self.w, self.h)
-
             self.new_frame = scale_to(self.new_frame, nw, self.h)  # first preserve the h and flex the w down to a proportional level
 
 

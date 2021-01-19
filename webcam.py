@@ -17,6 +17,7 @@ def scale_by(frame, factor):
 
 def scale_to(frame: numpy.ndarray, x=0, y=0):
     # no scaling passed
+    print(x, y)
     if x == y == 0:
         return frame
     ox, oy, _ = frame.shape  # third is colors

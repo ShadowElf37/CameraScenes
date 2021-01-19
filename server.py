@@ -35,7 +35,7 @@ last_show_file = show_file = config['last_show_file']
 def load_cfg(sv=None):
     global show_file
     path = fd.askopenfilename(initialdir='shows', filetypes=(
-                                        ("Config/JSON files", "*.json;*.cfg;*.json5"),
+                                        ("JSON/JSON5 files", "*.json;*.json5"),
                                         ("All files", "*.*")
                                             ))
     if sv:
@@ -114,7 +114,7 @@ def frac_to_coord(x=None, y=None):
         x *= WIDTH
     if type(y) is float and 0 <= y <= 1:
         y *= HEIGHT
-    return x, y
+    return round(x), round(y)
 
 pygame.init()
 pygame.display.set_caption("Proscenium Server")

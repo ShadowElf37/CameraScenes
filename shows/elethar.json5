@@ -1,27 +1,27 @@
 /*
 
-1 Reyluk- Gabby
-2 Elethar- Victor
-3 Nirin- Jane
-4 Hrustus- Miles
-5 Teresai- Hannah
-6 Geremor- Marissa
-7 Merchant- Jack
-8 Voice 1- Phoebe
-9 Voice 2- Olivia
-10 Voice 3- Evelyn
-11 Voice 4- Aidan
+1 Reyluk - Gabby
+2 Elethar - Victor
+3 Nirin - Jane
+4 Hrustus - Miles
+5 Teresai - Hannah
+6 Geremor - Marissa
+7 Merchant - Jack
+8 Voice 1 - Phoebe (pink)
+9 Voice 2 - Olivia (yellow)
+10 Voice 3 / Kir'akal - Evelyn (blue)
+11 Voice 4 - Aidan (green)
 
 */
 
 [
-  { // SCENE 0
+  { // SCENE 0 (OPEN)
     "text": [
       ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]
     ]
   },
 
-  { // SCENE 1 (0)
+  { // SCENE 1 (VOICES INTRO)
     'transition': 'wipe',
     'wipe_to': 'top',
     'transition_duration': 120,
@@ -34,13 +34,15 @@
     ]
   },
 
-  { // SCENE 3 (1)
+  { // SCENE 2 (1)
     "cameras": [
       [4, 0.5, 0.5, 0.45, 0.6]
     ]
   },
+
   // SCENE 3
   {"transition": "fade", "transition_duration": 45},
+  
   { // SCENE 4 (2A)
     "transition": "fade", "transition_duration": 60,
     "cameras": [
@@ -120,12 +122,29 @@
         [7, 0.5, 0.8, 0.2, 0.2666]
     ]
   },
-  { // SCENE 12 (6A)
 
+  { // SCENE 12 (6A)
+    "cameras": [
+      // TRIO
+      [3, 0.2, 0.5, 0.2, 0.2666],
+      [2, 0.5, 0.5, 0.2, 0.2666],
+      [1, 0.8, 0.5, 0.2, 0.2666],
+    ]
   },
 
   { // SCENE 13 (6B)
+    "cameras": [
+      // HALF VOICES
+      [9, 0.9, 0.8666, 0.2, 0.2666],
+      [11, 0.1, 0.8666, 0.2, 0.2666],
 
+      // REYLUK
+      [1, 0.5, 0.8, 0.2, 0.2666],
+
+      // KIRAKAL + TERESAI
+      [5, 0.325, 0.4, 0.3, 0.4],
+      [10, 0.675, 0.4, 0.3, 0.4],
+    ]
   },
 
   { // SCENE 14 (7A)
@@ -154,27 +173,191 @@
       ]
   },
 
-  { // SCENE 15 (7B)
+  { // SCENE 16 (8)
     "cameras": [
-      // TRIO
-        [1, 0.8, 0.5, 0.3, 0.4],
-      // VOICES
+        // Elethar and Teresai
+        [2, 0.25, 0.5, 0.2, 0.2666],
+        [5, 0.75, 0.5, 0.2, 0.2666],
+
+        // voices
         [10, 0.1, 0.1333, 0.2, 0.2666],
         [9, 0.9, 0.1333, 0.2, 0.2666],
         [11, 0.1, 0.8666, 0.2, 0.2666],
         [8, 0.9, 0.8666, 0.2, 0.2666],
-      ]
-  },
-
-  { // SCENE 16 (7)
-
-  },
-
-  { // SCENE 17 (8A)
-    "cameras": [
-        [1, 0.25, 0.5, 0.2, 0.2666],
-        [2, 0.75, 0.5, 0.2, 0.2666]
     ]
-  }
+  },
+
+  { // SCENE 17 (9A)
+    "cameras": [
+        // trio
+        [1, 0.25, 0.5, 0.3, 0.4],
+        [2, 0.65, 0.35, 0.3, 0.4],
+        [3, 0.65, 0.75, 0.2, 0.2666],
+
+        // voices
+        [10, 0.075, 0.1, 0.15, 0.2],
+        [9, 0.925, 0.1, 0.15, 0.2],
+        [11, 0.075, 0.9, 0.15, 0.2],
+        [8, 0.925, 0.9, 0.15, 0.2],
+    ]
+  },
+
+  { // SCENE 18 (9B)
+    "cameras": [
+        // nirin
+        [3, 0.5, 0.5, 0.3, 0.4],
+    ]
+  },
+
+  { // SCENE 19 (9C)
+    "cameras": [
+        // reyluk and kirakal
+        [1, 0.65, 0.5, 0.3, 0.4],
+        [10, 0.35, 0.5, 0.3, 0.4]
+    ]
+  },
+
+  { // SCENE 20 (9D)
+    "cameras": [
+        // elethar and kirakal
+        [2, 0.675, 0.5, 0.3, 0.4],
+        [10, 0.325, 0.5, 0.3, 0.4],
+
+        // voices
+        [10, 0.075, 0.1, 0.15, 0.2],
+        [9, 0.925, 0.1, 0.15, 0.2],
+        [11, 0.075, 0.9, 0.15, 0.2],
+        [8, 0.925, 0.9, 0.15, 0.2],
+    ]
+  },
+
+  { // SCENE 21 (10A)
+    "cameras": [
+        // geremor, nirin, elethar
+        [6, 0.275, 0.5, 0.2, 0.2666],
+        [3, 0.5, 0.5, 0.2, 0.2666],
+        [2, 0.725, 0.5, 0.2, 0.2666],
+    ]
+  },
+
+  { // SCENE 22 (10B)
+    "cameras": [
+        // geremor, elethar, nirin
+        [6, 0.275, 0.5, 0.2, 0.2666],
+        [2, 0.5, 0.5, 0.2, 0.2666],
+        [3, 0.725, 0.5, 0.2, 0.2666],
+    ]
+  },
+
+  { // SCENE 23 (10C)
+    "transition": "fade",
+    "transition_duration": 60,
+    "cameras": [
+        // g,e,n
+        [6, 0.275, 0.5, 0.2, 0.2666],
+        [2, 0.5, 0.5, 0.2, 0.2666],
+        [3, 0.725, 0.5, 0.2, 0.2666],
+
+        // reyluk (spirit form)
+        [1, 0.5, 0.8666, 0.2, 0.2666],
+
+        // hrustus
+        [4, 0.5, 0.1333, 0.2, 0.2666],
+    ]
+  },
+
+  { // SCENE 24 (10D)
+    "transition": "fade",
+    "transition_duration": 60,
+    "cameras": [
+        // g,e,n
+        [6, 0.275, 0.5, 0.2, 0.2666],
+        [2, 0.5, 0.5, 0.2, 0.2666],
+        [3, 0.725, 0.5, 0.2, 0.2666],
+
+        // voices
+        [10, 0.075, 0.1, 0.15, 0.2],
+        [9, 0.925, 0.1, 0.15, 0.2],
+        [11, 0.075, 0.9, 0.15, 0.2],
+        [8, 0.925, 0.9, 0.15, 0.2],
+
+        // reyluk (spirit form)
+        [1, 0.5, 0.8666, 0.2, 0.2666],
+
+        // hrustus
+        [4, 0.5, 0.1333, 0.2, 0.2666],
+
+        // etc (teresai, merchant)
+        [5, 0.075, 0.5, 0.15, 0.2],
+        [7, 0.925, 0.5, 0.15, 0.2],
+    ]
+  },
+
+  { // SCENE 25 (11A)
+    "cameras": [
+        // Hrustus
+        [4, 0.5, 0.5, 0.3, 0.4],
+    ]
+  },
+/*
+  { // SCENE 26 (11B)  this scene is dumb and i hate it please remove
+    "cameras": [
+        // Voices
+        [10, 0.322, 0.25, 0.3, 0.4],
+        [9, 0.678, 0.25, 0.3, 0.4],
+        [11, 0.322, 0.75, 0.3, 0.4],
+        [8, 0.678, 0.75, 0.3, 0.4],
+    ]
+  },*/
+
+  // SCENE 26 (CLOSE)
+  {
+    "transition": "fade",
+    "transition_duration": 180,
+    "text":[
+      ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]
+    ]
+  },
 
 ]
+
+
+/*
+
+1 Reyluk - Gabby
+2 Elethar - Victor
+3 Nirin - Jane
+4 Hrustus - Miles
+5 Teresai - Hannah
+6 Geremor - Marissa
+7 Merchant - Jack
+8 Voice 1 - Phoebe (pink)
+9 Voice 2 - Olivia (yellow)
+10 Voice 3 / Kir'akal - Evelyn (blue)
+11 Voice 4 - Aidan (green)
+
+
+Backgrounds:
+Voices
+Tavern
+Town
+Red Sky
+Field (day)
+Forest (day)
+Forest (shrine)
+Forest (night)
+Inside palace normal sky
+Inside palace red sky
+
+Music:
+Fight song
+Sovylin Deep
+Night-time Prophecies
+Transition 1- Honor
+Transition 2- Traveler
+Transition 3- Malice
+Standoff
+
+
+*/
+
