@@ -77,11 +77,13 @@ pygame.display.set_caption("Proscenium Client")
 
 import sys
 if getattr(sys, 'frozen', False):
-    pygame.display.set_icon(pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png')))
+    favicon = pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png'))
+    easter_egg_image = pygame.image.load(os.path.join(sys._MEIPASS, 'images/easter_egg.png'))
 else:
-    pygame.display.set_icon(pygame.image.load('images/favicon.png'))
+    favicon = pygame.image.load('images/favicon.png')
+    easter_egg_image = pygame.image.load('images/easter_egg.png')
 
-
+pygame.display.set_icon(favicon)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
 clock = pygame.time.Clock()
 
@@ -133,7 +135,7 @@ if response == 'CONTINUE':
     print('Permission received.')
     pass
 elif response == 'DUPLICATE':
-    print('The server already has this ID registered AND marked as open. Fuck.')
+    print('The server already has this ID registered AND marked as open.')
     throw_error_to_user('This ID is already in use. Please ask your manager for help.', close=False)
 else:
     print('Couldn\'t connect to server.')
@@ -152,7 +154,7 @@ except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
 cam  # pycharm is dumb
 
-text = graphics.Text('Welcome!', WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
+text = graphics.Text('Welcome %s!' % uuid, WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
 cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT * 4 / 9, 640, 480, dim_enforcer=graphics.scale.NONE if FIXED_VIEWER else graphics.scale.WFLEX)
 
 print('Opening microphone...')
@@ -169,6 +171,8 @@ aud  # pycharm is dumb
 # ==========
 ENFORCED_OUTPUT_RESOLUTION = cam.width, cam.height
 CROP_X1_X2 = 0, 0
+
+EASTER_EGG = False
 
 RUNNING = True
 
@@ -259,8 +263,6 @@ try:
         cam_viewer.draw(screen)
         text.draw(screen)
 
-        pygame.display.update()
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 print('User quit.')
@@ -268,11 +270,25 @@ try:
                 RUNNING = False
                 client.close()
                 break
+
             elif event.type == pygame.VIDEORESIZE:
                 WIDTH, HEIGHT = pygame.display.get_window_size()
                 cam_viewer.set_pos(WIDTH/2, HEIGHT * 4 / 9)
                 text.x = WIDTH/2
                 text.y = HEIGHT * 7 / 8
+
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKQUOTE and event.mod & pygame.KMOD_LSHIFT:
+                    EASTER_EGG = True
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_BACKQUOTE or event.key == pygame.K_LSHIFT:
+                    EASTER_EGG = False
+
+            if EASTER_EGG:
+                screen.blit(easter_egg_image, (0, 0))
+
+            pygame.display.update()
+
             #elif event.type == VIDEOEXPOSE:  # handles window minimising/maximising
             #    screen.fill((0, 0, 0))
             #    screen.blit(pygame.transform.scale(pic, screen.get_size()), (0, 0))

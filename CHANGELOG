@@ -1,6 +1,12 @@
+BETA v0.1.13 (EASTER EGG)
+- Added an easter egg to client
+- Minor improvements
+
 BETA v0.1.12 (LOGGING)
-- Added logging to client so we can see app output in emergencies
+- Added file-logging to client so we can see output even as an executable
 - Fixed macOS build process
+- Added JSON5 support to server
+- Mute-type commands can now take multiple arguments (i.e. mute multiple people)
 
 BETA v0.1.11 (FADES)
 - Server mutes before the client officially does, in case the mute message gets lost in the mail

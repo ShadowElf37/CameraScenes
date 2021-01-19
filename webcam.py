@@ -44,7 +44,7 @@ class Webcam:
         if not self.cap.isOpened():
             raise IOError('Failed to open webcam. Make sure it\'s connected and not in use.')
         elif self.cap.read()[1] is None:
-            raise IOError('Failed to open webcam. Maybe it\'s already in use?\nIf you\'re on macOS, this might get fixed simply by restarting the program a few times.')
+            raise IOError('Failed to open webcam. Maybe it\'s already in use?\nOn newer Macs, this might be fixed simply by restarting the program a few times.')
         print('Webcam initialized.')
         # DONE INIT WOO
 

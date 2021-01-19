@@ -29,6 +29,7 @@ import ntpath
 
 with open('config.json') as config_file:
     config = json.decode_io(config_file)
+
 last_show_file = show_file = config['last_show_file']
 
 def load_cfg(sv=None):
@@ -74,6 +75,7 @@ except tk.TclError:
     show_selector.destroy()
     submit.destroy()
     root.quit()
+
 
 config['last_show_file'] = show_file
 with open('config.json', 'wb') as config_file:
