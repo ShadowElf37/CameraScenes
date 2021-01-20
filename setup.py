@@ -46,7 +46,7 @@ elif system() == 'Darwin':
         import subprocess
         path = os.path.join('dist', 'Proscenium.app')
         # subprocess.Popen(['xattr', '-cr', path])
-        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', '--entitlements', 'entitlements.plist', '-o', 'runtime', path])
+        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)',  path])
 
 #codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)" --entitlements /Users/speedyturtle/Desktop/entitlements.plist -o runtime /Users/speedyturtle/Desktop/CameraScenes/dist/Proscenium.app
 #xcrun altool --notarize-app --primary-bundle-id "com.keycohen.proscenium" --username "coveler@icloud.com" --password "qkdq-gpht-wyxz-keuk" --file /Users/speedyturtle/Proscenium\ 0.13.1.dmg
