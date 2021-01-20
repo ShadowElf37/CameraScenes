@@ -4,7 +4,7 @@ from getpass import getuser
 import os
 import PyInstaller.__main__ as pyi
 
-# pyinstaller --onedir --windowed --add-data="images/favicon.png:images" --icon="images/favicon.icns" --name="Proscenium" client.py
+# https://pyinstaller.readthedocs.io/en/stable/usage.html
 
 """
 exclude = 'libcrypto psutil'
@@ -44,5 +44,8 @@ elif system() == 'Darwin':
     if getuser() == 'speedyturtle':
         import subprocess
         path = os.path.join('dist', 'Proscenium.app')
-        # subprocess.Popen(['xattr', '-cr', path])
-        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', path])
+        subprocess.Popen(['xattr', '-cr', path])
+        subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', '--entitlements', 'entitlements.plist', '-o', 'runtime', path])
+
+#codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)" --entitlements /Users/speedyturtle/Desktop/entitlements.plist -o runtime /Users/speedyturtle/Desktop/CameraScenes/dist/Proscenium.app
+#xcrun altool --notarize-app --primary-bundle-id "com.keycohen.proscenium" --username "coveler@icloud.com" --password "qkdq-gpht-wyxz-keuk" --file /Users/speedyturtle/Proscenium\ 0.13.1.dmg
