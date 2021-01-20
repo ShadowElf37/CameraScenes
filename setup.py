@@ -45,7 +45,7 @@ elif system() == 'Darwin':
     if getuser() == 'speedyturtle':
         import subprocess
         path = os.path.join('dist', 'Proscenium.app')
-        subprocess.Popen(['xattr', '-cr', path])
+        #subprocess.Popen(['xattr', '-cr', path])
         subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', '--entitlements', 'entitlements.plist', '-o', 'runtime', path])
 
 #codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)" --entitlements /Users/speedyturtle/Desktop/entitlements.plist -o runtime /Users/speedyturtle/Desktop/CameraScenes/dist/Proscenium.app
