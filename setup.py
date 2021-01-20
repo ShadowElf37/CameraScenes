@@ -25,7 +25,7 @@ if system() == 'Windows':
         '--clean',
         '--windowed',
         '--add-data=images/favicon.png;images',
-        '--add-data=images/easter_egg.png;images',
+        #'--add-data=images/easter_egg.png;images',
         '--icon=images/favicon.ico',
         '--name=Proscenium'
     ])
@@ -37,7 +37,7 @@ elif system() == 'Darwin':
         '--osx-bundle-identifier=com.keycohen.Proscenium',
         '--windowed',
         '--add-data=images/favicon.png:images',
-        '--add-data=images/easter_egg.png:images',
+        #'--add-data=images/easter_egg.png:images',
         '--icon=images/favicon.icns',
         '--name=Proscenium'
     ])
@@ -45,7 +45,7 @@ elif system() == 'Darwin':
     if getuser() == 'speedyturtle':
         import subprocess
         path = os.path.join('dist', 'Proscenium.app')
-        #subprocess.Popen(['xattr', '-cr', path])
+        # subprocess.Popen(['xattr', '-cr', path])
         subprocess.Popen(['codesign', '--force', '--deep', '--sign', 'Developer ID Application: Karen Coveler (K559Z5J335)', '--entitlements', 'entitlements.plist', '-o', 'runtime', path])
 
 #codesign --force --deep --sign "Developer ID Application: Karen Coveler (K559Z5J335)" --entitlements /Users/speedyturtle/Desktop/entitlements.plist -o runtime /Users/speedyturtle/Desktop/CameraScenes/dist/Proscenium.app

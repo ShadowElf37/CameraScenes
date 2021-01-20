@@ -78,10 +78,10 @@ pygame.display.set_caption("Proscenium Client")
 import sys
 if getattr(sys, 'frozen', False):
     favicon = pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png'))
-    easter_egg_image = pygame.image.load(os.path.join(sys._MEIPASS, 'images/easter_egg.png'))
+    #easter_egg_image = pygame.image.load(os.path.join(sys._MEIPASS, 'images/easter_egg.png'))
 else:
     favicon = pygame.image.load('images/favicon.png')
-    easter_egg_image = pygame.image.load('images/easter_egg.png')
+    #easter_egg_image = pygame.image.load('images/easter_egg.png')
 
 pygame.display.set_icon(favicon)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -284,7 +284,7 @@ try:
                 text.y = HEIGHT * 7 / 8
 
         if EASTER_EGG:
-            screen.blit(easter_egg_image, (0, 0))
+            ...#screen.blit(easter_egg_image, (0, 0))
 
         pygame.display.update()
 
