@@ -23,18 +23,21 @@
 
   { // SCENE 1 (VOICES INTRO)
     'transition': 'wipe',
-    'wipe_to': 'top',
     'transition_duration': 120,
-    'background': 'mh.jpg',
+    'wipe_to': 'top',
+    'background': 'voices.png',
     "cameras": [
-      [10, 0.322, 0.25, 0.3, 0.4],
-      [9, 0.678, 0.25, 0.3, 0.4],
-      [11, 0.322, 0.75, 0.3, 0.4],
-      [8, 0.678, 0.75, 0.3, 0.4],
+      [10, 0.25, 0.25, 0.3, 0.4],
+      [9, 0.75, 0.25, 0.3, 0.4],
+      [11, 0.25, 0.75, 0.3, 0.4],
+      [8, 0.75, 0.75, 0.3, 0.4],
     ]
   },
 
   { // SCENE 2 (1)
+    'transition': 'fade',
+    'transition_duration': 45,
+    'background': 'tavern.jpg',
     "cameras": [
       [4, 0.5, 0.5, 0.45, 0.6]
     ]
@@ -44,6 +47,7 @@
   {"transition": "fade", "transition_duration": 45},
   
   { // SCENE 4 (2A)
+    'background': 'town.jpg',
     "transition": "fade", "transition_duration": 60,
     "cameras": [
       [10, 0.322, 0.25, 0.3, 0.4],
@@ -52,8 +56,12 @@
       [8, 0.678, 0.75, 0.3, 0.4],
     ]
   },
-  { // SCENE 5 (2A)
+  { // SCENE 5 (2B)
     // NOTE: left to right isnt great
+    'background': 'town.jpg',
+    'transition': 'wipe',
+    'transition_duration': 45,
+    'wipe_to': 'left',
     "cameras": [
       [1, 0.125, 0.5, 0.2, 0.2666],
       [6, 0.375, 0.5, 0.2, 0.2666],
@@ -61,17 +69,30 @@
       [3, 0.875, 0.5, 0.2, 0.2666],
     ]
   },
-  { // SCENE 6 (2B)
+  {"transition": "fade", "transition_duration": 45},
+  { // SCENE 6 (2C)
+    'background': 'field_red.png',
+    'transition': 'fade',
+    'transition_duration': 60,
     "cameras": [
       [10, 0.1, 0.1333, 0.2, 0.2666],
       [9, 0.9, 0.1333, 0.2, 0.2666],
       [11, 0.1, 0.8666, 0.2, 0.2666],
       [8, 0.9, 0.8666, 0.2, 0.2666],
+
       [1, 0.5, 0.5, 0.4, 0.5]
     ]
   },
 
-  { // SCENE 7 (3)
+  // SCENE 7
+  {"transition": "fade", "transition_duration": 45},
+  // TODO INSERT YELLOW VOICE ALONE, SHOW CAM IS QUESTIONABLE
+  
+
+  { // SCENE 8 (3)
+    'background': 'town.jpg',
+    'transition': 'fade',
+    'transition_duration': 60,
     "cameras": [
       [1, 0.2, 0.5, 0.2, 0.2666],
       [2, 0.5, 0.5, 0.2, 0.2666],
@@ -79,7 +100,11 @@
     ]
   },
 
-  { // SCENE 8 (4A)
+  { // SCENE 9 (4A) T1
+    'background': 'tavern2.png',
+    'transition': 'wipe',
+    'transition_duration': 120,
+    'wipe_to': 'left',
     "cameras": [
       [1, 0.2, 0.5, 0.2, 0.2666],
       [2, 0.5, 0.5, 0.2, 0.2666],
@@ -87,11 +112,41 @@
     ]
   },
 
-  { // SCENE 9 (4B)
+  { // SCENE 10 (4B) H1
+    'background': 'tavern.jpg',
     "cameras": [[4, 0.5, 0.5, 0.45, 0.6]]
   },
 
-  { // SCENE 10 (5A)
+  { // SCENE 11 (4A) T2
+    'background': 'tavern2.png',
+    "cameras": [
+      [1, 0.2, 0.5, 0.2, 0.2666],
+      [2, 0.5, 0.5, 0.2, 0.2666],
+      [3, 0.8, 0.5, 0.2, 0.2666]
+    ]
+  },
+
+  { // SCENE 12 (4B) H2
+    'background': 'tavern.jpg',
+    "cameras": [[4, 0.5, 0.5, 0.45, 0.6]]
+  },
+
+  { // SCENE 13 (4A) T3
+    'background': 'tavern2.png',
+    "cameras": [
+      [1, 0.2, 0.5, 0.2, 0.2666],
+      [2, 0.5, 0.5, 0.2, 0.2666],
+      [3, 0.8, 0.5, 0.2, 0.2666]
+    ]
+  },
+
+  // TODO END IS QUESTIONABLE, ASK ELIANA (SCENE 4)
+
+  { // SCENE 14 (5A)
+    'background': 'field.png',
+    'transition': 'wipe',
+    'transition_duration': 120,
+    'wipe_to': 'right',
     "cameras": [
       // TRIO
         [1, 0.2, 0.5, 0.2, 0.2666],
@@ -105,7 +160,8 @@
     ]
   },
 
-  { // SCENE 11 (5B)
+  { // SCENE 15 (5B)
+    'background': 'field.png',
     "transition": "fade",
     "transition_duration": 10,
     "cameras": [
@@ -123,7 +179,27 @@
     ]
   },
 
-  { // SCENE 12 (6A)
+  { // SCENE 16 (5C)
+    'background': 'field.png',
+    "transition": "fade",
+    "transition_duration": 20,
+    "cameras": [
+      // TRIO
+        [1, 0.2, 0.5, 0.2, 0.2666],
+        [2, 0.5, 0.2, 0.2, 0.2666],
+        [3, 0.8, 0.5, 0.2, 0.2666],
+      // MERCHANT
+        [7, 0.5, 0.8, 0.2, 0.2666]
+    ]
+  },
+
+    // SCENE 17
+  {"transition": "fade", "transition_duration": 45},
+
+  { // SCENE 18 (6A)
+    'background': 'forest_night.png',
+    "transition": "fade",
+    "transition_duration": 60,
     "cameras": [
       // TRIO
       [3, 0.2, 0.5, 0.2, 0.2666],
@@ -132,22 +208,29 @@
     ]
   },
 
-  { // SCENE 13 (6B)
+  { // SCENE 19 (6B)
+    'background': 'palace_red.png',
+    "transition": "fade",
+    "transition_duration": 30,
     "cameras": [
-      // HALF VOICES
-      [9, 0.9, 0.8666, 0.2, 0.2666],
+      // VOICES
+      [10, 0.1, 0.1333, 0.2, 0.2666],
+      [9, 0.9, 0.1333, 0.2, 0.2666],
       [11, 0.1, 0.8666, 0.2, 0.2666],
+      [8, 0.9, 0.8666, 0.2, 0.2666],
 
       // REYLUK
-      [1, 0.5, 0.8, 0.2, 0.2666],
-
-      // KIRAKAL + TERESAI
-      [5, 0.325, 0.4, 0.3, 0.4],
-      [10, 0.675, 0.4, 0.3, 0.4],
+      [1, 0.5, 0.5, 0.2, 0.2666],
     ]
   },
 
-  { // SCENE 14 (7A)
+  // SCENE 20
+  {"transition": "fade", "transition_duration": 45},
+
+  { // SCENE 21 (7A)
+    'background': 'forest_day.png',
+    "transition": "fade",
+    "transition_duration": 60,
     "cameras": [
       // TRIO
         [3, 0.2, 0.5, 0.2, 0.2666],
@@ -161,7 +244,11 @@
       ]
   },
 
-  { // SCENE 15 (7B)
+  { // SCENE 22 (7B)
+    'background': 'forest_shrine.png',
+    "transition": "wipe",
+    "transition_duration": 90,
+    "wipe_to": "right",
     "cameras": [
       // TRIO
         [1, 0.8, 0.5, 0.3, 0.4],
@@ -173,7 +260,11 @@
       ]
   },
 
-  { // SCENE 16 (8)
+  { // SCENE 23 (8)
+    'background': 'palace.png',
+    "transition": "wipe",
+    "transition_duration": 90,
+    "wipe_to": "left",
     "cameras": [
         // Elethar and Teresai
         [2, 0.25, 0.5, 0.2, 0.2666],
@@ -187,7 +278,11 @@
     ]
   },
 
-  { // SCENE 17 (9A)
+  { // SCENE 24 (9A)
+    'background': 'palace_red.png',
+    "transition": "wipe",
+    "transition_duration": 45,
+    "wipe_to": "right",
     "cameras": [
         // trio
         [1, 0.25, 0.5, 0.3, 0.4],
@@ -202,26 +297,27 @@
     ]
   },
 
-  { // SCENE 18 (9B)
+  { // SCENE 25 (9B)
+    'background': 'palace_red.png',
     "cameras": [
         // nirin
         [3, 0.5, 0.5, 0.3, 0.4],
     ]
   },
 
-  { // SCENE 19 (9C)
+  { // SCENE 26 (9C)
+    'background': 'palace_red.png',
     "cameras": [
         // reyluk and kirakal
-        [1, 0.65, 0.5, 0.3, 0.4],
-        [10, 0.35, 0.5, 0.3, 0.4]
+        [1, 0.5, 0.5, 0.3, 0.4],
     ]
   },
 
-  { // SCENE 20 (9D)
+  { // SCENE 27 (9D)
+    'background': 'palace_red.png',
     "cameras": [
         // elethar and kirakal
-        [2, 0.675, 0.5, 0.3, 0.4],
-        [10, 0.325, 0.5, 0.3, 0.4],
+        [2, 0.5, 0.5, 0.3, 0.4],
 
         // voices
         [10, 0.075, 0.1, 0.15, 0.2],
@@ -231,7 +327,10 @@
     ]
   },
 
-  { // SCENE 21 (10A)
+  { // SCENE 28 (10A)
+    'background': 'palace.png',
+    "transition": "fade",
+    "transition_duration": 90,
     "cameras": [
         // geremor, nirin, elethar
         [6, 0.275, 0.5, 0.2, 0.2666],
@@ -240,7 +339,10 @@
     ]
   },
 
-  { // SCENE 22 (10B)
+  { // SCENE 29 (10B)
+    'background': 'palace.png',
+    "transition": "fade",
+    "transition_duration": 10,
     "cameras": [
         // geremor, elethar, nirin
         [6, 0.275, 0.5, 0.2, 0.2666],
@@ -249,7 +351,8 @@
     ]
   },
 
-  { // SCENE 23 (10C)
+  { // SCENE 30 (10C)
+    'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
     "cameras": [
@@ -266,7 +369,8 @@
     ]
   },
 
-  { // SCENE 24 (10D)
+  { // SCENE 31 (10D)
+    'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
     "cameras": [
@@ -293,25 +397,19 @@
     ]
   },
 
-  { // SCENE 25 (11A)
+  { // SCENE 32 (11)
+    'background': 'tavern.jpg',
+    "transition": "fade",
+    "transition_duration": 60,
     "cameras": [
         // Hrustus
         [4, 0.5, 0.5, 0.3, 0.4],
     ]
   },
-/*
-  { // SCENE 26 (11B)  this scene is dumb and i hate it please remove
-    "cameras": [
-        // Voices
-        [10, 0.322, 0.25, 0.3, 0.4],
-        [9, 0.678, 0.25, 0.3, 0.4],
-        [11, 0.322, 0.75, 0.3, 0.4],
-        [8, 0.678, 0.75, 0.3, 0.4],
-    ]
-  },*/
 
-  // SCENE 26 (CLOSE)
+  // SCENE 33 (CLOSE)
   {
+    //'background': 'tavern.jpg',
     "transition": "fade",
     "transition_duration": 180,
     "text":[
@@ -338,24 +436,26 @@
 
 
 Backgrounds:
-Voices
-Tavern
-Town
-Red Sky
-Field (day)
-Forest (day)
-Forest (shrine)
-Forest (night)
-Inside palace normal sky
-Inside palace red sky
+Voices x
+Tavern 1 x
+Tavern 2 bx
+Town x
+Red Sky bx
+Field (day) x
+Forest (day) x
+Forest (shrine day) x
+Forest (shrine night) bx
+Forest (night) x
+Inside palace normal sky bx
+Inside palace red sky b
 
 Music:
 Fight song
 Sovylin Deep
 Night-time Prophecies
-Transition 1- Honor
-Transition 2- Traveler
-Transition 3- Malice
+Transition 1 - Honor
+Transition 2 - Traveler
+Transition 3 - Malice
 Standoff
 
 

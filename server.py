@@ -127,16 +127,23 @@ print('Audio ready. Initializing server...')
 server = network.UDPManager(37001, frag=True)
 server.init()
 
-scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG)
+scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG, auto_mute=True)
 
 # ============
 # PARSE SCENES
 # ============
 
+print('Loading scenes...')
+_loaded_bgs = {}
 for scene in show_data:
     bg = scene.get('background', '')
+    if bg and bg not in _loaded_bgs:
+        _loaded_bgs[bg] = bg_surf = scene_manager.bg_to_surface(os.path.join('images', bg))
+        print(f'Loading background "{bg}"')
+    else:
+        bg_surf = _loaded_bgs.get(bg)
     s = scenes.Scene(scene_manager,
-                     background=os.path.join('images', bg) if bg else None,
+                     background=bg_surf,
                      transition_duration=scene.get('transition_duration', 0),
                      transition=scene.get('transition', None),
                      wipe_side=scene.get('wipe_to', 'left'))

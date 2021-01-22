@@ -17,6 +17,7 @@ class Pipe:
 
     def __init__(self, at=38050, ip='localhost'):
         self.port = at
+        self.ip = ip
         self.socket = socket.socket()
         try:
             self.socket.bind(('0.0.0.0', at))
@@ -25,7 +26,6 @@ class Pipe:
             self.server = True
         except OSError:
             self.server = False
-            self.ip = ip
 
         self.is_open = False
         self.reader_thread = Thread(target=self._read_all, daemon=True)
@@ -34,6 +34,10 @@ class Pipe:
     def __iter__(self):
         while not self._messages.empty():
             yield self._messages.get()
+
+    def plant(self, msg: str):
+        """Plants a message in the local queue, instead of writing it to the other end"""
+        self._messages.put(msg.encode())
 
     def write(self, msg: str):
         self.connection.send(msg.encode())
@@ -79,7 +83,8 @@ class Pipe:
         except ConnectionError:
             self.is_open = False
             print('Pipe broke.')
-
+            self.__init__(self.port, self.ip)
+            self.open(False)
 
 if __name__ == "__main__":
     p = Pipe(at=38051)

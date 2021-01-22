@@ -11,7 +11,7 @@ class SceneManager:
     UNDEFINED_COMMAND = object()
     RESOLUTION_SETTER = 'W_FLEX'  # SET, W_FLEX, H_FLEX, CROP
 
-    def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost'):
+    def __init__(self, server: UDPManager, screen: pygame.Surface, use_pipe=True, block_pipe=False, debug=False, pipe_ip='localhost', auto_mute=True):
         self.server: UDPManager = server
         self.cameras: {str: graphics.WebcamViewer} = {}
         self.persistent_objects: [graphics.Object] = []
@@ -23,6 +23,7 @@ class SceneManager:
         self.screen_width = screen.get_width()
         self.screen_height = screen.get_height()
         self.debug = debug
+        self.auto_mute = auto_mute
 
         self.transition_from = None
         self.prior_scene: Optional[Scene] = None
@@ -44,6 +45,14 @@ class SceneManager:
     @property
     def dim(self):
         return self.screen_width, self.screen_height
+
+    def bg_to_surface(self, fp):
+        try:
+            surf = pygame.image.load(fp)
+            surf = pygame.transform.scale(surf, (self.screen_width, self.screen_height))
+            return surf
+        except FileNotFoundError:
+            raise FileNotFoundError('File %s does not exist.' % fp)
 
     def register_camera(self, uuid, viewer):
         uuid = str(uuid)
@@ -141,6 +150,18 @@ class SceneManager:
                                 for u in args:
                                     self.server.sessions[u].send('UNMUTE_VIDEO')
                                     self.server.unmuted(u)
+                            elif cmd == 'switch_unmuted_av_to':  # turns off everything except args passed
+                                for u in self.cameras.keys():
+                                    self.server.muted(u)
+                                for u in args:
+                                    self.server.sessions[u].send('UNMUTE_AUDIO')
+                                    self.server.sessions[u].send('UNMUTE_VIDEO')
+                                    self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0, 0), b''))
+                                    self.server.unmuted(u)
+                                for u in self.server.mutes:
+                                    self.server.sessions[u].send('MUTE_AUDIO')
+                                    self.server.sessions[u].send('MUTE_VIDEO')
+                                    self.server.META_QUEUE.put((u, -7, 'MUTE', (0, 0), b''))
                             elif cmd in ('update_text', 'text'):
                                 self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
                             elif cmd in ('update_text_color', 'color'):
@@ -215,17 +236,12 @@ class Scene:
         self.debug_rects: {str: graphics.Rect} = {}  # uuid: rect
         self.debug_texts: {str: graphics.Text} = {}  # uuid: text with uuid, pos, etc
         self.objects: [graphics.Object] = []
-        self.background: Optional[pygame.Surface, tuple] = self.bg_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set) else None
+        self.background: Optional[pygame.Surface, tuple] = self.manager.bg_to_surface(background) if type(background) is str else background if type(background) in (tuple, list, set, pygame.Surface) else None
         self.manager.add_scenes(self)
 
         self.transition_duration = transition_duration
         self.transition = transition
         self.wipe_side = wipe_side
-
-    def bg_to_surface(self, fp):
-        surf = pygame.image.load(fp)
-        surf = pygame.transform.scale(surf, (self.manager.screen_width, self.manager.screen_height))
-        return surf
 
     def update_cameras(self, offload=True):
         # updates all CLIENTS that are CURRENTLY REGISTERED (i.e. logged in) with the manager
@@ -245,6 +261,14 @@ class Scene:
 
     def activate(self, client_offload=True):
         self.update_cameras(client_offload)
+        if self.manager.auto_mute:
+            mute = []
+            for uuid, _ in self.cameras:
+                if uuid in self.manager.cameras:
+                    mute.append(uuid)
+            # print('switch_unmuted_av_to ' + ' '.join(mute))
+            self.manager.cues.plant('switch_unmuted_av_to ' + ' '.join(mute))
+
         for obj in self.objects:
             obj.reset()
 
@@ -270,6 +294,10 @@ class Scene:
             dim = self.layout.get_dim(uuid)
             #print('NEW GUY IN TOWN HAS DIMS', dim)
             self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+
+            if self.manager.auto_mute:
+                if uuid not in map(lambda i:i[0], self.cameras):
+                    self.manager.cues.plant(f'mutea {uuid}; mutev {uuid}')
 
         self.layout.notify_new(uuid)
         if self.layout.DYNAMIC: self.update_cameras()  # for basictiler and similar

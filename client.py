@@ -99,6 +99,7 @@ def throw_error_to_user(text, close=True):
     global clock, client
     change_loading_text(text+'\nYou may exit the application.', color=RED)
     print('Threw error to user:', text.encode())
+    traceback.print_exc()
     try:
         if close: client.session._send('CLOSE')
     except OSError:
@@ -138,7 +139,7 @@ elif response == 'DUPLICATE':
     print('The server already has this ID registered AND marked as open.')
     throw_error_to_user('This ID is already in use. Please ask your manager for help.', close=False)
 else:
-    print('Couldn\'t connect to server.')
+    print('Couldn\'t connect to server (%s).' % response)
     throw_error_to_user('Failed to connect to the server. It may be closed, or your internet may be down.\nPlease ask your manager for help if you cannot resolve the issue.')
 
 

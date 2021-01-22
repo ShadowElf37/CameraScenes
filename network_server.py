@@ -51,9 +51,11 @@ class UDPManager:
                 return s
 
     def muted(self, uuid):
-        self.mutes.append(uuid)
+        if uuid not in self.mutes:
+            self.mutes.append(uuid)
     def unmuted(self, uuid):
-        self.mutes.remove(uuid)
+        if uuid in self.mutes:
+            self.mutes.remove(uuid)
 
     def _print_reports(self):
         sleep(1)
@@ -96,7 +98,12 @@ class UDPManager:
         # 4 - data
         try:
             while self.running:
-                raw, addr = self.socket.recvfrom(96000)
+                try:
+                    raw, addr = self.socket.recvfrom(96000)
+                except Exception as e:
+                    print('Failed to recvfrom', str(e))
+                    continue
+
                 decomp = UDPSession.decompile(raw)
                 uuid = decomp[0]
                 pid = decomp[1]

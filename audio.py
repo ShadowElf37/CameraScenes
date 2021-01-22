@@ -107,9 +107,11 @@ class MultipleAudioOutput:
             del self.outputs[uuid]
 
     def mute(self, uuid):
-        self.muted.append(uuid)
+        if uuid not in self.muted:
+            self.muted.append(uuid)
     def unmute(self, uuid):
-        self.muted.remove(uuid)
+        if uuid in self.muted:
+            self.muted.remove(uuid)
 
     def process(self, uuid, chunk):
         if uuid not in self.muted:
