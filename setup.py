@@ -25,7 +25,7 @@ if system() == 'Windows':
         '--clean',
         '--windowed',
         '--add-data=images/favicon.png;images',
-        #'--add-data=images/easter_egg.png;images',
+        '--add-data=images/easter_egg.png;images',
         '--icon=images/favicon.ico',
         '--name=Proscenium'
     ])
@@ -37,7 +37,7 @@ elif system() == 'Darwin':
         '--osx-bundle-identifier=com.keycohen.Proscenium',
         '--windowed',
         '--add-data=images/favicon.png:images',
-        #'--add-data=images/easter_egg.png:images',
+        '--add-data=images/easter_egg.png:images',
         '--icon=images/favicon.icns',
         '--name=Proscenium'
     ])

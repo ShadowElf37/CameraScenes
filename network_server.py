@@ -65,7 +65,8 @@ class UDPManager:
             del self.reports['frag']
             print('%s out of order packets were dropped.' % self.reports['out of order'])
             del self.reports['out of order']
-            print('Clients:', ', '.join(uuid for uuid, s in self.sessions.items() if s.is_open), '(%s)' % len(self.sessions.keys()))
+            open_sessions = [uuid for uuid, s in self.sessions.items() if s.is_open]
+            print('Clients:', ', '.join(open_sessions), '(%s/%s)' % (len(open_sessions), len(self.sessions)))
             if self.reports:
                 print('Packet report:\n\t' + '\n\t'.join(f'{key} - {i}' for key,i in self.reports.items()))
             else:
@@ -80,7 +81,7 @@ class UDPManager:
             t = time()
             # send muted some pings
             for uuid in self.mutes.copy():  # need copy for threadsafe
-                if 3.1 > t - self.times[uuid] > 3 or 8.1 > t - self.times[uuid] > 8 or 12.1 > t - self.times[uuid] > 12:
+                if t - self.times[uuid] > 3:
                     self.sessions[uuid].send('PING')
 
             # kill expired sessions

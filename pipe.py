@@ -4,7 +4,7 @@ Copied from Proscenium
 
 import socket
 from threading import Thread
-from queue import Queue, Empty
+from queue import Queue
 
 
 class Nothing:
@@ -57,6 +57,7 @@ class Pipe:
         self.socket.close()
 
     def open(self, blocking=False, cb=lambda: None):
+        print('Pipe open.')
         if blocking:
             self._open()
             cb()

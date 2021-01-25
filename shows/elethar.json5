@@ -16,9 +16,8 @@
 
 [
   { // SCENE 0 (OPEN)
-    "text": [
-      ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]
-    ]
+    //"text": [ ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]]
+    "background": "Ballad Title 2.png"
   },
 
   { // SCENE 1 (VOICES INTRO)
@@ -69,8 +68,11 @@
       [3, 0.875, 0.5, 0.2, 0.2666],
     ]
   },
+
+  // SCENE 6
   {"transition": "fade", "transition_duration": 45},
-  { // SCENE 6 (2C)
+
+  { // SCENE 7 (2C)
     'background': 'field_red.png',
     'transition': 'fade',
     'transition_duration': 60,
@@ -84,12 +86,12 @@
     ]
   },
 
-  // SCENE 7
+  // SCENE 8
   {"transition": "fade", "transition_duration": 45},
   // TODO INSERT YELLOW VOICE ALONE, SHOW CAM IS QUESTIONABLE
   
 
-  { // SCENE 8 (3)
+  { // SCENE 9 (3)
     'background': 'town.jpg',
     'transition': 'fade',
     'transition_duration': 60,
@@ -100,10 +102,10 @@
     ]
   },
 
-  { // SCENE 9 (4A) T1
+  { // SCENE 10 (4A) T1
     'background': 'tavern2.png',
     'transition': 'wipe',
-    'transition_duration': 120,
+    'transition_duration': 150,
     'wipe_to': 'left',
     "cameras": [
       [1, 0.2, 0.5, 0.2, 0.2666],
@@ -112,12 +114,12 @@
     ]
   },
 
-  { // SCENE 10 (4B) H1
+  { // SCENE 11 (4B) H1
     'background': 'tavern.jpg',
     "cameras": [[4, 0.5, 0.5, 0.45, 0.6]]
   },
 
-  { // SCENE 11 (4A) T2
+  { // SCENE 12 (4A) T2
     'background': 'tavern2.png',
     "cameras": [
       [1, 0.2, 0.5, 0.2, 0.2666],
@@ -126,12 +128,12 @@
     ]
   },
 
-  { // SCENE 12 (4B) H2
+  { // SCENE 13 (4B) H2
     'background': 'tavern.jpg',
     "cameras": [[4, 0.5, 0.5, 0.45, 0.6]]
   },
 
-  { // SCENE 13 (4A) T3
+  { // SCENE 14 (4A) T3
     'background': 'tavern2.png',
     "cameras": [
       [1, 0.2, 0.5, 0.2, 0.2666],
@@ -142,7 +144,7 @@
 
   // TODO END IS QUESTIONABLE, ASK ELIANA (SCENE 4)
 
-  { // SCENE 14 (5A)
+  { // SCENE 15 (5A)
     'background': 'field.png',
     'transition': 'wipe',
     'transition_duration': 120,
@@ -160,7 +162,7 @@
     ]
   },
 
-  { // SCENE 15 (5B)
+  { // SCENE 16 (5B)
     'background': 'field.png',
     "transition": "fade",
     "transition_duration": 10,
@@ -179,7 +181,7 @@
     ]
   },
 
-  { // SCENE 16 (5C)
+  { // SCENE 17 (5C)
     'background': 'field.png',
     "transition": "fade",
     "transition_duration": 20,
@@ -193,10 +195,10 @@
     ]
   },
 
-    // SCENE 17
+    // SCENE 18
   {"transition": "fade", "transition_duration": 45},
 
-  { // SCENE 18 (6A)
+  { // SCENE 19 (6A)
     'background': 'forest_night.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -208,7 +210,7 @@
     ]
   },
 
-  { // SCENE 19 (6B)
+  { // SCENE 20 (6B)
     'background': 'palace_red.png',
     "transition": "fade",
     "transition_duration": 30,
@@ -224,10 +226,10 @@
     ]
   },
 
-  // SCENE 20
+  // SCENE 21
   {"transition": "fade", "transition_duration": 45},
 
-  { // SCENE 21 (7A)
+  { // SCENE 22 (7A)
     'background': 'forest_day.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -244,14 +246,14 @@
       ]
   },
 
-  { // SCENE 22 (7B)
+  { // SCENE 23 (7B)
     'background': 'forest_shrine.png',
     "transition": "wipe",
     "transition_duration": 90,
     "wipe_to": "right",
     "cameras": [
-      // TRIO
-        [1, 0.8, 0.5, 0.3, 0.4],
+      // REYLUK
+        [1, 0.6, 0.5, 0.3, 0.4],
       // VOICES
         [10, 0.1, 0.1333, 0.2, 0.2666],
         [9, 0.9, 0.1333, 0.2, 0.2666],
@@ -260,7 +262,7 @@
       ]
   },
 
-  { // SCENE 23 (8)
+  { // SCENE 24 (8)
     'background': 'palace.png',
     "transition": "wipe",
     "transition_duration": 90,
@@ -278,7 +280,7 @@
     ]
   },
 
-  { // SCENE 24 (9A)
+  { // SCENE 25 (9A)
     'background': 'palace_red.png',
     "transition": "wipe",
     "transition_duration": 45,
@@ -297,7 +299,7 @@
     ]
   },
 
-  { // SCENE 25 (9B)
+  { // SCENE 26 (9B)
     'background': 'palace_red.png',
     "cameras": [
         // nirin
@@ -305,7 +307,7 @@
     ]
   },
 
-  { // SCENE 26 (9C)
+  { // SCENE 27 (9C)
     'background': 'palace_red.png',
     "cameras": [
         // reyluk and kirakal
@@ -313,7 +315,7 @@
     ]
   },
 
-  { // SCENE 27 (9D)
+  { // SCENE 28 (9D)
     'background': 'palace_red.png',
     "cameras": [
         // elethar and kirakal
@@ -327,7 +329,7 @@
     ]
   },
 
-  { // SCENE 28 (10A)
+  { // SCENE 29 (10A)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 90,
@@ -339,7 +341,7 @@
     ]
   },
 
-  { // SCENE 29 (10B)
+  { // SCENE 30 (10B)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 10,
@@ -351,7 +353,7 @@
     ]
   },
 
-  { // SCENE 30 (10C)
+  { // SCENE 31 (10C)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -369,7 +371,7 @@
     ]
   },
 
-  { // SCENE 31 (10D)
+  { // SCENE 32 (10D)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -397,7 +399,7 @@
     ]
   },
 
-  { // SCENE 32 (11)
+  { // SCENE 33 (11)
     'background': 'tavern.jpg',
     "transition": "fade",
     "transition_duration": 60,
@@ -407,14 +409,13 @@
     ]
   },
 
-  // SCENE 33 (CLOSE)
+  // SCENE 34 (CLOSE)
   {
     //'background': 'tavern.jpg',
     "transition": "fade",
     "transition_duration": 180,
-    "text":[
-      ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]
-    ]
+    //"text": [ ["The Ballad of\nElethar the Yielding", 0.5, 0.5, "Book Antiqua", 60]]
+    "background": "Ballad Title 2.png"
   },
 
 ]

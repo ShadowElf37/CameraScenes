@@ -96,6 +96,10 @@ class Webcam:
     def enforce_output_resolution(self, x, y):
         self.enforced_resolution = x,y
 
+    def set_compress_quality(self, n):
+        if 100 >= n > 0:
+            self.compress_quality = n
+
     def close(self):
         self.cap.release()
 

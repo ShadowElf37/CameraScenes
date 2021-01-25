@@ -76,7 +76,7 @@ class SceneManager:
         self.current_scene.activate()
         print(f'Switched to scene {i}. UUIDs available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
 
-    def set_scene(self, i):
+    def set_scene(self, i, auto_mute=True):
         if i > len(self.scenes) - 1 or i < 0: return
         self.prior_scene = self.current_scene
         self.current_i = i
@@ -96,7 +96,7 @@ class SceneManager:
             self.transition_type = None
             self.transition_counter = 0
 
-        self.current_scene.activate()
+        self.current_scene.activate(auto_mute=auto_mute)
         print(f'Switched to scene {i}' + (f' ({self.current_scene.transition})' if self.current_scene.transition else '') + '. UUIDs available: ' + ', '.join(info[0] for info in self.current_scene.cameras))
 
     def next(self):
@@ -132,8 +132,11 @@ class SceneManager:
 
                             if cmd == 'set_scene':
                                 self.set_scene(int(args[0]))
-                            elif cmd == 'set_scene_nowipe':
+                            elif cmd == 'set_scene_notrans':
                                 self.set_scene_notrans(int(args[0]))
+                            elif cmd == 'set_scene_nomute':
+                                self.set_scene(int(args[0]), auto_mute=False)
+
                             elif cmd in ('mute_audio', 'mutea', 'mute'):
                                 for u in args:
                                     self.server.sessions[u].send('MUTE_AUDIO')
@@ -150,6 +153,7 @@ class SceneManager:
                                 for u in args:
                                     self.server.sessions[u].send('UNMUTE_VIDEO')
                                     self.server.unmuted(u)
+
                             elif cmd == 'switch_unmuted_av_to':  # turns off everything except args passed
                                 for u in self.cameras.keys():
                                     self.server.muted(u)
@@ -162,16 +166,30 @@ class SceneManager:
                                     self.server.sessions[u].send('MUTE_AUDIO')
                                     self.server.sessions[u].send('MUTE_VIDEO')
                                     self.server.META_QUEUE.put((u, -7, 'MUTE', (0, 0), b''))
+
                             elif cmd in ('update_text', 'text'):
                                 self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
+                            elif cmd in ('update_text_all', 'text_all'):
+                                for u in self.cameras.keys():
+                                    self.cues.plant(f'text {u} {" ".join(args)}')
+
                             elif cmd in ('update_text_color', 'color'):
                                 self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
+                            elif cmd in ('update_text_color_all', 'color_all'):
+                                for u in self.cameras.keys():
+                                    self.cues.plant(f'color {u} {" ".join(args)}')
+
+                            elif cmd in ('update_quality', 'quality'):
+                                self.server.sessions[args[0]].send('QUALITY', args[1].encode())
+
                             elif cmd == 'kill':
                                 self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
                             elif cmd == 'force-exit':
                                 raise SystemExit('Exit by pipe command')
+
                             elif cmd == 'print':
                                 print('From pipe:', *args)
+
                             else:
                                 print('Bad pipe command', '"'+command+'"')
                     except Exception as e:
@@ -259,9 +277,10 @@ class Scene:
                 if offload:
                     self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
-    def activate(self, client_offload=True):
+    def activate(self, client_offload=True, auto_mute=True):
         self.update_cameras(client_offload)
-        if self.manager.auto_mute:
+
+        if auto_mute and self.manager.auto_mute:
             mute = []
             for uuid, _ in self.cameras:
                 if uuid in self.manager.cameras:

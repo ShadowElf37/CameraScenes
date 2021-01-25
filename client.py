@@ -78,10 +78,10 @@ pygame.display.set_caption("Proscenium Client")
 import sys
 if getattr(sys, 'frozen', False):
     favicon = pygame.image.load(os.path.join(sys._MEIPASS, 'images/favicon.png'))
-    #easter_egg_image = pygame.image.load(os.path.join(sys._MEIPASS, 'images/easter_egg.png'))
+    easter_egg_image = pygame.image.load(os.path.join(sys._MEIPASS, 'images/easter_egg.png'))
 else:
     favicon = pygame.image.load('images/favicon.png')
-    #easter_egg_image = pygame.image.load('images/easter_egg.png')
+    easter_egg_image = pygame.image.load('images/easter_egg.png')
 
 pygame.display.set_icon(favicon)
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
@@ -202,6 +202,9 @@ try:
             elif data == 'UNMUTE_VIDEO':
                 cam.unmute()
 
+            elif data[0] == 'QUALITY':
+                cam.set_compress_quality(float(data[1].decode()))
+
             elif data[0] == 'SET_RESOLUTION':  # 'x y'
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
@@ -212,10 +215,9 @@ try:
             elif data[0] == 'W_FLEX_RESOLUTION': # 'x y'
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
-                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
-                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    fw, fh = ENFORCED_OUTPUT_RESOLUTION
                     ENFORCED_OUTPUT_RESOLUTION = round(fw * h / fh), h
-                    print('H-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                    print('W-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
                 else:
                     print('Ignored 0x0 wflex request.')
             elif data[0] == 'H_FLEX_RESOLUTION':
@@ -224,7 +226,7 @@ try:
                     fw = ENFORCED_OUTPUT_RESOLUTION[0]
                     fh = ENFORCED_OUTPUT_RESOLUTION[1]
                     ENFORCED_OUTPUT_RESOLUTION = w, round(fh * w / fw)
-                    print('W-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
+                    print('H-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
                 else:
                     print('Ignored 0x0 hflex request.')
             elif data[0] == 'CROP_RESOLUTION':
@@ -285,7 +287,7 @@ try:
                 text.y = HEIGHT * 7 / 8
 
         if EASTER_EGG:
-            ...#screen.blit(easter_egg_image, (0, 0))
+            screen.blit(easter_egg_image, (0, 0))
 
         pygame.display.update()
 
