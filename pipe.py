@@ -4,7 +4,7 @@ Copied from Proscenium
 
 import socket
 from threading import Thread
-from queue import Queue
+from multiprocessing import Queue
 
 
 class Nothing:

@@ -13,7 +13,7 @@ import scenes
 import pickle
 import pyjson5 as json
 from sys import exit
-from network_common import UDPSession, iterq
+from network_common import Session, iterq
 import traceback
 
 import os
@@ -207,9 +207,9 @@ try:
             if data[2] == 'OPEN':
                 if not session.is_open:
                     session.is_open = True
-                    session.send('CONTINUE')
+                    session.send_tcp('CONTINUE')
                 else:  # the session is already open!
-                    session.send('DUPLICATE')
+                    session.send_tcp('DUPLICATE')
                     continue
                 # add an audio processor for them
                 aud.new_output(uuid)
@@ -248,7 +248,7 @@ try:
             if event.type == pygame.QUIT:
                 print('User quit.')
                 for session in server.sessions.values():
-                    session._send('DIE')
+                    session._send_tcp('DIE')
                 RUNNING = False
                 break
 
@@ -301,14 +301,14 @@ except Exception as e:
     traceback.print_exc()
     print(type(e).__qualname__, str(e))
     for session in server.sessions.values():
-        session._send('DIE')
+        session._send_tcp('DIE')
     RUNNING = False
     server.close()
     raise e
 
 except SystemExit:
     for session in server.sessions.values():
-        session._send('DIE')
+        session._send_tcp('DIE')
     RUNNING = False
 
 finally:

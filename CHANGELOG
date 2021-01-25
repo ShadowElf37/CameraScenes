@@ -1,5 +1,9 @@
 BETA v0.1.14 (STABILITY)
-- Greatly
+- Autolog now prints to stdout as well as the logfile; better for when the kernel murders us
+- Added jpeg compression control to the pipe commands
+- Added automatic muting of clients not in a scene, whenever the scene changes
+- Cleaned up some code and fixed lots of bugs
+- Improved pipe
 
 BETA v0.1.13 (EASTER EGG)
 - Added an easter egg to client

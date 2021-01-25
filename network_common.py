@@ -2,16 +2,23 @@ from uuid import getnode
 from queue import Queue
 from threading import Thread
 from collections import defaultdict
+from socket import socket
+from typing import Optional
 
-FRAG_LIMIT = 2048
+FRAG_LIMIT = 8000
 
-class UDPSession:
-    def __init__(self, manager, ip, port, uuid=None, fragment=False):
+class Session:
+    def __init__(self, manager, ip, port, tcp_socket: Optional[socket], uuid=None, fragment=False):
         self.manager = manager  # UDPClient or UDPManager will both work
         self.ip = ip
         self.port = port
         self.uuid = uuid or str(getnode())
         self.frag = fragment
+
+        self.tcp_socket = tcp_socket
+        self.tcp_send_buffer = Queue()
+        self.tcp_recv_thread = Thread(target=self._recv_all_tcp, daemon=True)
+        self.tcp_send_thread = Thread(target=self._send_all_tcp, daemon=True)
 
         # these are different because we don't care about client and server syncing perfectly when it's just streaming data
         # all we want to ensure is that we and they are not *receiving* packets out of order, and are discarding such packets
@@ -20,7 +27,7 @@ class UDPSession:
         self.packet_id_recv = defaultdict(lambda: -1)  # packet id of packets we send - other end's receive id
 
         self.send_buffer = Queue()
-        self.sending = False
+        self.running = False
         self.send_thread = Thread(target=(self._sendloop_frag if self.frag else self._sendloop_nofrag), daemon=True)
 
         self.is_open = False
@@ -31,7 +38,7 @@ class UDPSession:
 
     @classmethod
     def decompile(self, data: bytes):
-        # this is probably faster than split - just breaks into 4 pieces by first 3 \n
+        # this is probably *faster* than split - just breaks into 4 pieces by first 3 \n
         ncount = 0
         indices = []
         index = -1
@@ -63,6 +70,28 @@ class UDPSession:
     def verify_pid(self, pid, datatype):
         return pid > self.packet_id_recv[datatype]
 
+    def send_tcp(self, datatype: str, data: bytes=b'', ignore_pid=False):
+        self.tcp_send_buffer.put((datatype, data, None, 0, 0, ignore_pid))
+
+    def _send_tcp(self, datatype: str, data: bytes=b'', send_as=None, frag_num=0, frag_final=0, ignore_pid=False):
+        if not ignore_pid:
+            self.packet_id_send[datatype] += 1
+        cmp = self.compile(datatype, data, override_uuid=send_as, frag_num=frag_num, frag_final=frag_final)
+        print('sending ', cmp)
+        return self.tcp_socket.send(cmp)
+    def _send_all_tcp(self):
+        while self.running:
+            data = self.tcp_send_buffer.get()
+            self._send_tcp(*data)
+
+    def _recv_tcp(self):
+        data = self.tcp_socket.recv(self.manager.BUFFER)
+        print('received ', data)
+        self.manager.recv_queue.put((data, (self.ip, self.port)))
+    def _recv_all_tcp(self):
+        while self.running:
+            self._recv_tcp()
+
     def _send(self, datatype: str, data: bytes=b'', send_as=None, frag_num=0, frag_final=0, ignore_pid=False):
         if not ignore_pid:
             self.packet_id_send[datatype] += 1
@@ -72,15 +101,19 @@ class UDPSession:
     def send(self, datatype: str, data: bytes=b'', send_as=None):
         self.send_buffer.put((datatype, data, send_as))
 
-    def start_send_thread(self):
-        self.sending = True
-        self.send_thread.start()
+    def start_threads(self, tcp_only=False):
+        self.running = True
+        if not tcp_only:
+            self.send_thread.start()
+        if self.tcp_socket is not None:
+            self.tcp_recv_thread.start()
+            self.tcp_send_thread.start()
     def close(self):
-        self.sending = False
+        self.running = False
 
     def _sendloop_nofrag(self):
         try:
-            while self.sending:
+            while self.running:
                 self._send(*self.send_buffer.get())
         except OSError:
             print('Socket disconnected suddenly.')
@@ -89,7 +122,7 @@ class UDPSession:
         # 1 - data
         # 2 - uuid
         try:
-            while self.sending:
+            while self.running:
                 data = self.send_buffer.get()
                 self.packet_id_send[data[0]] += 1
 
@@ -109,6 +142,7 @@ class UDPSession:
 
         except OSError:
             print('Socket disconnected suddenly.')
+
 
 def iterq(queue: Queue):
     """Creates an iterator over a Queue object"""

@@ -120,17 +120,25 @@ client.init()
 
 change_loading_text('Waiting for server...')
 print('Waiting for permission to continue...')
+
+# fuck UDP all my homies hate UDP
 client.session.send('OPEN')
+client.session.send('OPEN')
+client.session.send('OPEN')
+client.session.send('OPEN')
+client.session.send('OPEN')
+# why did i ever decide to use UDP for flow control
 
-# FIRST PING PONG
-
+from socket import timeout as timeout_error
 try:
-    sleep(0.2)
-    if not client.running:  # it crashed when it tried to send OPEN
-        raise Empty
+    client.init_tcp()
+
+    if not client.running:  # it received DIE or crashed when it tried to send OPEN
+        raise ConnectionRefusedError
+
     response = client.META_QUEUE.get(timeout=5)
-except Empty:
-    response = None
+except (Empty, ConnectionRefusedError, timeout_error) as e:
+    response = str(e)
 
 if response == 'CONTINUE':
     print('Permission received.')
@@ -139,7 +147,7 @@ elif response == 'DUPLICATE':
     print('The server already has this ID registered AND marked as open.')
     throw_error_to_user('This ID is already in use. Please ask your manager for help.', close=False)
 else:
-    print('Couldn\'t connect to server (%s).' % response)
+    print('Couldn\'t connect to server – %s' % response)
     throw_error_to_user('Failed to connect to the server. It may be closed, or your internet may be down.\nPlease ask your manager for help if you cannot resolve the issue.')
 
 
@@ -177,6 +185,8 @@ EASTER_EGG = False
 
 RUNNING = True
 
+client.session._send_tcp('HELLO')
+
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 try:
     while client.running and RUNNING:
@@ -213,6 +223,7 @@ try:
                     print('Ignored 0x0 resolution set request.')
                 #print('Set resolution to', w, h)
             elif data[0] == 'W_FLEX_RESOLUTION': # 'x y'
+                print(data[1])
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
                     fw, fh = ENFORCED_OUTPUT_RESOLUTION
@@ -275,7 +286,7 @@ try:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 print('User quit.')
-                client.session._send('CLOSE')
+                client.session._send_tcp('CLOSE')
                 RUNNING = False
                 client.close()
                 break
@@ -301,7 +312,7 @@ try:
 except Exception as e:
     traceback.print_exc()
     print(type(e).__qualname__, str(e))
-    client.session._send('CLOSE')
+    client.session._send_tcp('CLOSE')
     RUNNING = False
     client.close()
     raise e

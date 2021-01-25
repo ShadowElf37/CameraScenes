@@ -4,8 +4,7 @@ import graphics
 import webcam
 from pipe import Pipe
 from network_server import UDPManager
-import time
-import threading
+import multiprocessing
 
 class SceneManager:
     UNDEFINED_COMMAND = object()
@@ -41,6 +40,13 @@ class SceneManager:
                 print('SceneManager Pipe has been created without blocking. The other end may connect at any time.')
 
             self.cues.open(blocking=block_pipe, cb=lambda: print('Pipe established.'))
+
+        #self.pipe_input_process = multiprocessing.Process(target=self._take_pipe_stdin, daemon=True)
+
+    def _take_pipe_stdin(self):
+        print('Pipe input')
+        while True:
+            self.cues._messages.put(input('>> '))
 
     @property
     def dim(self):
@@ -139,48 +145,48 @@ class SceneManager:
 
                             elif cmd in ('mute_audio', 'mutea', 'mute'):
                                 for u in args:
-                                    self.server.sessions[u].send('MUTE_AUDIO')
+                                    self.server.sessions[u].send_tcp('MUTE_AUDIO')
                                     self.server.META_QUEUE.put((u, -7, 'MUTE', (0,0), b''))
                             elif cmd in ('unmute_audio', 'unmutea', 'unmute'):
                                 for u in args:
-                                    self.server.sessions[u].send('UNMUTE_AUDIO')
+                                    self.server.sessions[u].send_tcp('UNMUTE_AUDIO')
                                     self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0,0), b''))
                             elif cmd in ('mute_video', 'mutev'):
                                 for u in args:
-                                    self.server.sessions[u].send('MUTE_VIDEO')
+                                    self.server.sessions[u].send_tcp('MUTE_VIDEO')
                                     self.server.muted(u)
                             elif cmd in ('unmute_video', 'unmutev'):
                                 for u in args:
-                                    self.server.sessions[u].send('UNMUTE_VIDEO')
+                                    self.server.sessions[u].send_tcp('UNMUTE_VIDEO')
                                     self.server.unmuted(u)
 
                             elif cmd == 'switch_unmuted_av_to':  # turns off everything except args passed
                                 for u in self.cameras.keys():
                                     self.server.muted(u)
                                 for u in args:
-                                    self.server.sessions[u].send('UNMUTE_AUDIO')
-                                    self.server.sessions[u].send('UNMUTE_VIDEO')
+                                    self.server.sessions[u].send_tcp('UNMUTE_AUDIO')
+                                    self.server.sessions[u].send_tcp('UNMUTE_VIDEO')
                                     self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0, 0), b''))
                                     self.server.unmuted(u)
                                 for u in self.server.mutes:
-                                    self.server.sessions[u].send('MUTE_AUDIO')
-                                    self.server.sessions[u].send('MUTE_VIDEO')
+                                    self.server.sessions[u].send_tcp('MUTE_AUDIO')
+                                    self.server.sessions[u].send_tcp('MUTE_VIDEO')
                                     self.server.META_QUEUE.put((u, -7, 'MUTE', (0, 0), b''))
 
                             elif cmd in ('update_text', 'text'):
-                                self.server.sessions[args[0]].send('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
+                                self.server.sessions[args[0]].send_tcp('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))
                             elif cmd in ('update_text_all', 'text_all'):
                                 for u in self.cameras.keys():
                                     self.cues.plant(f'text {u} {" ".join(args)}')
 
                             elif cmd in ('update_text_color', 'color'):
-                                self.server.sessions[args[0]].send('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
+                                self.server.sessions[args[0]].send_tcp('UPDATE_TEXT_COLOR', b' '.join(map(str.encode, args[1:])))
                             elif cmd in ('update_text_color_all', 'color_all'):
                                 for u in self.cameras.keys():
                                     self.cues.plant(f'color {u} {" ".join(args)}')
 
                             elif cmd in ('update_quality', 'quality'):
-                                self.server.sessions[args[0]].send('QUALITY', args[1].encode())
+                                self.server.sessions[args[0]].send_tcp('QUALITY', args[1].encode())
 
                             elif cmd == 'kill':
                                 self.server.META_QUEUE.put((args[0], 0, 'CLOSE', (0,0), b''))
@@ -275,7 +281,7 @@ class Scene:
 
                 print('Set dim %sx%s for %s' % (*dim, uuid))
                 if offload:
-                    self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+                    self.manager.server.sessions[uuid].send_tcp(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
     def activate(self, client_offload=True, auto_mute=True):
         self.update_cameras(client_offload)
@@ -312,7 +318,7 @@ class Scene:
         if self.manager.current_scene is self:
             dim = self.layout.get_dim(uuid)
             #print('NEW GUY IN TOWN HAS DIMS', dim)
-            self.manager.server.sessions[uuid].send(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
+            self.manager.server.sessions[uuid].send_tcp(self.manager.RESOLUTION_SETTER+'_RESOLUTION', f'{dim[0]} {dim[1]}'.encode())
 
             if self.manager.auto_mute:
                 if uuid not in map(lambda i:i[0], self.cameras):

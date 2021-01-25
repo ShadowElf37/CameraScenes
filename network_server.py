@@ -5,6 +5,7 @@ from collections import defaultdict
 from time import time, sleep
 
 class UDPManager:
+    BUFFER = 9000
     SESSION_TIMEOUT = 15
     DEBUG_ALL = False
     REPORT_INTERVAL = 15
@@ -15,15 +16,23 @@ class UDPManager:
         self.INFO_QUEUE = Queue()
         self.META_QUEUE = Queue()
 
+        self.recv_queue = Queue()
+        self.recv_thread = threading.Thread(target=self._recv_all, daemon=True)
+
         self.port = port
-        self.sessions: {str: UDPSession} = {}
+        self.sessions: {str: Session} = {}
 
         self.socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
         self.socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.socket.bind(('0.0.0.0', port))
 
+        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        self.tcp_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+        self.tcp_socket.bind(('0.0.0.0', port+1))
+        self.tcp_socket.listen(64)
+
         self.running = False
-        self.thread = threading.Thread(target=self._handle_data, daemon=True)
+        self.handle_thread = threading.Thread(target=self._handle_data, daemon=True)
 
         self.frag = frag
         self.fragments = defaultdict(lambda: defaultdict(list))
@@ -38,14 +47,15 @@ class UDPManager:
 
     def init(self):
         self.running = True
-        self.thread.start()
+        self.handle_thread.start()
         self.pingpong_thread.start()
         self.reporter_thread.start()
+        self.recv_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
 
-    def session_by_addr(self, addr) -> UDPSession:
+    def session_by_addr(self, addr) -> Session:
         for s in self.sessions.values():
             if s.addr == addr:
                 return s
@@ -82,7 +92,7 @@ class UDPManager:
             # send muted some pings
             for uuid in self.mutes.copy():  # need copy for threadsafe
                 if t - self.times[uuid] > 3:
-                    self.sessions[uuid].send('PING')
+                    self.sessions[uuid].send_tcp('PING')
 
             # kill expired sessions
             for uuid in self.sessions.keys():
@@ -90,6 +100,14 @@ class UDPManager:
                     self.META_QUEUE.put((uuid, -7, 'CLOSE', (0,0), b''))
 
             sleep(0.1)
+
+    def _recv_all(self):
+        while self.running:
+            try:
+                self.recv_queue.put(self.socket.recvfrom(96000))
+            except Exception as e:
+                print('UDP socket crashed:', str(e))
+                continue
 
     def _handle_data(self):
         # 0 - uuid
@@ -99,13 +117,9 @@ class UDPManager:
         # 4 - data
         try:
             while self.running:
-                try:
-                    raw, addr = self.socket.recvfrom(96000)
-                except Exception as e:
-                    print('Failed to recvfrom', str(e))
-                    continue
+                raw, addr = self.recv_queue.get()
 
-                decomp = UDPSession.decompile(raw)
+                decomp = Session.decompile(raw)
                 uuid = decomp[0]
                 pid = decomp[1]
                 frag_opts = decomp[3]
@@ -144,17 +158,20 @@ class UDPManager:
                 self.reports[reason] += 1
 
                 if self.sessions.get(uuid) is None:
-                    self.sessions[uuid] = session = UDPSession(self, *addr, uuid=uuid, fragment=self.frag)
+                    self.sessions[uuid] = session = Session(self, *addr, tcp_socket=None, uuid=uuid, fragment=self.frag)
 
                     # If they're sending us something but we have no records, i.e. zombie that we have to get rid of
                     if reason != 'OPEN':
-                        session._send('DIE')  # can't send() because no send thread, must _send
+                        session._send_tcp('DIE')  # can't send() because no send thread, must _send
                         del self.sessions[uuid]
                         continue
 
-                    session.start_send_thread()
+                    session.tcp_socket = self.tcp_socket.accept()[0]
+                    session.start_threads()
+
+                # they already exist, no init needed
                 else:
-                    session: UDPSession = self.sessions[uuid]
+                    session: Session = self.sessions[uuid]
                     # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
                     # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
                     if not session.verify_pid(pid, reason) and reason != 'OPEN':
@@ -163,6 +180,7 @@ class UDPManager:
                         continue
                     elif reason == 'OPEN':
                         session.packet_id_recv.clear()
+                        # we'll need to do more up top
 
                 session.packet_id_recv[reason] = pid
                 self.times[uuid] = time()
@@ -174,8 +192,8 @@ class UDPManager:
                     self.AUDIO_QUEUE.put((session.uuid, data[4]))
                 elif data[2] == 'VIDEO':
                     self.VIDEO_QUEUE.put((session.uuid, data[4]))
-                elif data[2] == 'KEEPALIVE':
-                    pass
+                elif data[2] in ('KEEPALIVE', 'HELLO'):
+                    print('%s says hello :)' % uuid)
                 elif data[2] == 'PRINT':
                     print('PRINT REQUEST:', data[4])
                 elif data[2] in ('OPEN', 'CLOSE'):

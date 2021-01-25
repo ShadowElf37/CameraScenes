@@ -6,11 +6,16 @@ from collections import defaultdict
 import autolog
 
 class UDPClient:
+    BUFFER = 8192
+
     def __init__(self, host, port=37001, override_uuid=None, frag=False):
         self.AUDIO_QUEUE = Queue()
         self.VIDEO_QUEUE = Queue()
         self.INFO_QUEUE = Queue()
         self.META_QUEUE = Queue()
+
+        self.recv_queue = Queue()
+        self.recv_thread = threading.Thread(target=self._recv_all, daemon=True)
 
         self.host = host
         self.port = port
@@ -27,10 +32,11 @@ class UDPClient:
             else:
                 break
 
-        self.session = UDPSession(self, self.host, self.port, fragment=frag)
+        self.tcp_socket = socket(AF_INET, SOCK_STREAM)
+        self.session = Session(self, self.host, self.port, tcp_socket=None, fragment=frag)
         if override_uuid:
             self.session.uuid = override_uuid
-        self.session.start_send_thread()
+        self.session.start_threads()
 
         self.running = False
         self.thread = threading.Thread(target=self._handle_data, daemon=True)
@@ -39,9 +45,16 @@ class UDPClient:
         self.fragments = defaultdict(list)
         self.incomplete_packets = []
 
+    def init_tcp(self):
+        """This must be called AFTER sending an OPEN request over UDP"""
+        self.session.tcp_socket = self.tcp_socket
+        self.tcp_socket.connect((self.host, self.port + 1))
+        self.session.start_threads(tcp_only=True)
+
     def init(self):
         self.running = True
         self.thread.start()
+        self.recv_thread.start()
     def close(self):
         self.running = False
         self.session.close()
@@ -49,6 +62,14 @@ class UDPClient:
             self.socket.close()
         except OSError:
             pass
+
+    def _recv_all(self):
+        while self.running:
+            try:
+                self.recv_queue.put(self.socket.recvfrom(56000))
+            except Exception as e:
+                print('UDP socket crashed:', str(e))
+                continue
 
     def _handle_data(self):
         try:
@@ -58,7 +79,8 @@ class UDPClient:
             # 3 - frag
             # 4 - data
             while self.running:
-                decomp = UDPSession.decompile(self.socket.recvfrom(56000)[0])
+                decomp = Session.decompile(self.recv_queue.get()[0])
+
                 pid = decomp[1]
                 frag_opts = decomp[3]
 
@@ -114,7 +136,7 @@ class UDPClient:
                 elif reason in ('SET_RESOLUTION', 'CROP_RESOLUTION', 'H_FLEX_RESOLUTION', 'W_FLEX_RESOLUTION', 'UPDATE_TEXT', 'UPDATE_TEXT_COLOR', 'QUALITY'):
                     self.META_QUEUE.put((data[2], data[4]))
                 elif reason == 'PING':
-                    self.session.send('PONG')
+                    self.session.send_tcp('PONG')
                 else:
                     ...  # can do stuff if necessary
 
