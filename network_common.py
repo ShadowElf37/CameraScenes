@@ -4,6 +4,7 @@ from threading import Thread
 from collections import defaultdict
 from socket import socket
 from typing import Optional
+import struct
 
 FRAG_LIMIT = 8000
 
@@ -82,29 +83,38 @@ class Session:
             self.packet_id_send[datatype] += 1
         cmp = self.compile(datatype, data, override_uuid=send_as, frag_num=frag_num, frag_final=frag_final)
         #print('sending ', cmp)
-        return self.tcp_socket.send(cmp)
+        l = struct.pack('!H', len(cmp))
+        #print(f'TCP sent ({len(cmp)}): {cmp}')
+        return self.tcp_socket.sendall(l+cmp)
     def _send_all_tcp(self):
         from time import sleep
         try:
             while self.running:
-                data = self.tcp_send_buffer.get()
-                self._send_tcp(*data)
+                self._send_tcp(*self.tcp_send_buffer.get())
                 sleep(0.1)
-        except ConnectionError:
-            print('TCP sending with %s broke' % self.addr_str)
+        except (ConnectionError, AttributeError) as e:
+            print('TCP sending with %s broke' % self.addr_str, str(e))
             self.tcp_socket = None
 
     def _recv_tcp(self):
-        data = self.tcp_socket.recv(self.manager.BUFFER)
-        #print('received ', data)
-        self.manager.recv_queue.put((data, (self.ip, self.port)))
+        self._handle_tcp(self.tcp_socket.recv(self.manager.BUFFER))
+    def _handle_tcp(self, data):
+        l = struct.unpack('!H', data[:2])[0]
+        #print(f'TCP recv ({l}): {data[2:l+2]}')
+        self.manager.recv_queue.put((data[2:l+2], (self.ip, self.port)))
+        if len(data[2:]) > l:
+            self._handle_tcp(data[l+2:])
     def _recv_all_tcp(self):
         try:
             while self.running:
                 self._recv_tcp()
-        except ConnectionError:
-            print('TCP reception with %s broke' % self.addr_str)
+        except (ConnectionError, AttributeError) as e:
+            print('TCP reception with %s broke' % self.addr_str, str(e))
             self.tcp_socket = None
+
+    def reset_tcp(self):
+        self.tcp_recv_thread = Thread(target=self._recv_all_tcp, daemon=True)
+        self.tcp_send_thread = Thread(target=self._send_all_tcp, daemon=True)
 
     def _send(self, datatype: str, data: bytes=b'', send_as=None, frag_num=0, frag_final=0, ignore_pid=False):
         if not ignore_pid:

@@ -136,6 +136,8 @@ scene_manager = scenes.SceneManager(server, screen, use_pipe=True, debug=DEBUG, 
 print('Loading scenes...')
 _loaded_bgs = {}
 for scene in show_data:
+    pygame.display.flip()
+
     bg = scene.get('background', '')
     if bg and bg not in _loaded_bgs:
         _loaded_bgs[bg] = bg_surf = scene_manager.bg_to_surface(os.path.join('images', bg))
@@ -220,6 +222,7 @@ try:
 
             elif data[2] == 'CLOSE':
                 session.is_open = False
+                session.tcp_socket = None
                 scene_manager.unregister_camera(uuid)
                 aud.close_output(uuid)
 

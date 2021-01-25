@@ -117,7 +117,10 @@ class SceneManager:
     def draw(self):
         for full_command in iter(self.cues):
             full_command = full_command.decode()
-            full_command.replace('\\;', 'SUPERAWESOMEAMAZINGNONCE')  # they can escape semicolons
+            full_command = full_command.replace('\\;', 'SUPERAWESOMEAMAZINGNONCE')  # they can escape semicolons
+
+            print(full_command)
+
             for command in full_command.split(';'):
                 command = command.strip().replace('SUPERAWESOMEAMAZINGNONCE', '\\;')
                 if {
@@ -153,6 +156,7 @@ class SceneManager:
                                     self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0,0), b''))
                             elif cmd in ('mute_video', 'mutev'):
                                 for u in args:
+                                    print('mutev', u)
                                     self.server.sessions[u].send_tcp('MUTE_VIDEO')
                                     self.server.muted(u)
                             elif cmd in ('unmute_video', 'unmutev'):

@@ -123,10 +123,6 @@ print('Waiting for permission to continue...')
 
 # fuck UDP all my homies hate UDP
 client.session.send('OPEN')
-client.session.send('OPEN')
-client.session.send('OPEN')
-client.session.send('OPEN')
-client.session.send('OPEN')
 # why did i ever decide to use UDP for flow control
 
 from socket import timeout as timeout_error
