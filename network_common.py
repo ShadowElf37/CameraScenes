@@ -36,6 +36,10 @@ class Session:
     def addr(self):
         return self.ip, self.port
 
+    @property
+    def addr_str(self):
+        return f'{self.ip}:{self.port}'
+
     @classmethod
     def decompile(self, data: bytes):
         # this is probably *faster* than split - just breaks into 4 pieces by first 3 \n
@@ -77,20 +81,30 @@ class Session:
         if not ignore_pid:
             self.packet_id_send[datatype] += 1
         cmp = self.compile(datatype, data, override_uuid=send_as, frag_num=frag_num, frag_final=frag_final)
-        print('sending ', cmp)
+        #print('sending ', cmp)
         return self.tcp_socket.send(cmp)
     def _send_all_tcp(self):
-        while self.running:
-            data = self.tcp_send_buffer.get()
-            self._send_tcp(*data)
+        from time import sleep
+        try:
+            while self.running:
+                data = self.tcp_send_buffer.get()
+                self._send_tcp(*data)
+                sleep(0.1)
+        except ConnectionError:
+            print('TCP sending with %s broke' % self.addr_str)
+            self.tcp_socket = None
 
     def _recv_tcp(self):
         data = self.tcp_socket.recv(self.manager.BUFFER)
-        print('received ', data)
+        #print('received ', data)
         self.manager.recv_queue.put((data, (self.ip, self.port)))
     def _recv_all_tcp(self):
-        while self.running:
-            self._recv_tcp()
+        try:
+            while self.running:
+                self._recv_tcp()
+        except ConnectionError:
+            print('TCP reception with %s broke' % self.addr_str)
+            self.tcp_socket = None
 
     def _send(self, datatype: str, data: bytes=b'', send_as=None, frag_num=0, frag_final=0, ignore_pid=False):
         if not ignore_pid:
