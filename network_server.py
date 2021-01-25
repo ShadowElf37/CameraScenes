@@ -76,6 +76,8 @@ class UDPManager:
             del self.reports['frag']
             print('%s out of order packets were dropped.' % self.reports['out of order'])
             del self.reports['out of order']
+            print('%s hopelessly fragmented packets were terminated.' % self.reports['frag term'])
+            del self.reports['frag term']
             open_sessions = [uuid for uuid, s in self.sessions.items() if s.is_open]
             print('Clients:', ', '.join(open_sessions), '(%s/%s)' % (len(open_sessions), len(self.sessions)))
             if self.reports:
@@ -158,7 +160,13 @@ class UDPManager:
                     data = decomp
 
                 uuid = data[0]
+                pid = data[1]
                 reason = data[2]
+
+                for pid_frag in self.fragments[uuid]:
+                    if pid > pid_frag:
+                        self.reports['frag term'] += 1
+                        del self.fragments[uuid][pid_frag]
 
                 if self.DEBUG_ALL: print(*data[:3], addr[0]+':'+str(addr[1]))
                 self.reports[reason] += 1
@@ -215,7 +223,8 @@ class UDPManager:
                 elif data[2] in ('KEEPALIVE', 'PONG'):
                     pass
                 else:
-                    ... # can do stuff if necessary
+                    print('Odd request:', data)
+                    # can do stuff if necessary
                     # possible keep-alive, auth, etc.
 
         except OSError as e:

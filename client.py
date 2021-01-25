@@ -286,7 +286,7 @@ try:
 
                 if time() - reporting_time > 10:
                     reporting_time = time()
-                    print('Average size of last 100 frames: %d' % (sum(last_100_sizes) / 100))
+                    print('Average size of last 100 frames: %d' % last_100_size)
 
             client.session.send('VIDEO', data)
             cam_viewer.take_frame(frame if FIXED_VIEWER else enc_frame)
