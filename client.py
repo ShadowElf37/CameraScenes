@@ -15,7 +15,8 @@ import pickle
 from cv2 import COLOR_BGR2RGB
 from network_common import iterq
 from queue import Empty
-from time import sleep
+from time import time
+import zlib
 import traceback
 import autolog
 
@@ -176,12 +177,20 @@ aud  # pycharm is dumb
 # ==========
 ENFORCED_OUTPUT_RESOLUTION = cam.width, cam.height
 CROP_X1_X2 = 0, 0
+ZIP = True
 
 EASTER_EGG = False
 
 RUNNING = True
 
 client.session._send_tcp('HELLO')
+
+# for tracking frame sizes
+from queue import Queue
+last_100_size = 0
+all_sizes = Queue()
+last_100_counter = 0
+reporting_time = time()
 
 print('Client starting at', str(cam_viewer.w)+'x'+str(cam_viewer.h))
 try:
@@ -219,7 +228,6 @@ try:
                     print('Ignored 0x0 resolution set request.')
                 #print('Set resolution to', w, h)
             elif data[0] == 'W_FLEX_RESOLUTION': # 'x y'
-                print(data[1])
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
                     fw, fh = ENFORCED_OUTPUT_RESOLUTION
@@ -230,8 +238,7 @@ try:
             elif data[0] == 'H_FLEX_RESOLUTION':
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
-                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
-                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    fw, fh = ENFORCED_OUTPUT_RESOLUTION
                     ENFORCED_OUTPUT_RESOLUTION = w, round(fh * w / fw)
                     print('H-Flexed output to', 'x'.join(map(str, ENFORCED_OUTPUT_RESOLUTION)))
                 else:
@@ -239,8 +246,7 @@ try:
             elif data[0] == 'CROP_RESOLUTION':
                 w, h = map(int, data[1].decode().split())
                 if w != 0 and h != 0:
-                    fw = ENFORCED_OUTPUT_RESOLUTION[0]
-                    fh = ENFORCED_OUTPUT_RESOLUTION[1]
+                    fw, fh = ENFORCED_OUTPUT_RESOLUTION
                     nw = round(fw * h / fh)
                     ENFORCED_OUTPUT_RESOLUTION = nw, h
 
@@ -265,7 +271,24 @@ try:
             if any(CROP_X1_X2):
                 # print(CROP_X1_X2[0], 0, CROP_X1_X2[1], ENFORCED_OUTPUT_RESOLUTION[1])
                 enc_frame = webcam.crop(enc_frame, CROP_X1_X2[0], 0, CROP_X1_X2[1], ENFORCED_OUTPUT_RESOLUTION[1])
-            client.session.send('VIDEO', pickle.dumps(webcam.jpeg_encode(enc_frame, cam.compress_quality)))
+
+            data = pickle.dumps(webcam.jpeg_encode(enc_frame, cam.compress_quality))
+
+            if ZIP:
+                data = zlib.compress(data, level=6)
+
+            all_sizes.put(len(data)/100)
+            last_100_size += len(data)/100
+            if last_100_counter < 100:
+                last_100_counter += 1
+            else:
+                last_100_size -= all_sizes.get()
+
+                if time() - reporting_time > 10:
+                    reporting_time = time()
+                    print('Average size of last 100 frames: %d' % (sum(last_100_sizes) / 100))
+
+            client.session.send('VIDEO', data)
             cam_viewer.take_frame(frame if FIXED_VIEWER else enc_frame)
 
         screen.fill(BLACK)

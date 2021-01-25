@@ -105,7 +105,6 @@ class UDPManager:
                 for session in self.sessions.values():
                     session.send_tcp('KEEPALIVE')
 
-
             sleep(0.1)
 
     def _recv_all(self):

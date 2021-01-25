@@ -15,6 +15,7 @@ import pyjson5 as json
 from sys import exit
 from network_common import Session, iterq
 import traceback
+import zlib
 
 import os
 import tkinter as tk
@@ -195,6 +196,8 @@ scene_manager.first()
 #  LOOP
 # ======
 
+ZIP = True
+
 DEBUG_DRAGGING_SELECTED = None  # uuid of box dragging
 DEBUG_DRAGGING_CACHED_POSITION = None  # original box position, used for mouse offset so dragging feels more natural
 DEBUG_DRAGGING_CACHED_MOUSE = None  # original mouse position, used for mouse offset so dragging feels more natural
@@ -236,6 +239,10 @@ try:
         for uuid, frame in iterq(server.VIDEO_QUEUE):
             if (cam := scene_manager.cameras.get(uuid)) is None:
                 continue
+
+            if ZIP:
+                frame = zlib.decompress(frame)
+
             cam.take_frame(pickle.loads(frame))
             #server.sessions[uuid].send('PRINT', b'hello fren')
 
