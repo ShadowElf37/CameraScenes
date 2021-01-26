@@ -95,19 +95,21 @@ class UDPManager:
         while self.running:
             t = time()
             # send muted some pings
-            for uuid in self.mutes.copy():  # need copy for threadsafe
-                if t - self.times[uuid] > 3:
-                    self.sessions[uuid].send_tcp('PING')
+            #for uuid in self.mutes.copy():  # need copy for threadsafe
+            #    if t - self.times[uuid] > 3:
+            #        self.sessions[uuid].send_tcp('PING')
 
-            # kill expired sessions
+            #kill expired sessions
             #for uuid in self.sessions.keys():
                 #if 15.1 >= t - self.times[uuid] >= 15:
                     #self.META_QUEUE.put((uuid, -7, 'CLOSE', (0,0), b''))
 
-            if t - self.tcp_keepalive_time > 3:
+            if t - self.tcp_keepalive_time > 2:
                 self.tcp_keepalive_time = t
                 for session in self.sessions.values():
-                    session.send_tcp('KEEPALIVE')
+                    if session.is_open:
+                        session.send_tcp('KEEPALIVE')
+
                     #print('KEEPALIVE', session.uuid)
 
             sleep(0.1)

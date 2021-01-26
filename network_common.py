@@ -87,13 +87,12 @@ class Session:
         #print(f'TCP sent ({len(cmp)}): {cmp}')
         return self.tcp_socket.sendall(l+cmp)
     def _send_all_tcp(self):
-        from time import sleep
         try:
             while self.running:
                 self._send_tcp(*self.tcp_send_buffer.get())
-                sleep(0.1)
         except (ConnectionError, AttributeError) as e:
-            print('TCP sending with %s broke' % self.addr_str, str(e))
+            if self.is_open:
+                print('TCP sending with %s broke' % self.addr_str, str(e))
             self.tcp_socket = None
 
     def _recv_tcp(self):
@@ -112,7 +111,8 @@ class Session:
             while self.running:
                 self._recv_tcp()
         except (ConnectionError, AttributeError) as e:
-            print('TCP reception with %s broke' % self.addr_str, str(e))
+            if self.is_open:
+                print('TCP reception with %s broke' % self.addr_str, str(e))
             self.tcp_socket = None
         except struct.error as e:
             print('TCP reception broke on unpack:', str(e))
@@ -137,6 +137,7 @@ class Session:
         if self.tcp_socket is not None:
             self.tcp_recv_thread.start()
             self.tcp_send_thread.start()
+
     def close(self):
         self.running = False
 
