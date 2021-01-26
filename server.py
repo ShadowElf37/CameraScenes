@@ -240,9 +240,6 @@ try:
             if (cam := scene_manager.cameras.get(uuid)) is None:
                 continue
 
-            if ZIP:
-                frame = zlib.decompress(frame)
-
             cam.take_frame(pickle.loads(frame))
             #server.sessions[uuid].send('PRINT', b'hello fren')
 

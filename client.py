@@ -280,9 +280,6 @@ try:
 
             data = pickle.dumps(webcam.jpeg_encode(enc_frame, cam.compress_quality))
 
-            if ZIP:
-                data = zlib.compress(data, level=6)
-
             all_sizes.put(len(data)/100)
             last_100_size += len(data)/100
             if last_100_counter < 100:
