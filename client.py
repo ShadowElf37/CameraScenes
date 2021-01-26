@@ -159,7 +159,7 @@ else:
 print('Opening webcam...')
 change_loading_text('Opening webcam...')
 try:
-    cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, compress_quality=75) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
+    cam = webcam.Webcam(COLOR_BGR2RGB, mirror=True, swap_axes=True, compress_quality=50) #device=r'C:\Users\Key Cohen Office\Desktop\My Movie.mp4'
 except (ValueError, IOError) as e:
     throw_error_to_user(str(e))
 except Exception as e:

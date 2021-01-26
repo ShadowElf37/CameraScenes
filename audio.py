@@ -13,7 +13,7 @@ def iterq(queue: Queue):
 
 FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 20000
+RATE = 16000
 CHUNK = 1000  # actually doubled because 16 bit samples - needs to be small for encoding, doesn't matter too much for raw
 AUDIO = pyaudio.PyAudio()
 
