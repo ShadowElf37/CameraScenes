@@ -1,4 +1,6 @@
-BETA v0.2.1 (ZIP)
+BETA v0.2.1 (STABILITY)
+- Fully switched over to a TCP-oriented meta setup, including the initial connection, granting us far greater stability
+- Transitioned from UDP ping-pong to TCP keepalive
 - Added zlib compression
 - Further improved logging
 - Fixed some bugs and crashes

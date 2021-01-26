@@ -166,7 +166,7 @@ except Exception as e:
     throw_error_to_user('Wow, your webcam absolutely imploded. Show your manager the error message below.\n\n'+type(e).__qualname__+': '+str(e)+'\n')
 cam  # pycharm is dumb
 
-text = graphics.Text('Welcome %s!' % uuid, WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
+text = graphics.Text('Welcome %s' % uuid, WIDTH / 2, HEIGHT * 7 / 8, fontsize=56)
 cam_viewer = graphics.WebcamViewer(WIDTH / 2, HEIGHT * 4 / 9, 640, 480, dim_enforcer=graphics.scale.NONE if FIXED_VIEWER else graphics.scale.WFLEX)
 
 print('Opening microphone...')

@@ -23,6 +23,7 @@ class SceneManager:
         self.screen_height = screen.get_height()
         self.debug = debug
         self.auto_mute = auto_mute
+        self.excluded_from_auto_mute = set()
 
         self.transition_from = None
         self.prior_scene: Optional[Scene] = None
@@ -164,16 +165,26 @@ class SceneManager:
 
                             elif cmd == 'switch_unmuted_av_to':  # turns off everything except args passed
                                 for u in self.cameras.keys():
-                                    self.server.muted(u)
+                                    if u not in self.excluded_from_auto_mute:
+                                        self.server.muted(u)
                                 for u in args:
-                                    self.server.sessions[u].send_tcp('UNMUTE_AUDIO')
-                                    self.server.sessions[u].send_tcp('UNMUTE_VIDEO')
-                                    self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0, 0), b''))
-                                    self.server.unmuted(u)
+                                    if u not in self.excluded_from_auto_mute:
+                                        self.server.sessions[u].send_tcp('UNMUTE_AUDIO')
+                                        self.server.sessions[u].send_tcp('UNMUTE_VIDEO')
+                                        self.server.META_QUEUE.put((u, -7, 'UNMUTE', (0, 0), b''))
+                                        self.server.unmuted(u)
                                 for u in self.server.mutes:
-                                    self.server.sessions[u].send_tcp('MUTE_AUDIO')
-                                    self.server.sessions[u].send_tcp('MUTE_VIDEO')
-                                    self.server.META_QUEUE.put((u, -7, 'MUTE', (0, 0), b''))
+                                    if u not in self.excluded_from_auto_mute:
+                                        self.server.sessions[u].send_tcp('MUTE_AUDIO')
+                                        self.server.sessions[u].send_tcp('MUTE_VIDEO')
+                                        self.server.META_QUEUE.put((u, -7, 'MUTE', (0, 0), b''))
+
+                            elif cmd == 'forbid_mute':
+                                for u in args:
+                                    self.excluded_from_auto_mute.add(u)
+                            elif cmd == 'allow_mute':
+                                for u in args:
+                                    self.excluded_from_auto_mute.remove(u)
 
                             elif cmd in ('update_text', 'text'):
                                 self.server.sessions[args[0]].send_tcp('UPDATE_TEXT', b' '.join(map(str.encode, args[1:])))

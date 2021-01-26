@@ -108,7 +108,10 @@ class UDPManager:
                 self.tcp_keepalive_time = t
                 for session in self.sessions.values():
                     if session.is_open:
-                        session.send_tcp('KEEPALIVE')
+                        try:
+                            session._send_tcp('KEEPALIVE')
+                        except:
+                            self.META_QUEUE.put((session.uuid, -8, 'CLOSE', (0, 0), b''))
 
                     #print('KEEPALIVE', session.uuid)
 
