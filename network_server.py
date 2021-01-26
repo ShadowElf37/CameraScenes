@@ -196,7 +196,7 @@ class UDPManager:
                 reason = data[2]
 
                 for pid_frag, age in self.fragment_age[uuid].copy().items():
-                    if time() - age > 20:
+                    if time() - age > 15:
                         self.reports['frag term'] += 1
                         del self.fragments[uuid][pid_frag], self.fragment_age[uuid][pid_frag]
 
