@@ -38,6 +38,7 @@ class UDPManager:
 
         self.frag = frag
         self.fragments = defaultdict(lambda: defaultdict(list))
+        self.fragment_age = defaultdict(lambda: defaultdict(int))
         self.incomplete_packets = defaultdict(list)
 
         self.times: {str: float} = defaultdict(time)  # uuid: time() of last message
@@ -165,6 +166,7 @@ class UDPManager:
                 incomplete = False
                 if self.frag and frag_opts[0] != 0:
                     self.fragments[uuid][pid].append((frag_opts[0], decomp[4]))
+                    self.fragment_age[uuid][pid] = time()
 
                     if (found_incomplete := (pid in self.incomplete_packets)) or frag_opts[1] == 1:
                         fragments = self.fragments[uuid][pid]
@@ -193,10 +195,10 @@ class UDPManager:
                 pid = data[1]
                 reason = data[2]
 
-                for pid_frag in self.fragments[uuid].copy():
-                    if pid > pid_frag:
+                for pid_frag, age in self.fragment_age[uuid].copy().items():
+                    if time() - age > 20:
                         self.reports['frag term'] += 1
-                        del self.fragments[uuid][pid_frag]
+                        del self.fragments[uuid][pid_frag], self.fragment_age[uuid][pid_frag]
 
                 if self.DEBUG_ALL: print(*data[:3], addr[0]+':'+str(addr[1]))
                 self.reports[reason] += 1
