@@ -48,7 +48,7 @@ class UDPClient:
     def init_tcp(self):
         """This must be called AFTER sending an OPEN request over UDP"""
         self.session.tcp_socket = self.tcp_socket
-        self.tcp_socket.connect((self.host, self.port + 1))
+        self.session.tcp_socket.connect((self.host, self.port + 1))
         self.session.start_threads(tcp_only=True)
 
     def init(self):
@@ -66,7 +66,7 @@ class UDPClient:
     def _recv_all(self):
         while self.running:
             try:
-                self.recv_queue.put(self.socket.recvfrom(56000))
+                self.recv_queue.put(self.socket.recvfrom(self.BUFFER))
             except Exception as e:
                 print('UDP socket crashed:', str(e))
                 continue

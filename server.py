@@ -258,7 +258,10 @@ try:
             if event.type == pygame.QUIT:
                 print('User quit.')
                 for session in server.sessions.values():
-                    session._send_tcp('DIE')
+                    try:
+                        session._send_tcp('DIE')
+                    except AttributeError:
+                        pass
                 RUNNING = False
                 break
 

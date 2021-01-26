@@ -97,8 +97,11 @@ class Session:
             self.tcp_socket = None
 
     def _recv_tcp(self):
-        self._handle_tcp(self.tcp_socket.recv(self.manager.BUFFER))
+        self._handle_tcp(data := self.tcp_socket.recv(self.manager.BUFFER))
+        return data
     def _handle_tcp(self, data):
+        if not data:
+            return
         l = struct.unpack('!H', data[:2])[0]
         #print(f'TCP recv ({l}): {data[2:l+2]}')
         self.manager.recv_queue.put((data[2:l+2], (self.ip, self.port)))
@@ -111,6 +114,8 @@ class Session:
         except (ConnectionError, AttributeError) as e:
             print('TCP reception with %s broke' % self.addr_str, str(e))
             self.tcp_socket = None
+        except struct.error as e:
+            print('TCP reception broke on unpack:', str(e))
 
     def reset_tcp(self):
         self.tcp_recv_thread = Thread(target=self._recv_all_tcp, daemon=True)

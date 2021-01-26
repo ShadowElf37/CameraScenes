@@ -122,19 +122,25 @@ client.init()
 change_loading_text('Waiting for server...')
 print('Waiting for permission to continue...')
 
-# fuck UDP all my homies hate UDP
-client.session.send('OPEN')
-# why did i ever decide to use UDP for flow control
-
+response = ''
 from socket import timeout as timeout_error
 try:
     client.init_tcp()
+except (ConnectionRefusedError, timeout_error):
+    response = None
 
+# fuck UDP all my homies hate UDP
+client.session._send_tcp('OPEN')
+# why did i ever decide to use UDP for flow control
+
+try:
     if not client.running:  # it received DIE or crashed when it tried to send OPEN
         raise ConnectionRefusedError
+    if response is None:
+        raise Empty
 
     response = client.META_QUEUE.get(timeout=5)
-except (Empty, ConnectionRefusedError, timeout_error) as e:
+except (Empty,) as e:
     response = str(e)
 
 if response == 'CONTINUE':

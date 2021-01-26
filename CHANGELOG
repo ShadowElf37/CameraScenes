@@ -1,5 +1,7 @@
 BETA v0.2.1 (ZIP)
 - Added zlib compression
+- Further improved logging
+- Fixed some bugs and crashes
 
 BETA v0.2.0 (STABILITY)
 - Added TCP connections to Session (formerly UDPSession)
@@ -8,10 +10,10 @@ BETA v0.2.0 (STABILITY)
 - Added scene command to mute everyone not listed in the args
 - Added jpeg compression control to the pipe commands
 - Added automatic muting of clients not in a scene, whenever the scene changes
+- Pipe can now reconnect when one end breaks
 - Cleaned up some code and fixed lots of bugs
-- Improved pipe
 
-======= MAJOR =======
+======= MAJOR ======= [past this point, Proscenium is production-stable]
 
 BETA v0.1.13 (EASTER EGG)
 - Added an easter egg to client

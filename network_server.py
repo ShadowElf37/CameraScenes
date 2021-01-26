@@ -29,8 +29,9 @@ class UDPManager:
         self.tcp_socket = socket(AF_INET, SOCK_STREAM)
         self.tcp_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         self.tcp_socket.bind(('0.0.0.0', port+1))
-        self.tcp_socket.listen(64)
+        self.tcp_connections: {tuple: socket} = {}
         self.tcp_keepalive_time = time()
+        self.tcp_connector_thread = Thread(target=self._handle_tcp_connections, daemon=True)
 
         self.running = False
         self.handle_thread = threading.Thread(target=self._handle_data, daemon=True)
@@ -52,6 +53,7 @@ class UDPManager:
         self.pingpong_thread.start()
         self.reporter_thread.start()
         self.recv_thread.start()
+        self.tcp_connector_thread.start()
     def close(self):
         self.running = False
         self.socket.close()
@@ -76,7 +78,7 @@ class UDPManager:
             del self.reports['frag']
             print('%s out of order packets were dropped.' % self.reports['out of order'])
             del self.reports['out of order']
-            print('%s hopelessly fragmented packets were terminated.' % self.reports['frag term'])
+            print('%s fragmented packets were terminated.' % self.reports['frag term'])
             del self.reports['frag term']
             open_sessions = [uuid for uuid, s in self.sessions.items() if s.is_open]
             print('Clients:', ', '.join(open_sessions), '(%s/%s)' % (len(open_sessions), len(self.sessions)))
@@ -98,24 +100,47 @@ class UDPManager:
                     self.sessions[uuid].send_tcp('PING')
 
             # kill expired sessions
-            for uuid in self.sessions.keys():
-                if 15.1 >= t - self.times[uuid] >= 15:
-                    self.META_QUEUE.put((uuid, -7, 'CLOSE', (0,0), b''))
+            #for uuid in self.sessions.keys():
+                #if 15.1 >= t - self.times[uuid] >= 15:
+                    #self.META_QUEUE.put((uuid, -7, 'CLOSE', (0,0), b''))
 
             if t - self.tcp_keepalive_time > 3:
                 self.tcp_keepalive_time = t
                 for session in self.sessions.values():
                     session.send_tcp('KEEPALIVE')
+                    #print('KEEPALIVE', session.uuid)
 
             sleep(0.1)
 
     def _recv_all(self):
         while self.running:
             try:
-                self.recv_queue.put(self.socket.recvfrom(96000))
+                self.recv_queue.put(self.socket.recvfrom(self.BUFFER))
             except Exception as e:
                 print('UDP socket crashed:', str(e))
                 continue
+
+    def _handle_tcp_connections(self):
+        self.tcp_socket.listen(32)
+        while self.running:
+            c, a = self.tcp_socket.accept()
+            print('CONNECTION', a, c)
+            self.tcp_connections[a] = c
+            def _handle_open_msg():
+                print('HANDLING')
+                data = c.recv(self.BUFFER)
+                open_msg = Session.decompile(data[2:2+struct.unpack('!H', data[:2])[0]])
+                print('GOT', open_msg)
+                uuid = open_msg[0]
+                reason = open_msg[2]
+                print(uuid, reason)
+                if reason == 'OPEN':
+                    self.sessions[uuid] = session = Session(self, *a, tcp_socket=c, uuid=uuid, fragment=self.frag)
+                    session.start_threads()
+                    self.META_QUEUE.put(open_msg)
+                else:
+                    c.send(b'DIE')  # can't send() because no send thread, must _send
+            Thread(target=_handle_open_msg, daemon=True).start()
 
     def _handle_data(self):
         # 0 - uuid
@@ -163,7 +188,7 @@ class UDPManager:
                 pid = data[1]
                 reason = data[2]
 
-                for pid_frag in self.fragments[uuid]:
+                for pid_frag in self.fragments[uuid].copy():
                     if pid > pid_frag:
                         self.reports['frag term'] += 1
                         del self.fragments[uuid][pid_frag]
@@ -172,36 +197,28 @@ class UDPManager:
                 self.reports[reason] += 1
 
                 if self.sessions.get(uuid) is None:
-                    #print('Making session!')
-                    self.sessions[uuid] = session = Session(self, *addr, tcp_socket=None, uuid=uuid, fragment=self.frag)
-
                     # If they're sending us something but we have no records, i.e. zombie that we have to get rid of
-                    if reason != 'OPEN':
-                        session._send_tcp('DIE')  # can't send() because no send thread, must _send
-                        del self.sessions[uuid]
-                        continue
+                    Session(self, *addr, tcp_socket=None, uuid=uuid, fragment=self.frag)._send_tcp('DIE') # can't send() because no send thread, must _send
+                    continue
 
-                    session.tcp_socket = self.tcp_socket.accept()[0]
-                    session.start_threads()
-                    #print('Made!', session)
+
                 # they already exist, no init needed
-                else:
-                    session: Session = self.sessions[uuid]
-                    # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
-                    # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
-                    if not session.verify_pid(pid, reason) and reason != 'OPEN':
-                        self.reports['out of order'] += 1
-                        if self.DEBUG_ALL: print('Out of order packet rejected!')
-                        continue
+                session: Session = self.sessions[uuid]
+                # print('SESSION:', session.uuid, session.packet_id_recv, session.packet_id_send)
+                # print(data[0] == session.uuid, data[1] > session.packet_id_recv, data[1] == -1)
+                if not session.verify_pid(pid, reason) and reason != 'OPEN':
+                    self.reports['out of order'] += 1
+                    if self.DEBUG_ALL: print('Out of order packet rejected!')
+                    continue
 
-                    elif reason == 'OPEN':
-                        session.packet_id_recv.clear()
-                        if session.tcp_socket is None:
-                            print('Resetting session TCP...')
-                            session.tcp_socket = self.tcp_socket.accept()[0]
-                            session.reset_tcp()
-                            session.start_threads(tcp_only=True)
-                            print('Reset!')
+                elif reason == 'OPEN':
+                    session.packet_id_recv.clear()
+                        #if session.tcp_socket is None:
+                        #    print('Resetting session TCP...')
+                        #    session.tcp_socket = self.tcp_socket.accept()[0]
+                        #    session.reset_tcp()
+                        #    session.start_threads(tcp_only=True)
+                        #    print('Reset!')
                         # we'll need to do more up top
 
                 session.packet_id_recv[reason] = pid
