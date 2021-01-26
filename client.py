@@ -31,6 +31,7 @@ FPS = 30
 RUNNING = False
 FIXED_VIEWER = False
 
+IP = '73.166.38.74'
 
 # GET UUID
 import tkinter as tk
@@ -45,14 +46,19 @@ root = tk.Tk()
 root.title('ID Entry')
 root.focus()
 uid = tk.StringVar(value='')
+ip = tk.StringVar(value=IP)
 
 uid_text = tk.Label(root, text='Enter ID')
 uid_entry = tk.Entry(root, textvar=uid)
+ip_text = tk.Label(root, text='Server')
+ip_entry = tk.Entry(root, textvar=ip)
 submit = tk.Button(root, text='Submit', command=lambda *_: root.destroy() if uid_entry.get() != '' else 0)
 root.bind('<Return>', lambda *_: submit.invoke())
 
 uid_text.pack()
 uid_entry.pack(padx=20)
+ip_text.pack()
+ip_entry.pack(padx=20)
 submit.pack(pady=10)
 
 root.protocol("WM_DELETE_WINDOW", quit_tk)
@@ -67,6 +73,7 @@ except tk.TclError:
 
 # END GET UUID
 uuid = uid.get().strip()
+IP = ip.get().strip() or IP
 if done or not uuid:
     exit()
 del uid, tk, submit, uid_entry, uid_text
@@ -116,7 +123,7 @@ def throw_error_to_user(text, close=True):
 
 change_loading_text('Starting client...')
 print('Initializing client...')
-client = network.UDPClient('73.166.38.74', 37001, override_uuid=uuid, frag=True)
+client = network.UDPClient(IP, 37001, override_uuid=uuid, frag=True)
 client.init()
 
 change_loading_text('Waiting for server...')
@@ -134,12 +141,10 @@ client.session._send_tcp('OPEN')
 # why did i ever decide to use UDP for flow control
 
 try:
-    if not client.running:  # it received DIE or crashed when it tried to send OPEN
-        raise ConnectionRefusedError
-    if response is None:
+    if not client.running or response is None:
         raise Empty
 
-    response = client.META_QUEUE.get(timeout=5)
+    response = client.META_QUEUE.get(timeout=6)
 except (Empty,) as e:
     response = str(e)
 

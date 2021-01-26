@@ -198,22 +198,25 @@
     // SCENE 18
   {"transition": "fade", "transition_duration": 45},
 
-  { // SCENE 19 (6A)
-    'background': 'forest_night.png',
+  {  // SCENE 19 (6A)
+    'background': 'forest_shrine_night.png',
     "transition": "fade",
     "transition_duration": 60,
-    "cameras": [
-      // TRIO
-      [3, 0.2, 0.5, 0.2, 0.2666],
-      [2, 0.5, 0.5, 0.2, 0.2666],
-      [1, 0.8, 0.5, 0.2, 0.2666],
+   "cameras": [
+      [10, 0.1, 0.1333, 0.2, 0.2666],
+      [9, 0.9, 0.1333, 0.2, 0.2666],
+      [11, 0.1, 0.8666, 0.2, 0.2666],
+      [8, 0.9, 0.8666, 0.2, 0.2666],
+
+      // REYLUK
+      [1, 0.6, 0.5, 0.2, 0.2666],
     ]
-  },
+  }
 
   { // SCENE 20 (6B)
     'background': 'palace_red.png',
     "transition": "fade",
-    "transition_duration": 30,
+    "transition_duration": 90,
     "cameras": [
       // VOICES
       [10, 0.1, 0.1333, 0.2, 0.2666],
@@ -222,14 +225,32 @@
       [8, 0.9, 0.8666, 0.2, 0.2666],
 
       // REYLUK
-      [1, 0.5, 0.5, 0.2, 0.2666],
+      [1, 0.6, 0.5, 0.2, 0.2666],
     ]
   },
 
-  // SCENE 21
+  { // SCENE 21 (6C)
+    'background': 'forest_night.png',
+    "transition": "fade",
+    "transition_duration": 60,
+    "cameras": [
+      // VOICES
+      [10, 0.1, 0.1333, 0.2, 0.2666],
+      [9, 0.9, 0.1333, 0.2, 0.2666],
+      [11, 0.1, 0.8666, 0.2, 0.2666],
+      [8, 0.9, 0.8666, 0.2, 0.2666],
+
+      // REYLUK
+      [3, 0.2, 0.5, 0.2, 0.2666],
+      [2, 0.5, 0.5, 0.2, 0.2666],
+      [1, 0.8, 0.5, 0.2, 0.2666],
+    ]
+  },
+
+  // SCENE 22
   {"transition": "fade", "transition_duration": 45},
 
-  { // SCENE 22 (7A)
+  { // SCENE 23 (7A)
     'background': 'forest_day.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -246,7 +267,7 @@
       ]
   },
 
-  { // SCENE 23 (7B)
+  { // SCENE 24 (7B)
     'background': 'forest_shrine.png',
     "transition": "wipe",
     "transition_duration": 90,
@@ -262,7 +283,7 @@
       ]
   },
 
-  { // SCENE 24 (8)
+  { // SCENE 25 (8)
     'background': 'palace.png',
     "transition": "wipe",
     "transition_duration": 90,
@@ -280,7 +301,7 @@
     ]
   },
 
-  { // SCENE 25 (9A)
+  { // SCENE 26 (9A)
     'background': 'palace_red.png',
     "transition": "wipe",
     "transition_duration": 45,
@@ -299,7 +320,7 @@
     ]
   },
 
-  { // SCENE 26 (9B)
+  { // SCENE 27 (9B)
     'background': 'palace_red.png',
     "cameras": [
         // nirin
@@ -307,15 +328,21 @@
     ]
   },
 
-  { // SCENE 27 (9C)
+  { // SCENE 28 (9C)
     'background': 'palace_red.png',
     "cameras": [
         // reyluk and kirakal
         [1, 0.5, 0.5, 0.3, 0.4],
+
+        // voices
+        [10, 0.075, 0.1, 0.15, 0.2],
+        [9, 0.925, 0.1, 0.15, 0.2],
+        [11, 0.075, 0.9, 0.15, 0.2],
+        [8, 0.925, 0.9, 0.15, 0.2],
     ]
   },
 
-  { // SCENE 28 (9D)
+  { // SCENE 29 (9D)
     'background': 'palace_red.png',
     "cameras": [
         // elethar and kirakal
@@ -329,10 +356,10 @@
     ]
   },
 
-  { // SCENE 29 (10A)
+  { // SCENE 30 (10A)
     'background': 'palace.png',
     "transition": "fade",
-    "transition_duration": 90,
+    "transition_duration": 120,
     "cameras": [
         // geremor, nirin, elethar
         [6, 0.275, 0.5, 0.2, 0.2666],
@@ -341,7 +368,7 @@
     ]
   },
 
-  { // SCENE 30 (10B)
+  { // SCENE 31 (10B)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 10,
@@ -353,7 +380,7 @@
     ]
   },
 
-  { // SCENE 31 (10C)
+  { // SCENE 32 (10C)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -371,7 +398,7 @@
     ]
   },
 
-  { // SCENE 32 (10D)
+  { // SCENE 33 (10D)
     'background': 'palace.png',
     "transition": "fade",
     "transition_duration": 60,
@@ -399,7 +426,7 @@
     ]
   },
 
-  { // SCENE 33 (11)
+  { // SCENE 34 (11)
     'background': 'tavern.jpg',
     "transition": "fade",
     "transition_duration": 60,
@@ -409,7 +436,7 @@
     ]
   },
 
-  // SCENE 34 (CLOSE)
+  // SCENE 35 (CLOSE)
   {
     //'background': 'tavern.jpg',
     "transition": "fade",
